@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE ARCHIVE | Jethro Adebisi — Project Gallery</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <!-- CSS / Frameworks -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        :root {
+            --accent: #00FFC2;
+            --accent-muted: rgba(0, 255, 194, 0.2);
+            --bg: #050505;
+            --card-bg: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.08);
+            --glass: rgba(10, 10, 10, 0.7);
+        }
+
+        * {
+            cursor: none !important;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background-color: var(--bg);
+            color: #e2e8f0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Noise Overlay */
+        .noise {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            opacity: 0.05;
+            z-index: 9999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Custom Cursor */
+        .custom-cursor {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            transition: transform 0.1s ease;
+        }
+
+        .cursor-follower {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Grid Background */
+        .grid-bg {
+            background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle at center, black, transparent 90%);
+        }
+
+        /* Glass Cards */
+        .bento-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bento-card:hover {
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 20px 40px -15px rgba(0, 255, 194, 0.1);
+        }
+
+        /* Hyper-Border Effect */
+        .hyper-border::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid transparent;
+            background: linear-gradient(var(--angle, 90deg), transparent, var(--accent), transparent) border-box;
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .bento-card:hover.hyper-border::after {
+            opacity: 1;
+            animation: rotateBorder 3s linear infinite;
+        }
+
+        @keyframes rotateBorder {
+            to { --angle: 450deg; }
+        }
+
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 90deg;
+            inherits: false;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .math-symbol {
+            position: absolute;
+            font-size: 14px;
+            color: var(--accent);
+            opacity: 0.05;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        /* Scanline Effect */
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 255, 194, 0.1);
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            animation: scan 4s linear infinite;
+            z-index: 5;
+        }
+
+        @keyframes scan {
+            0% { top: -10%; }
+            100% { top: 110%; }
+        }
+
+        /* Filter Tabs */
+        .filter-btn {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .filter-btn.active {
+            color: var(--accent);
+        }
+        .filter-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--accent);
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        .image-container {
+            mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+        }
+
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body x-data="{ 
+    filter: 'all', 
+    mobileMenu: false, 
+    scrolled: false,
+    projects: [
+        { id: 1, title: 'AI TRAVEL PLANNER', cat: 'engineering', img: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&q=80&w=800', tags: ['React', 'OpenAI', 'Next.js'], desc: 'Autonomous itinerary generation using vector embeddings and personalized UX flows.' },
+        { id: 2, title: 'REFUGEEAID PLATFORM', cat: 'design', img: 'https://images.unsplash.com/photo-1506377247377-2a5b3b0ca7df?auto=format&fit=crop&q=80&w=800', tags: ['UI/UX', 'Figma', 'Research'], desc: 'A humanitarian coordination system designed for high-stress environments and low-connectivity.' },
+        { id: 3, title: 'CARDANO GOVERNANCE', cat: 'engineering', img: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=800', tags: ['Blockchain', 'Tailwind', 'Web3'], desc: 'Complex voting interface for decentralized protocol management and treasury oversight.' },
+        { id: 4, title: 'GIGSGIG APP', cat: 'design', img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800', tags: ['Mobile Design', 'Interaction'], desc: 'Hyper-local freelance marketplace focusing on micro-interactions and rapid hiring loops.' },
+        { id: 5, title: 'SPEED MATH BATTLE', cat: 'engineering', img: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=800', tags: ['GSAP', 'Game Dev', 'Logic'], desc: 'Educational physics-based engine built to gamify complex algebraic concepts.' },
+        { id: 6, title: 'DESIGN SYSTEM ALPHA', cat: 'design', img: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=800', tags: ['Systems', 'Documentation'], desc: 'A token-based design architecture for enterprise-level SaaS scalability.' }
+    ]
+}" @scroll.window="scrolled = (window.pageYOffset > 50)">
+
+    <div class="noise"></div>
+    <div id="cursor" class="custom-cursor hidden md:block"></div>
+    <div id="follower" class="cursor-follower hidden md:block"></div>
+
+    <!-- Background Elements -->
+    <div class="fixed inset-0 z-0 pointer-events-none">
+        <div class="grid-bg absolute inset-0 opacity-20"></div>
+        <div class="absolute top-[20%] left-[-10%] w-[40%] h-[40%] bg-[var(--accent)]/5 blur-[120px] rounded-full"></div>
+        <div class="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-purple-600/5 blur-[120px] rounded-full"></div>
+    </div>
+
+    <!-- Header / Nav -->
+    <nav class="fixed top-0 w-full z-50 px-6 py-6 transition-all duration-500" :class="scrolled ? 'bg-black/90 backdrop-blur-xl border-b border-white/5 py-4' : ''">
+        <div class="max-w-[1400px] mx-auto flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 border border-[var(--accent)] flex items-center justify-center relative overflow-hidden">
+                    <span class="text-[var(--accent)] font-bold relative z-10 group-hover:scale-125 transition-transform duration-500">Σ</span>
+                    <div class="absolute inset-0 bg-[var(--accent)]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold tracking-tighter leading-none">JETHRO ADEBISI</span>
+                    <span class="text-[10px] text-gray-500 tracking-[0.3em] uppercase">The Archive</span>
+                </div>
+            </a>
+
+            <div class="hidden md:flex items-center gap-10 text-[10px] font-bold tracking-[0.2em] uppercase">
+                <a href="#" class="hover:text-[var(--accent)] transition-colors">Projects</a>
+                <a href="#" class="hover:text-[var(--accent)] transition-colors">Lab</a>
+                <a href="#" class="hover:text-[var(--accent)] transition-colors">Thinking</a>
+                <a href="#" class="px-5 py-2 border border-white/10 hover:border-[var(--accent)] hover:text-black hover:bg-[var(--accent)] transition-all duration-500">Contact</a>
+            </div>
+
+            <button @click="mobileMenu = !mobileMenu" class="md:hidden text-[var(--accent)]">
+                <div class="w-6 h-1 bg-[var(--accent)] mb-1"></div>
+                <div class="w-4 h-1 bg-[var(--accent)]"></div>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div x-show="mobileMenu" x-cloak class="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center gap-10 text-2xl uppercase tracking-widest" x-transition.opacity>
+        <button @click="mobileMenu = false" class="absolute top-8 right-8 text-[var(--accent)] text-sm">CLOSE_</button>
+        <a href="#" class="hover:text-[var(--accent)]">Work</a>
+        <a href="#" class="hover:text-[var(--accent)]">Process</a>
+        <a href="#" class="hover:text-[var(--accent)]">Lab</a>
+        <a href="#" class="text-[var(--accent)]">Get in Touch</a>
+    </div>
+
+    <main class="flex-grow relative z-10 pt-32 pb-20 px-6">
+        
+        <!-- Header Section -->
+        <header class="max-w-[1400px] mx-auto mb-20">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+                <div class="lg:col-span-8">
+                    <div class="inline-flex items-center gap-2 mb-6 text-[10px] text-[var(--accent)] tracking-[0.4em] uppercase">
+                        <span class="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse"></span>
+                        Status: Browsing_Repository
+                    </div>
+                    <h1 class="text-5xl md:text-8xl font-black tracking-tighter leading-none mb-6">
+                        PROJ<span class="gradient-text">ECTS.</span><br/>
+                        ARCHIVE_01
+                    </h1>
+                </div>
+                <div class="lg:col-span-4 lg:text-right">
+                    <p class="text-gray-500 text-xs md:text-sm leading-relaxed max-w-sm ml-auto">
+                        A systematic collection of digital artifacts, ranging from high-fidelity interfaces to complex engineering systems. Built with precision and intent.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="mt-16 flex flex-wrap items-center justify-between border-y border-white/5 py-6 gap-6">
+                <div class="flex gap-8 text-[10px] font-bold tracking-[0.2em] uppercase">
+                    <button @click="filter = 'all'" class="filter-btn" :class="filter === 'all' ? 'active' : 'text-gray-500'">All_Systems</button>
+                    <button @click="filter = 'engineering'" class="filter-btn" :class="filter === 'engineering' ? 'active' : 'text-gray-500'">Engineering</button>
+                    <button @click="filter = 'design'" class="filter-btn" :class="filter === 'design' ? 'active' : 'text-gray-500'">UI/UX_Design</button>
+                </div>
+                <div class="text-[10px] text-gray-600 font-mono">
+                    TOTAL_ENTRIES: <span class="text-white" x-text="projects.filter(p => filter === 'all' || p.cat === filter).length">06</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Project Grid -->
+        <section class="max-w-[1400px] mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="project in projects" :key="project.id">
+                    <div x-show="filter === 'all' || project.cat === filter" 
+                         x-transition:enter="transition ease-out duration-500"
+                         x-transition:enter-start="opacity-0 translate-y-10 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         class="bento-card hyper-border group"
+                         :class="project.id % 4 === 0 ? 'lg:col-span-2' : ''">
+                        
+                        <div class="scanline"></div>
+                        
+                        <!-- Image Area -->
+                        <div class="h-72 overflow-hidden relative image-container">
+                            <img :src="project.img" class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" alt="Project Image">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                            
+                            <!-- Category Badge -->
+                            <div class="absolute top-6 left-6 px-3 py-1 bg-black/80 backdrop-blur-md border border-white/10 text-[8px] uppercase tracking-widest text-[var(--accent)]">
+                                [ <span x-text="project.cat"></span> ]
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="p-8">
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <template x-for="tag in project.tags">
+                                    <span class="text-[9px] text-gray-500 font-mono border border-white/5 px-2 py-0.5" x-text="tag"></span>
+                                </template>
+                            </div>
+                            
+                            <h3 class="text-xl font-bold mb-3 tracking-tight group-hover:text-[var(--accent)] transition-colors" x-text="project.title"></h3>
+                            <p class="text-gray-500 text-xs leading-relaxed mb-6" x-text="project.desc"></p>
+                            
+                            <div class="flex items-center justify-between pt-6 border-t border-white/5">
+                                <a href="#" class="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 group/link">
+                                    View Artifact 
+                                    <svg class="w-3 h-3 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                </a>
+                                <span class="text-[10px] text-gray-700 font-mono">0<span x-text="project.id"></span>_</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- Interaction Playground (Small Snippet) -->
+        <section class="max-w-[1400px] mx-auto mt-40">
+            <div class="bento-card p-12 bg-white/[0.01] border-dashed border-white/10 text-center">
+                <div class="max-w-xl mx-auto">
+                    <span class="text-[var(--accent)] text-[10px] font-bold uppercase tracking-[0.5em] mb-4 block">Experimental_Zone</span>
+                    <h2 class="text-3xl font-bold mb-6 italic">"Design is a function of logic, refined by empathy."</h2>
+                    <div class="flex justify-center gap-4">
+                        <div x-data="{ active: false }" @mouseenter="active = true" @mouseleave="active = false" 
+                             class="w-16 h-16 border border-white/10 flex items-center justify-center cursor-pointer transition-all duration-500"
+                             :class="active ? 'border-[var(--accent)] rotate-90 scale-110' : ''">
+                             <span class="text-xl" :class="active ? 'text-[var(--accent)]' : 'text-gray-700'">∫</span>
+                        </div>
+                        <div x-data="{ count: 0 }" @click="count++" 
+                             class="w-16 h-16 border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--accent)] group transition-all">
+                             <span class="text-[8px] group-hover:text-black">INC_</span>
+                             <span class="text-xs font-bold group-hover:text-black" x-text="count"></span>
+                        </div>
+                        <div class="w-16 h-16 border border-white/10 flex items-center justify-center cursor-pointer hover:border-[var(--accent)] animate-pulse">
+                             <div class="w-4 h-4 bg-[var(--accent)] rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 border-t border-white/5 bg-black/40 backdrop-blur-md relative z-10">
+        <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex flex-col gap-2">
+                <span class="text-xs font-bold tracking-widest text-[var(--accent)]">JETHRO ADEBISI</span>
+                <span class="text-[10px] text-gray-600 font-mono uppercase tracking-tighter">Handcrafted in Lagos / Built for the Web</span>
+            </div>
+            
+            <div class="flex gap-10 text-[10px] font-bold tracking-widest uppercase">
+                <a href="https://x.com/jethroadebisi" target="_blank" class="hover:text-[var(--accent)] transition-colors">Twitter_X</a>
+                <a href="#" class="hover:text-[var(--accent)] transition-colors">LinkedIn</a>
+                <a href="#" class="hover:text-[var(--accent)] transition-colors">GitHub</a>
+            </div>
+
+            <div class="text-[10px] text-gray-700 font-mono">
+                ©2024_ALL_RIGHTS_RESERVED
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Custom Cursor Logic
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('follower');
+
+        document.addEventListener('mousemove', (e) => {
+            gsap.to(cursor, {
+                x: e.clientX,
+                y: e.clientY,
+                duration: 0.1
+            });
+            gsap.to(follower, {
+                x: e.clientX - 20,
+                y: e.clientY - 20,
+                duration: 0.4,
+                ease: "power2.out"
+            });
+        });
+
+        // Click Effect
+        document.addEventListener('mousedown', () => {
+            gsap.to(follower, { scale: 0.5, duration: 0.2 });
+        });
+        document.addEventListener('mouseup', () => {
+            gsap.to(follower, { scale: 1, duration: 0.2 });
+        });
+
+        // Hover Effect on interactive elements
+        const interactiveElements = document.querySelectorAll('a, button, .bento-card');
+        interactiveElements.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                gsap.to(follower, { 
+                    scale: 1.8, 
+                    backgroundColor: 'rgba(0, 255, 194, 0.1)', 
+                    borderColor: 'rgba(0, 255, 194, 0.5)',
+                    duration: 0.3 
+                });
+            });
+            el.addEventListener('mouseleave', () => {
+                gsap.to(follower, { 
+                    scale: 1, 
+                    backgroundColor: 'transparent', 
+                    borderColor: '#00FFC2',
+                    duration: 0.3 
+                });
+            });
+        });
+
+        // Math Symbols Background Spawner
+        const symbols = ['Σ', 'Δ', '∫', 'π', 'Ω', '∞', '√', '≈', 'θ', 'λ'];
+        const container = document.querySelector('.grid-bg');
+        
+        for (let i = 0; i < 30; i++) {
+            const sym = document.createElement('div');
+            sym.className = 'math-symbol';
+            sym.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+            sym.style.left = Math.random() * 100 + '%';
+            sym.style.top = Math.random() * 100 + '%';
+            sym.style.transform = `rotate(${Math.random() * 360}deg)`;
+            container.appendChild(sym);
+        }
+
+        // GSAP Scroll Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.from("h1", {
+            opacity: 0,
+            y: 100,
+            duration: 1.5,
+            ease: "power4.out",
+            stagger: 0.2
+        });
+
+        // Parallax effect on cards
+        document.querySelectorAll('.bento-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px) scale(1.01)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)`;
+            });
+        });
+    </script>
+</body>
+</html>

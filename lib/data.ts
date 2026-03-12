@@ -1,0 +1,86 @@
+export type Project = {
+  slug: string;
+  title: string;
+  year: string;
+  description: string;
+  problem: string;
+  role: string;
+  tech: string[];
+  category: 'engineering' | 'design';
+  image: string;
+  projectLink?: string;
+  caseStudy?: string;
+};
+
+export const projects: Project[] = [
+  {
+    slug: 'ai-travel-planner',
+    title: 'AI Travel Planner',
+    year: '2024',
+    description: 'Autonomous itinerary generation using vector embeddings and personalized UX flows.',
+    problem: 'Travel planning causes decision fatigue from fragmented tools, manual optimization, and unclear trade-offs.',
+    role: 'UX Design / Front-End / Research',
+    tech: ['Next.js', 'TypeScript', 'OpenAI', 'Tailwind', 'Framer Motion'],
+    category: 'engineering',
+    image: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&q=80&w=1200'
+  },
+  {
+    slug: 'refugeeaid-platform',
+    title: 'RefugeeAid Platform',
+    year: '2024',
+    description: 'A humanitarian coordination platform designed for low-connectivity environments.',
+    problem: 'Aid workers lacked a unified system for case routing, intake, and urgent updates.',
+    role: 'UX Design / Systems Thinking',
+    tech: ['Figma', 'Design Systems', 'Research'],
+    category: 'design',
+    image: 'https://images.unsplash.com/photo-1506377247377-2a5b3b0ca7df?auto=format&fit=crop&q=80&w=1200'
+  },
+  {
+    slug: 'gigsgig-app',
+    title: 'GigsGig App',
+    year: '2024',
+    description: 'Hyper-local freelance marketplace built for speed, trust, and micro-interactions.',
+    problem: 'Local job matching needed fast, low-friction transactions and clear social proof.',
+    role: 'Product Design / Front-End',
+    tech: ['React', 'Interaction Design', 'Tailwind'],
+    category: 'engineering',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200'
+  },
+  {
+    slug: 'speed-math-battle',
+    title: 'Speed Math Battle',
+    year: '2023',
+    description: 'An educational game merging real-time gameplay loops with math fluency.',
+    problem: 'Students disengaged from repetitive drills and needed feedback-rich gameplay.',
+    role: 'Game UX / Front-End Engineering',
+    tech: ['Framer Motion', 'React', 'State Machines'],
+    category: 'engineering',
+    image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=1200'
+  },
+  {
+    slug: 'cardano-governance-platform',
+    title: 'Cardano Governance Platform UI',
+    year: '2023',
+    description: 'Accessible governance workflows for complex blockchain voting actions.',
+    problem: 'Users struggled to understand proposals and complete high-stakes actions confidently.',
+    role: 'UX Design / Front-End',
+    tech: ['Web3', 'Design Systems', 'Accessibility'],
+    category: 'design',
+    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=1200'
+  }
+];
+
+export const processSteps = [
+  'Research',
+  'Ideation',
+  'Wireframing',
+  'UI Design',
+  'Prototyping',
+  'Development'
+];
+
+export const skillBuckets = {
+  frontend: ['React', 'Next.js', 'JavaScript', 'Tailwind', 'Framer Motion'],
+  design: ['UX Research', 'Wireframing', 'Prototyping', 'Design Systems', 'Interaction Design'],
+  tools: ['Figma', 'Framer', 'Git', 'Notion']
+};
