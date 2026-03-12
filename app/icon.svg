@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#07110E" />
+      <stop offset="1" stop-color="#020403" />
+    </linearGradient>
+    <linearGradient id="glow" x1="14" y1="14" x2="50" y2="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00FFC2" />
+      <stop offset="1" stop-color="#59B7FF" />
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="64" height="64" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5"/>
+    </filter>
+  </defs>
+  <rect x="8" y="8" width="48" height="48" rx="6" fill="url(#bg)" />
+  <rect x="9" y="9" width="46" height="46" rx="5" stroke="url(#glow)" stroke-width="2" />
+  <rect x="8" y="8" width="48" height="48" rx="6" stroke="rgba(255,255,255,0.08)" />
+  <g filter="url(#shadow)" opacity="0.45">
+    <path d="M42 18H24L33.5 31L24 44H42" stroke="#00FFC2" stroke-width="5.5" stroke-linecap="square" stroke-linejoin="bevel"/>
+  </g>
+  <path d="M42 18H24L33.5 31L24 44H42" stroke="url(#glow)" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="bevel"/>
+  <path d="M15 49.5H49" stroke="#59B7FF" stroke-opacity="0.45" stroke-width="1.5" />
+</svg>

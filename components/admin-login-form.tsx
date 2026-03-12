@@ -54,13 +54,13 @@ export function AdminLoginForm() {
         <form className="space-y-4" onSubmit={handleLogin}>
           <label className="block">
             <span className="mb-1 block text-[10px] uppercase tracking-[0.2em] text-gray-500">
-              Username or Email
+              Admin Email
             </span>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="admin-input"
-              title="Username or Email"
+              title="Admin Email"
               placeholder="Enter your admin email"
               autoComplete="username"
               required

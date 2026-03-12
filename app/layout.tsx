@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   title: "Jethro Adebisi | Front-End Engineer & UI/UX Designer",
   description:
     "Portfolio for Jethro Adebisi: product-focused front-end engineering, design systems, and interactive experiences.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
