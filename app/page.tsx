@@ -105,9 +105,9 @@ export default function HomePage() {
 
             <div className="max-w-xl">
               <p className="text-gray-400 text-sm md:text-base leading-relaxed mb-8">
-                Mathematics student turned UI/UX Engineer. I bridge the gap
-                between abstract logic and human-centered design through
-                high-performance web interfaces.
+                Mathematics student turned UX Engineer. I bridge the gap
+                between abstract logic and human centered design through
+                high performance web interfaces.
               </p>
               <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4">
                 <a
@@ -231,6 +231,28 @@ export default function HomePage() {
               staggerOffset={index % 2 === 1}
             />
           ))}
+        </div>
+
+        <div className="flex justify-center mt-10 sm:mt-14">
+          <Link
+            href="/archive"
+            className="group inline-flex items-center gap-2 px-6 py-3 border border-white/20 text-sm font-medium tracking-widest uppercase hover:border-accent hover:text-accent transition-colors duration-300"
+          >
+            View All Projects
+            <svg
+              className="w-4 h-4 translate-x-0 group-hover:translate-x-1 transition-transform duration-300"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
+              />
+            </svg>
+          </Link>
         </div>
       </motion.section>
 
