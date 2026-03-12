@@ -32,7 +32,7 @@ export function TopNav() {
       transition={{ type: "spring", stiffness: 120, damping: 20 }}
       className={`fixed top-0 w-full z-50 pointer-events-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 transition-all duration-300 ${
         scrolled
-          ? "bg-black/70 backdrop-blur-xl border-b border-accent/10 shadow-[0_10px_30px_-25px_rgba(89,183,255,0.8)]"
+          ? "bg-black/75 backdrop-blur-md border-b border-white/5"
           : "bg-transparent"
       }`}
     >
@@ -42,7 +42,7 @@ export function TopNav() {
           className="flex items-center gap-2 sm:gap-3 group"
           onClick={closeMenu}
         >
-          <div className="w-10 h-10 border border-accent flex items-center justify-center relative overflow-hidden shadow-[0_0_18px_rgba(0,255,194,0.25)] group-hover:shadow-[0_0_24px_rgba(89,183,255,0.35)] transition-shadow duration-500">
+          <div className="w-10 h-10 border border-accent flex items-center justify-center relative overflow-hidden shadow-[0_0_16px_rgba(0,255,194,0.18)] transition-shadow duration-500">
             <span className="font-mono text-accent font-bold text-xl relative z-10 group-hover:scale-125 transition-transform duration-500">
               Σ
             </span>

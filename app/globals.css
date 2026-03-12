@@ -8,7 +8,6 @@
   --bg: #050505;
   --accent: #00ffc2;
   --accent-cold: #59b7ff;
-  --accent-deep: #17385f;
   --border: rgba(255, 255, 255, 0.08);
   --card-bg: rgba(255, 255, 255, 0.02);
 }
@@ -39,10 +38,6 @@ body {
   padding: 0;
   margin: 0;
   background-color: var(--bg);
-  background-image:
-    radial-gradient(circle at 12% 18%, rgba(0, 255, 194, 0.09), transparent 34%),
-    radial-gradient(circle at 84% 22%, rgba(89, 183, 255, 0.09), transparent 38%),
-    linear-gradient(145deg, #030505 0%, #05090f 42%, #040608 100%);
   color: #e2e8f0;
   font-family: 'Space Mono', monospace;
   scroll-behavior: smooth;
@@ -92,7 +87,7 @@ textarea {
   inset: -15%;
   opacity: 0.16;
   background-image:
-    linear-gradient(rgba(89, 183, 255, 0.35) 1px, transparent 1px),
+    linear-gradient(rgba(89, 183, 255, 0.2) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 255, 194, 0.28) 1px, transparent 1px);
   background-size: 58px 58px;
   transform: perspective(700px) rotateX(56deg) translateY(26%);
@@ -123,7 +118,7 @@ textarea {
   height: 30vw;
   max-width: 340px;
   max-height: 340px;
-  background: radial-gradient(circle at center, rgba(89, 183, 255, 0.25), transparent 72%);
+  background: radial-gradient(circle at center, rgba(89, 183, 255, 0.22), transparent 72%);
   animation-delay: 1.8s;
 }
 
@@ -134,7 +129,7 @@ textarea {
   height: 26vw;
   max-width: 300px;
   max-height: 300px;
-  background: radial-gradient(circle at center, rgba(21, 69, 123, 0.35), transparent 74%);
+  background: radial-gradient(circle at center, rgba(21, 69, 123, 0.28), transparent 74%);
   animation-delay: 0.9s;
 }
 
@@ -151,27 +146,7 @@ textarea {
 .bento-card:hover {
   border-color: var(--accent);
   transform: translateY(-6px);
-  box-shadow:
-    0 25px 45px -20px rgba(0, 255, 194, 0.2),
-    0 18px 30px -25px rgba(89, 183, 255, 0.22);
-}
-
-.holo-card::before {
-  content: '';
-  position: absolute;
-  top: -120%;
-  left: -30%;
-  width: 46%;
-  height: 280%;
-  pointer-events: none;
-  transform: rotate(16deg);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 900ms cubic-bezier(0.19, 1, 0.22, 1);
-  z-index: 3;
-}
-
-.holo-card:hover::before {
-  left: 118%;
+  box-shadow: 0 22px 40px -22px rgba(0, 255, 194, 0.16);
 }
 
 /* Hyper-Border hover effect */

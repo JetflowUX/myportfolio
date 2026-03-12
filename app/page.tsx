@@ -68,16 +68,6 @@ export default function HomePage() {
 
   return (
     <main className="relative z-10 pt-28 sm:pt-32 px-4 sm:px-6 pb-16 sm:pb-24">
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
-      >
-        <div className="web3-grid" />
-        <div className="web3-orb web3-orb-a" />
-        <div className="web3-orb web3-orb-b" />
-        <div className="web3-orb web3-orb-c" />
-      </div>
-
       <ScrollProgress />
       <CursorFollower />
       <TopNav />
@@ -96,7 +86,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="col-span-12 lg:col-span-8 bento-card hyper-border holo-card p-6 sm:p-10 flex flex-col justify-between min-h-[420px] sm:min-h-[500px]"
+            className="col-span-12 lg:col-span-8 bento-card hyper-border p-6 sm:p-10 flex flex-col justify-between min-h-[420px] sm:min-h-[500px]"
           >
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-accent/30 text-accent text-[10px] uppercase tracking-[0.2em]">
@@ -197,7 +187,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="col-span-12 md:col-span-4 bento-card holo-card aqua-surface p-6 flex items-center justify-center group transition-all duration-500 hover:scale-[1.01]"
+            className="col-span-12 md:col-span-4 bento-card aqua-surface p-6 flex items-center justify-center group transition-all duration-500 hover:scale-[1.01]"
           >
             <a
               href="/resume.pdf"
@@ -283,7 +273,7 @@ export default function HomePage() {
             ].map((step) => (
               <div
                 key={step.title}
-                className="bento-card holo-card p-8 border border-white/10 bg-white/[0.02]"
+                className="bento-card p-8 border border-white/10 bg-white/[0.02]"
               >
                 <span className="text-accent text-lg font-bold mb-4 block">
                   {step.num} {step.title}
@@ -389,7 +379,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mt-16 sm:mt-24 p-5 sm:p-8 border border-white/10 max-w-lg mx-auto bg-white/5 bento-card holo-card">
+        <div className="mt-16 sm:mt-24 p-5 sm:p-8 border border-white/10 max-w-lg mx-auto bg-white/5 bento-card">
           <form className="text-left space-y-4" onSubmit={handleFormSubmit}>
             <div>
               <label className="text-[10px] uppercase text-gray-500 mb-1 block tracking-widest">

@@ -35,7 +35,7 @@ export function ProjectCard({ project, index, staggerOffset }: Props) {
         delay: index * 0.08,
       }}
       viewport={{ once: true, amount: 0.2 }}
-      className={`bento-card holo-card hyper-border group flex flex-col ${staggerOffset ? "md:mt-20" : ""}`}
+      className={`bento-card hyper-border group flex flex-col ${staggerOffset ? "md:mt-20" : ""}`}
     >
       {/* Scanline */}
       <div className="scanline" />
