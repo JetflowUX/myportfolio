@@ -7,6 +7,8 @@
 :root {
   --bg: #050505;
   --accent: #00ffc2;
+  --accent-cold: #59b7ff;
+  --accent-deep: #17385f;
   --border: rgba(255, 255, 255, 0.08);
   --card-bg: rgba(255, 255, 255, 0.02);
 }
@@ -37,11 +39,22 @@ body {
   padding: 0;
   margin: 0;
   background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(0, 255, 194, 0.09), transparent 34%),
+    radial-gradient(circle at 84% 22%, rgba(89, 183, 255, 0.09), transparent 38%),
+    linear-gradient(145deg, #030505 0%, #05090f 42%, #040608 100%);
   color: #e2e8f0;
   font-family: 'Space Mono', monospace;
   scroll-behavior: smooth;
   overflow-x: hidden;
   min-height: 100vh;
+}
+
+a,
+button,
+input,
+textarea {
+  transition: all 320ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 .noise {
@@ -74,20 +87,91 @@ body {
   z-index: 0;
 }
 
+.web3-grid {
+  position: absolute;
+  inset: -15%;
+  opacity: 0.16;
+  background-image:
+    linear-gradient(rgba(89, 183, 255, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 194, 0.28) 1px, transparent 1px);
+  background-size: 58px 58px;
+  transform: perspective(700px) rotateX(56deg) translateY(26%);
+  animation: grid-drift 18s ease-in-out infinite alternate;
+}
+
+.web3-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(55px);
+  animation: orb-float 12s ease-in-out infinite;
+}
+
+.web3-orb-a {
+  top: 6%;
+  left: -8%;
+  width: 34vw;
+  height: 34vw;
+  max-width: 390px;
+  max-height: 390px;
+  background: radial-gradient(circle at center, rgba(0, 255, 194, 0.2), transparent 70%);
+}
+
+.web3-orb-b {
+  top: 20%;
+  right: -10%;
+  width: 30vw;
+  height: 30vw;
+  max-width: 340px;
+  max-height: 340px;
+  background: radial-gradient(circle at center, rgba(89, 183, 255, 0.25), transparent 72%);
+  animation-delay: 1.8s;
+}
+
+.web3-orb-c {
+  bottom: -16%;
+  left: 28%;
+  width: 26vw;
+  height: 26vw;
+  max-width: 300px;
+  max-height: 300px;
+  background: radial-gradient(circle at center, rgba(21, 69, 123, 0.35), transparent 74%);
+  animation-delay: 0.9s;
+}
+
 .bento-card {
   background: var(--card-bg);
   border: 1px solid var(--border);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform 650ms cubic-bezier(0.19, 1, 0.22, 1), border-color 380ms ease, box-shadow 420ms ease;
   position: relative;
   overflow: hidden;
 }
 
 .bento-card:hover {
   border-color: var(--accent);
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px -15px rgba(0, 255, 194, 0.1);
+  transform: translateY(-6px);
+  box-shadow:
+    0 25px 45px -20px rgba(0, 255, 194, 0.2),
+    0 18px 30px -25px rgba(89, 183, 255, 0.22);
+}
+
+.holo-card::before {
+  content: '';
+  position: absolute;
+  top: -120%;
+  left: -30%;
+  width: 46%;
+  height: 280%;
+  pointer-events: none;
+  transform: rotate(16deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 900ms cubic-bezier(0.19, 1, 0.22, 1);
+  z-index: 3;
+}
+
+.holo-card:hover::before {
+  left: 118%;
 }
 
 /* Hyper-Border hover effect */
@@ -127,6 +211,17 @@ body {
   100% { top: 110%; }
 }
 
+@keyframes orb-float {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -18px, 0) scale(1.08); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes grid-drift {
+  0% { transform: perspective(700px) rotateX(56deg) translateY(26%) translateX(-1%); }
+  100% { transform: perspective(700px) rotateX(56deg) translateY(21%) translateX(1.5%); }
+}
+
 .gradient-text {
   background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
   -webkit-background-clip: text;
@@ -155,7 +250,8 @@ body {
 
 .rail-card-teal,
 .rail-card-purple {
-  padding-left: 2.6rem;
+  padding-left: 1.5rem;
+  transition: padding-left 420ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 420ms ease;
 }
 
 .rail-card-teal::before,
@@ -166,15 +262,16 @@ body {
   bottom: 0;
   left: 0;
   width: 4px;
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 420ms ease;
 }
 
 .rail-card-teal::before {
-  background: linear-gradient(180deg, #2fffd5 0%, #00ffc2 100%);
+  background: #00ffc2;
   box-shadow: 0 0 16px rgba(0, 255, 194, 0.45);
 }
 
 .rail-card-purple::before {
-  background: linear-gradient(180deg, #7b2cff 0%, #5d00ff 100%);
+  background: #5d00ff;
   box-shadow: 0 0 16px rgba(93, 0, 255, 0.4);
 }
 
@@ -184,6 +281,16 @@ body {
 
 .rail-card-purple {
   box-shadow: inset 6px 0 18px rgba(93, 0, 255, 0.08);
+}
+
+.bento-card:hover.rail-card-teal,
+.bento-card:hover.rail-card-purple {
+  padding-left: 2rem;
+}
+
+.bento-card:hover.rail-card-teal::before,
+.bento-card:hover.rail-card-purple::before {
+  width: 6px;
 }
 
 /* Filter button active state */
@@ -206,6 +313,15 @@ body {
   animation: spin-slow 20s linear infinite;
 }
 
+@keyframes orbit-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-orbit-slow {
+  animation: orbit-slow 28s linear infinite;
+}
+
 .admin-input {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -224,4 +340,14 @@ body {
 .archive-image-mask {
   -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
 }
