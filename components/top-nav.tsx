@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export function TopNav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const onScroll = () => {
@@ -17,6 +19,10 @@ export function TopNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   const closeMenu = () => setMenuOpen(false);
 
   return (
@@ -24,13 +30,13 @@ export function TopNav() {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 120, damping: 20 }}
-      className={`fixed top-0 w-full z-50 pointer-events-auto px-4 sm:px-6 py-3 sm:py-4 transition-all duration-300 ${
+      className={`fixed top-0 w-full z-50 pointer-events-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 transition-all duration-300 ${
         scrolled
           ? "bg-black/70 backdrop-blur-xl border-b border-accent/10 shadow-[0_10px_30px_-25px_rgba(89,183,255,0.8)]"
           : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between">
         <Link
           href="/"
           className="flex items-center gap-2 sm:gap-3 group"
@@ -57,31 +63,31 @@ export function TopNav() {
           Menu
         </button>
 
-        <div className="hidden md:flex items-center gap-8 text-[10px] font-bold tracking-[0.2em] uppercase">
+        <div className="hidden md:flex items-center gap-3 lg:gap-6 xl:gap-8 text-[10px] font-bold tracking-[0.2em] uppercase">
           <Link
             href="/#work"
-            className="px-3 py-2 hover:text-accent transition-colors"
+            className="px-2 lg:px-3 py-2 hover:text-accent transition-colors"
             onClick={closeMenu}
           >
             Work
           </Link>
           <Link
             href="/#process"
-            className="px-3 py-2 hover:text-accent transition-colors"
+            className="px-2 lg:px-3 py-2 hover:text-accent transition-colors"
             onClick={closeMenu}
           >
             Process
           </Link>
           <Link
             href="/#playground"
-            className="px-3 py-2 hover:text-accent transition-colors"
+            className="px-2 lg:px-3 py-2 hover:text-accent transition-colors"
             onClick={closeMenu}
           >
             Playground
           </Link>
           <Link
             href="/#contact"
-            className="px-4 py-2 bg-white text-black hover:bg-accent transition-all text-[10px] font-bold uppercase tracking-widest"
+            className="ml-1 px-4 py-2.5 lg:px-6 lg:py-3 bg-white text-black hover:bg-accent transition-all text-[10px] font-bold uppercase tracking-widest"
             onClick={closeMenu}
           >
             Let&apos;s Talk

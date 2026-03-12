@@ -27,6 +27,7 @@ export default function HomePage() {
 
   // Display first 4 projects in 2-column staggered layout like the reference
   const featured = allProjects.slice(0, 4);
+  const currentYear = new Date().getFullYear();
   const sectionTransition = {
     duration: 0.9,
     ease: [0.22, 1, 0.36, 1] as const,
@@ -466,7 +467,7 @@ export default function HomePage() {
       {/* ── FOOTER ───────────────────────────────────────── */}
       <footer className="py-10 sm:py-12 border-t border-white/5 text-gray-600 text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.4em]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-4">
-          <p>&copy; 2024 JETHRO ADEBISI. BUILT WITH PRECISION.</p>
+          <p>&copy; {currentYear} JETHRO ADEBISI. BUILT WITH PRECISION.</p>
           <p>DESIGNED AT THE INTERSECTION OF MATH &amp; CODE.</p>
         </div>
       </footer>
