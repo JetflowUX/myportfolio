@@ -7,11 +7,15 @@ import type { FormEvent, ReactNode } from "react";
 import { CursorFollower } from "@/components/cursor-follower";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { TopNav } from "@/components/top-nav";
-import { projects, type Project } from "@/lib/data";
+import { companies, projects, type Company, type Project } from "@/lib/data";
 import {
+  deleteAdminCompany,
+  getAdminCompanies,
   deleteAdminProject,
+  getAllCompanies,
   getAllProjects,
   getAdminProjects,
+  saveAdminCompany,
   saveAdminProject,
   slugify,
 } from "@/lib/project-store";
@@ -30,6 +34,13 @@ type FormState = {
   caseStudy: string;
 };
 
+type CompanyFormState = {
+  id: string;
+  name: string;
+  logo: string;
+  website: string;
+};
+
 const initialForm: FormState = {
   title: "",
   slug: "",
@@ -44,6 +55,13 @@ const initialForm: FormState = {
   caseStudy: "",
 };
 
+const initialCompanyForm: CompanyFormState = {
+  id: "",
+  name: "",
+  logo: "",
+  website: "",
+};
+
 export function AdminDashboard() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initialForm);
@@ -54,9 +72,21 @@ export function AdminDashboard() {
   const [status, setStatus] = useState("");
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [companyForm, setCompanyForm] =
+    useState<CompanyFormState>(initialCompanyForm);
+  const [availableCompanies, setAvailableCompanies] = useState<Company[]>([]);
+  const [adminCompanyIds, setAdminCompanyIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
+  const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
 
   const baseProjectSlugs = useMemo(
     () => new Set(projects.map((item) => item.slug)),
+    [],
+  );
+  const baseCompanyIds = useMemo(
+    () => new Set(companies.map((item) => item.id)),
     [],
   );
 
@@ -66,8 +96,15 @@ export function AdminDashboard() {
     setAvailableProjects(getAllProjects());
   }
 
+  function refreshCompanies() {
+    const adminCompanies = getAdminCompanies();
+    setAdminCompanyIds(new Set(adminCompanies.map((item) => item.id)));
+    setAvailableCompanies(getAllCompanies());
+  }
+
   useEffect(() => {
     refreshProjects();
+    refreshCompanies();
   }, []);
 
   const liveSlug = useMemo(() => {
@@ -77,8 +114,22 @@ export function AdminDashboard() {
     return slugify(form.title);
   }, [form.slug, form.title]);
 
+  const liveCompanyId = useMemo(() => {
+    if (companyForm.id.trim()) {
+      return slugify(companyForm.id);
+    }
+    return slugify(companyForm.name);
+  }, [companyForm.id, companyForm.name]);
+
   function onChange<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function onCompanyChange<K extends keyof CompanyFormState>(
+    key: K,
+    value: CompanyFormState[K],
+  ) {
+    setCompanyForm((prev) => ({ ...prev, [key]: value }));
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -172,6 +223,74 @@ export function AdminDashboard() {
   async function onLogout() {
     await fetch("/api/admin/logout", { method: "POST" });
     router.refresh();
+  }
+
+  function onCreateCompanyNew() {
+    setCompanyForm(initialCompanyForm);
+    setEditingCompanyId(null);
+    setIsCompanyFormOpen(true);
+    setStatus("Creating a new company entry.");
+  }
+
+  function onEditCompany(company: Company) {
+    setCompanyForm({
+      id: company.id,
+      name: company.name,
+      logo: company.logo,
+      website: company.website ?? "",
+    });
+    setEditingCompanyId(company.id);
+    setIsCompanyFormOpen(true);
+    setStatus(`Editing ${company.name}`);
+  }
+
+  function onResetCompanyForm() {
+    setCompanyForm(initialCompanyForm);
+    setEditingCompanyId(null);
+    setIsCompanyFormOpen(false);
+    setStatus("Company form cleared.");
+  }
+
+  function onSubmitCompany(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!companyForm.name.trim()) {
+      setStatus("Company name is required.");
+      return;
+    }
+
+    if (!liveCompanyId) {
+      setStatus("Company ID could not be generated.");
+      return;
+    }
+
+    const company: Company = {
+      id: liveCompanyId,
+      name: companyForm.name.trim(),
+      logo:
+        companyForm.logo.trim() ||
+        "https://dummyimage.com/240x240/111827/00ffc2&text=LOGO",
+      website: companyForm.website.trim(),
+    };
+
+    saveAdminCompany(company);
+    refreshCompanies();
+    const action = editingCompanyId ? "Updated" : "Saved";
+    setEditingCompanyId(null);
+    setCompanyForm(initialCompanyForm);
+    setIsCompanyFormOpen(false);
+    setStatus(`${action} ${company.name} in company list.`);
+  }
+
+  function onDeleteCompany(id: string) {
+    if (!adminCompanyIds.has(id)) {
+      setStatus("Default company entries cannot be deleted here.");
+      return;
+    }
+
+    deleteAdminCompany(id);
+    refreshCompanies();
+    setStatus(`Deleted company ${id}`);
   }
 
   return (
@@ -437,6 +556,160 @@ export function AdminDashboard() {
             </form>
           )}
           {status ? <p className="mt-4 text-xs text-accent">{status}</p> : null}
+        </article>
+      </section>
+
+      <section className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
+        <aside className="bento-card p-5 sm:p-8 lg:col-span-5">
+          <h2 className="text-2xl font-bold mb-2">Companies I Worked With</h2>
+          <p className="text-xs text-gray-500 mb-6">
+            Manage the homepage slider logos and company names.
+          </p>
+          <button
+            type="button"
+            onClick={onCreateCompanyNew}
+            className="mb-4 px-4 py-3 bg-accent text-black text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all"
+          >
+            Add New Company
+          </button>
+          <div className="space-y-3 max-h-[580px] overflow-auto pr-2">
+            {availableCompanies.length === 0 ? (
+              <p className="text-sm text-gray-500">No company entries yet.</p>
+            ) : (
+              availableCompanies.map((item) => {
+                const isDefault = baseCompanyIds.has(item.id);
+                const isCustomOverride = adminCompanyIds.has(item.id);
+
+                return (
+                  <div key={item.id} className="border border-white/10 p-4">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={item.logo}
+                        alt={`${item.name} logo`}
+                        className="w-10 h-10 rounded border border-white/10 object-contain bg-black/40 p-1"
+                      />
+                      <div>
+                        <p className="font-bold uppercase tracking-tight">
+                          {item.name}
+                        </p>
+                        <p className="text-[10px] text-gray-500 mt-1">
+                          /{item.id}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <button
+                        onClick={() => onEditCompany(item)}
+                        className="tag hover:border-accent hover:text-accent"
+                      >
+                        Edit
+                      </button>
+                      {isCustomOverride ? (
+                        <button
+                          onClick={() => onDeleteCompany(item.id)}
+                          className="tag hover:border-red-400 hover:text-red-300"
+                        >
+                          Delete
+                        </button>
+                      ) : (
+                        <span className="tag text-gray-500 border-white/10">
+                          {isDefault ? "Default" : "Read Only"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </aside>
+
+        <article className="bento-card p-5 sm:p-8 lg:col-span-7">
+          <h2 className="text-2xl font-bold mb-6">
+            {isCompanyFormOpen
+              ? editingCompanyId
+                ? "Edit Company"
+                : "Create Company"
+              : "Company Form"}
+          </h2>
+          {!isCompanyFormOpen ? (
+            <div className="border border-white/10 p-8 text-center">
+              <p className="text-sm text-gray-400 mb-5">
+                Select a company entry to edit, or add a new one.
+              </p>
+              <button
+                type="button"
+                onClick={onCreateCompanyNew}
+                className="px-6 py-3 bg-accent text-black text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all"
+              >
+                Add New Company
+              </button>
+            </div>
+          ) : (
+            <form className="space-y-4" onSubmit={onSubmitCompany}>
+              <Field label="Company Name">
+                <input
+                  value={companyForm.name}
+                  onChange={(e) => onCompanyChange("name", e.target.value)}
+                  className="admin-input"
+                  title="Company Name"
+                  placeholder="Gimbalabs"
+                  required
+                />
+              </Field>
+
+              <Field label="Company ID (optional)">
+                <input
+                  value={companyForm.id}
+                  onChange={(e) => onCompanyChange("id", e.target.value)}
+                  className="admin-input"
+                  title="Company ID"
+                  placeholder="auto-generated-from-company-name"
+                />
+              </Field>
+
+              <Field label="Logo URL (SVG or image)">
+                <input
+                  value={companyForm.logo}
+                  onChange={(e) => onCompanyChange("logo", e.target.value)}
+                  className="admin-input"
+                  title="Logo URL"
+                  placeholder="https://..."
+                  required
+                />
+              </Field>
+
+              <Field label="Company Website (optional)">
+                <input
+                  value={companyForm.website}
+                  onChange={(e) => onCompanyChange("website", e.target.value)}
+                  className="admin-input"
+                  title="Company Website"
+                  placeholder="https://..."
+                />
+              </Field>
+
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                <button
+                  type="submit"
+                  className="px-8 py-4 bg-accent text-black font-bold uppercase tracking-widest text-xs"
+                >
+                  {editingCompanyId ? "Update Company" : "Save Company"}
+                </button>
+                <button
+                  type="button"
+                  onClick={onResetCompanyForm}
+                  className="px-6 py-4 border border-white/20 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors"
+                >
+                  Cancel
+                </button>
+                <span className="text-xs text-gray-500">
+                  Generated company ID:{" "}
+                  <span className="text-accent">{liveCompanyId || "-"}</span>
+                </span>
+              </div>
+            </form>
+          )}
         </article>
       </section>
     </main>

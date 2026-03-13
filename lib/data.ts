@@ -12,6 +12,13 @@ export type Project = {
   caseStudy?: string;
 };
 
+export type Company = {
+  id: string;
+  name: string;
+  logo: string;
+  website?: string;
+};
+
 export const projects: Project[] = [
   {
     slug: 'ai-travel-planner',
@@ -84,3 +91,33 @@ export const skillBuckets = {
   design: ['UX Research', 'Wireframing', 'Prototyping', 'Design Systems', 'Interaction Design'],
   tools: ['Figma', 'Framer', 'Git', 'Notion']
 };
+
+export const companies: Company[] = [
+  {
+    id: 'gimbalabs',
+    name: 'Gimbalabs',
+    logo: 'https://logo.clearbit.com/gimbalabs.com',
+    website: 'https://gimbalabs.com',
+  },
+  {
+    id: 'andamio',
+    name: 'Andamio',
+    logo: 'https://logo.clearbit.com/andamio.io',
+    website: 'https://andamio.io',
+  },
+  {
+    id: 'handees',
+    name: 'Handees',
+    logo: 'https://dummyimage.com/240x240/111827/00ffc2&text=H',
+  },
+  {
+    id: 'blockrint',
+    name: 'Blockrint',
+    logo: 'https://dummyimage.com/240x240/111827/59b7ff&text=B',
+  },
+  {
+    id: 'lagbuy',
+    name: 'Lagbuy',
+    logo: 'https://dummyimage.com/240x240/111827/ffffff&text=L',
+  },
+];

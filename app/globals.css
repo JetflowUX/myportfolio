@@ -317,6 +317,39 @@ textarea {
   mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
 }
 
+@keyframes company-marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.company-marquee {
+  overflow: hidden;
+  position: relative;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.company-marquee-track {
+  display: flex;
+  align-items: stretch;
+  width: max-content;
+  animation: company-marquee-left 24s linear infinite;
+}
+
+.company-marquee:hover .company-marquee-track {
+  animation-play-state: paused;
+}
+
+.company-marquee-item {
+  width: 152px;
+  min-width: 152px;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -324,5 +357,13 @@ textarea {
     animation: none !important;
     transition-duration: 0ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .company-marquee-track {
+    animation: none !important;
+    transform: translateX(0) !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 12px;
   }
 }

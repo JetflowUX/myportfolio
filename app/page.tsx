@@ -8,11 +8,12 @@ import { ProjectCard } from "@/components/project-card";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { SpatialCanvas } from "@/components/spatial-canvas";
 import { TopNav } from "@/components/top-nav";
-import { projects, type Project } from "@/lib/data";
-import { getAllProjects } from "@/lib/project-store";
+import { companies, projects, type Company, type Project } from "@/lib/data";
+import { getAllCompanies, getAllProjects } from "@/lib/project-store";
 
 export default function HomePage() {
   const [allProjects, setAllProjects] = useState<Project[]>(projects);
+  const [allCompanies, setAllCompanies] = useState<Company[]>(companies);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -24,6 +25,7 @@ export default function HomePage() {
 
   useEffect(() => {
     setAllProjects(getAllProjects());
+    setAllCompanies(getAllCompanies());
   }, []);
 
   // Display first 4 projects in 2-column staggered layout like the reference
@@ -309,6 +311,65 @@ export default function HomePage() {
       </motion.section>
 
       {/* ── PLAYGROUND ───────────────────────────────────── */}
+      <motion.section
+        id="companies"
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.11 }}
+        className="max-w-7xl mx-auto mb-12 sm:mb-16"
+      >
+        <div className="mb-4 sm:mb-6 text-center">
+          <span className="text-accent text-xs font-bold uppercase tracking-widest block mb-2">
+            {"// Trusted Collaborations"}
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-bold">
+            Companies I&apos;ve Worked With
+          </h2>
+        </div>
+
+        <div className="company-marquee border border-white/10 bg-white/[0.02] py-5 sm:py-7">
+          <div className="company-marquee-track">
+            {[...allCompanies, ...allCompanies].map((company, index) => {
+              const card = (
+                <div
+                  className="company-marquee-item"
+                  key={`${company.id}-${index}`}
+                >
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 border border-white/10 bg-black/40 p-2 rounded-md flex items-center justify-center mb-2">
+                    <img
+                      src={company.logo}
+                      alt={`${company.name} logo`}
+                      loading="lazy"
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-gray-300 uppercase tracking-[0.18em] text-center">
+                    {company.name}
+                  </p>
+                </div>
+              );
+
+              if (company.website) {
+                return (
+                  <a
+                    key={`${company.id}-${index}`}
+                    href={company.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="no-underline"
+                  >
+                    {card}
+                  </a>
+                );
+              }
+
+              return card;
+            })}
+          </div>
+        </div>
+      </motion.section>
+
       <motion.section
         id="playground"
         initial={{ opacity: 0, y: 18 }}
