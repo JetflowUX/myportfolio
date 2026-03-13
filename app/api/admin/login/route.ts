@@ -15,8 +15,10 @@ export async function POST(request: Request) {
 
     const credentials = getAdminCredentials();
     const normalizedEmail = email?.trim().toLowerCase() ?? '';
+    const isValidLogin =
+      normalizedEmail === credentials.email && password === credentials.password;
 
-    if (normalizedEmail !== credentials.email || password !== credentials.password) {
+    if (!isValidLogin) {
       return NextResponse.json({ error: 'Invalid login details.' }, { status: 401 });
     }
 

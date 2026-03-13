@@ -17,6 +17,7 @@ export default function HomePage() {
     name: "",
     email: "",
     message: "",
+    website: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
@@ -53,7 +54,7 @@ export default function HomePage() {
 
       if (response.ok) {
         setSubmitMessage("✓ Message sent! I'll get back to you soon.");
-        setFormData({ name: "", email: "", message: "" });
+        setFormData({ name: "", email: "", message: "", website: "" });
         setTimeout(() => setSubmitMessage(""), 5000);
       } else {
         setSubmitMessage("✗ Failed to send. Please try again.");
@@ -105,9 +106,9 @@ export default function HomePage() {
 
             <div className="max-w-xl">
               <p className="text-gray-400 text-sm md:text-base leading-relaxed mb-8">
-                Mathematics student turned UX Engineer. I bridge the gap
-                between abstract logic and human centered design through
-                high performance web interfaces.
+                Mathematics student turned UX Engineer. I bridge the gap between
+                abstract logic and human centered design through high
+                performance web interfaces.
               </p>
               <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4">
                 <a
@@ -403,6 +404,17 @@ export default function HomePage() {
 
         <div className="mt-16 sm:mt-24 p-5 sm:p-8 border border-white/10 max-w-lg mx-auto bg-white/5 bento-card">
           <form className="text-left space-y-4" onSubmit={handleFormSubmit}>
+            <input
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              value={formData.website}
+              onChange={(e) =>
+                setFormData({ ...formData, website: e.target.value })
+              }
+              className="hidden"
+            />
             <div>
               <label className="text-[10px] uppercase text-gray-500 mb-1 block tracking-widest">
                 Full Name
