@@ -34,11 +34,11 @@ export default function ArchivePage() {
       <header className="max-w-[1400px] mx-auto w-full mb-14 sm:mb-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
           <div className="lg:col-span-8">
-            <div className="inline-flex items-center gap-2 mb-6 text-[10px] text-accent tracking-[0.4em] uppercase">
+            <div className="inline-flex items-center gap-2 mb-6 text-[10px] text-accent tracking-[0.2em] sm:tracking-[0.4em] uppercase">
               <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
               Status: Browsing_Repository
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-8xl font-black tracking-tighter leading-none mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-8xl font-black tracking-tighter leading-none mb-6 break-words">
               PROJ<span className="gradient-text">ECTS.</span>
               <br />
               ARCHIVE_01

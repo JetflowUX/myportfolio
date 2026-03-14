@@ -601,7 +601,7 @@ export function AdminDashboard() {
                       value={form.title}
                       onChange={(e) => onChange("title", e.target.value)}
                       className="admin-input"
-                      title="Category"
+                      title="Project Title"
                       placeholder="AI Travel Planner"
                       required
                     />
@@ -1151,12 +1151,12 @@ function FormSection(props: {
 }) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 pt-4 pb-2 border-b border-white/[0.07]">
+      <div className="flex items-center gap-2 sm:gap-3 pt-4 pb-2 border-b border-white/[0.07]">
         <span className="text-[9px] font-mono tabular-nums text-gray-600">
           {props.number}
         </span>
         <div className="h-px flex-1 bg-white/[0.05]" />
-        <span className="text-[9px] font-mono uppercase tracking-[0.35em] text-gray-500">
+        <span className="text-[9px] font-mono uppercase tracking-[0.18em] sm:tracking-[0.35em] text-gray-500 break-words text-right">
           {props.label}
         </span>
       </div>

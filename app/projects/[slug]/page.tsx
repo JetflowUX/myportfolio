@@ -113,7 +113,7 @@ export default function ProjectCaseStudyPage() {
       {/* ─── HEADER ─────────────────────────────────────────── */}
       <div className="pt-28 sm:pt-32 px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-[9px] uppercase tracking-[0.3em] text-gray-600 mb-10 font-mono">
+        <div className="flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.22em] sm:tracking-[0.3em] text-gray-600 mb-8 sm:mb-10 font-mono">
           <Link href="/" className="hover:text-accent transition-colors">
             Home
           </Link>
@@ -122,7 +122,7 @@ export default function ProjectCaseStudyPage() {
             Archive
           </Link>
           <span className="opacity-30">·</span>
-          <span className="text-accent/70">{project.title}</span>
+          <span className="text-accent/70 break-words">{project.title}</span>
         </div>
 
         {/* Title block */}
@@ -140,7 +140,7 @@ export default function ProjectCaseStudyPage() {
           </motion.p>
           <motion.h1
             variants={fadeUp}
-            className="text-5xl sm:text-7xl md:text-[clamp(4rem,10vw,8rem)] font-black tracking-tighter uppercase leading-[0.88] mb-8"
+            className="text-4xl min-[420px]:text-5xl sm:text-7xl md:text-[clamp(4rem,10vw,8rem)] font-black tracking-tighter uppercase leading-[0.88] mb-8 break-words"
           >
             {project.title}
           </motion.h1>
@@ -198,12 +198,22 @@ export default function ProjectCaseStudyPage() {
               href={project.projectLink}
               target="_blank"
               rel="noreferrer"
-              className="absolute top-5 right-5 sm:top-7 sm:right-7 bg-accent text-black px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.25em] hover:brightness-110 transition-all z-10 flex items-center gap-2"
+              className="hidden sm:flex absolute top-7 right-7 bg-accent text-black px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.25em] hover:brightness-110 transition-all z-10 items-center gap-2"
             >
               Live Site <span className="text-[11px]">↗</span>
             </a>
           )}
         </motion.div>
+        {project.projectLink && (
+          <a
+            href={project.projectLink}
+            target="_blank"
+            rel="noreferrer"
+            className="sm:hidden mt-3 inline-flex items-center justify-center gap-2 bg-accent text-black px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.22em] w-full"
+          >
+            Open Live Site <span className="text-[11px]">↗</span>
+          </a>
+        )}
       </div>
 
       {/* ─── STATS BAR ──────────────────────────────────────── */}
@@ -486,7 +496,7 @@ export default function ProjectCaseStudyPage() {
       </div>
 
       {/* ─── FOOTER ─────────────────────────────────────────── */}
-      <footer className="py-12 sm:py-16 px-4 sm:px-6 lg:px-10 border-t border-white/[0.05] bg-black/50 backdrop-blur-md relative z-10 mt-24 sm:mt-28">
+      <footer className="py-12 sm:py-16 px-4 sm:px-6 lg:px-10 border-t border-white/[0.05] bg-black/50 backdrop-blur-md relative z-10 mt-24 sm:mt-28 overflow-hidden">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-black tracking-widest text-accent uppercase">
@@ -496,7 +506,7 @@ export default function ProjectCaseStudyPage() {
               Handcrafted in Lagos · Built for the Web
             </span>
           </div>
-          <div className="flex flex-wrap justify-center gap-8 text-[9px] font-bold tracking-[0.28em] uppercase font-mono">
+          <div className="flex flex-wrap justify-center gap-6 sm:gap-8 text-[9px] font-bold tracking-[0.16em] sm:tracking-[0.28em] uppercase font-mono">
             <a
               href="https://x.com/jethroadebisi"
               target="_blank"
@@ -590,10 +600,7 @@ function NumberedSection({
       className="flex gap-6 sm:gap-10 py-8 sm:py-10 border-b border-white/[0.05]"
     >
       <div className="shrink-0 w-10 sm:w-14 pt-0.5">
-        <span
-          className="text-3xl sm:text-4xl font-black leading-none font-mono select-none"
-          style={{ color: "rgba(255,255,255,0.035)" }}
-        >
+        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-white/[0.035]">
           {number.replace(".", "")}
         </span>
       </div>
@@ -629,10 +636,7 @@ function PullQuoteSection({
       className="flex gap-6 sm:gap-10 py-8 sm:py-10 border-b border-white/[0.05]"
     >
       <div className="shrink-0 w-10 sm:w-14 pt-0.5">
-        <span
-          className="text-3xl sm:text-4xl font-black leading-none font-mono select-none"
-          style={{ color: "rgba(255,255,255,0.035)" }}
-        >
+        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-white/[0.035]">
           {number.replace(".", "")}
         </span>
       </div>

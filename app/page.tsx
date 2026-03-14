@@ -99,7 +99,7 @@ export default function HomePage() {
                 </span>
                 Available for new projects
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-[1.1] tracking-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-[1.1] tracking-tight break-words">
                 Front-End Engineer crafting{" "}
                 <span className="gradient-text">thoughtful</span> digital
                 experiences.
@@ -431,7 +431,7 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row justify-center gap-8 items-center">
           <a
             href="mailto:adebisireuel@gmail.com"
-            className="text-xl md:text-3xl border-b border-white/20 hover:border-accent transition-all pb-2"
+            className="text-base sm:text-xl md:text-3xl border-b border-white/20 hover:border-accent transition-all pb-2 break-all"
           >
             adebisireuel@gmail.com
           </a>
@@ -550,7 +550,7 @@ export default function HomePage() {
       </motion.section>
 
       {/* ── FOOTER ───────────────────────────────────────── */}
-      <footer className="py-10 sm:py-12 border-t border-white/5 text-gray-600 text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.4em]">
+      <footer className="py-10 sm:py-12 border-t border-white/5 text-gray-600 text-[10px] uppercase tracking-[0.12em] sm:tracking-[0.4em]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-4">
           <p>&copy; {currentYear} JETHRO ADEBISI. BUILT WITH PRECISION.</p>
           <p>DESIGNED AT THE INTERSECTION OF MATH &amp; CODE.</p>

@@ -48,7 +48,7 @@ export function TopNav() {
             </span>
             <div className="absolute inset-0 bg-accent/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
           </div>
-          <span className="font-mono text-xs sm:text-sm font-bold tracking-tight">
+          <span className="hidden min-[420px]:inline font-mono text-xs sm:text-sm font-bold tracking-tight">
             Jethro the UXpert
           </span>
         </Link>

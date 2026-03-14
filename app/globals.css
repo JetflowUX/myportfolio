@@ -350,6 +350,14 @@ textarea {
   justify-content: center;
 }
 
+@media (max-width: 640px) {
+  .company-marquee-item {
+    width: 126px;
+    min-width: 126px;
+    padding: 0 8px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
