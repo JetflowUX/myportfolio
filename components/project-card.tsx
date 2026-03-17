@@ -40,9 +40,15 @@ export function ProjectCard({ project, index, staggerOffset }: Props) {
       {/* Scanline */}
       <div className="scanline" />
 
-      {/* Image area - dark zinc bg with text watermark like the reference */}
+      {/* Image area */}
       <div className="h-52 sm:h-64 bg-zinc-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/30" />
+        <img
+          src={project.image}
+          alt={project.title}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/20" />
         <div className="absolute inset-0 flex items-center justify-center text-6xl sm:text-8xl font-black opacity-5 group-hover:scale-110 group-hover:blur-[1px] transition-all duration-700 text-white">
           {label}
         </div>
