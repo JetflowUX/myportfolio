@@ -55,7 +55,7 @@ export const projects: Project[] = [
     role: 'UX Design / Systems Thinking',
     tech: ['Figma', 'Design Systems', 'Research'],
     category: 'design',
-    image: 'https://pixabay.com/get/g2f6c268a5562e103bd63909765133cde08ce0234e8a9c112eb6310c0771be1c4947b6b7e196f8bfd42b354c3565dd665_1920.jpg'
+    image: 'https://cdn.pixabay.com/photo/2015/09/07/21/00/war-929109_1920__0956a8396d.jpg'
   },
   {
     slug: 'gigsgig-app',

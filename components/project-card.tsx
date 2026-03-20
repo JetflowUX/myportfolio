@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { Project } from "@/lib/data";
 
 const labelMap: Record<string, string> = {
@@ -18,10 +19,18 @@ type Props = {
   staggerOffset?: boolean;
 };
 
+const DEFAULT_PROJECT_IMAGE =
+  "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1200";
+
 export function ProjectCard({ project, index, staggerOffset }: Props) {
   const deepDiveHref = `/projects/${project.slug}`;
   const label =
     labelMap[project.slug] ?? project.slug.toUpperCase().slice(0, 4);
+  const [imgSrc, setImgSrc] = useState(project.image || DEFAULT_PROJECT_IMAGE);
+
+  useEffect(() => {
+    setImgSrc(project.image || DEFAULT_PROJECT_IMAGE);
+  }, [project.image]);
 
   return (
     <motion.article
@@ -43,9 +52,10 @@ export function ProjectCard({ project, index, staggerOffset }: Props) {
       {/* Image area */}
       <div className="h-52 sm:h-64 bg-zinc-900 relative overflow-hidden">
         <img
-          src={project.image}
+          src={imgSrc}
           alt={project.title}
           loading="lazy"
+          onError={() => setImgSrc(DEFAULT_PROJECT_IMAGE)}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/20" />
