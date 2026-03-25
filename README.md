@@ -1,26 +1,11 @@
-# Jethro Portfolio (Next.js)
+# Jethro Adebisi Portfolio
 
-Product-inspired portfolio site built from the provided HTML references and conversation brief.
+Front-end engineer and UX designer building thoughtful digital experiences.
 
-## Stack
+## Links
 
-- Next.js (App Router)
-- Tailwind CSS
-- Framer Motion
-
-## Run
-
-```bash
-npm install
-npm run dev
-```
-
-Open http://localhost:3000.
-
-## Structure
-
-- `app/page.tsx`: Main portfolio experience
-- `app/archive/page.tsx`: Project archive gallery
-- `app/projects/ai-travel-planner/page.tsx`: Deep-dive case study
-- `components/*`: Reusable UI and motion components
-- `lib/data.ts`: Centralized content model
+- Portfolio: [jethro.codes](https://jethro.codes)
+- Email: [adebisireuel@gmail.com](mailto:adebisireuel@gmail.com)
+- X (Twitter): [x.com/jethroadebisi](https://x.com/jethroadebisi)
+- LinkedIn: [jethro-adebisi-21872a20b](https://www.linkedin.com/in/jethro-adebisi-21872a20b/)
+- GitHub: [github.com/adebisijethro](https://github.com/adebisijethro)
