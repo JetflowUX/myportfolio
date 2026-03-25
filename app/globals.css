@@ -331,9 +331,24 @@ textarea {
 
 .company-marquee-track {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   width: max-content;
   animation: company-marquee-left 24s linear infinite;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.company-marquee-group {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+
+.company-marquee-link {
+  display: block;
+  flex: 0 0 auto;
+  text-decoration: none;
 }
 
 .company-marquee:hover .company-marquee-track {
@@ -370,6 +385,10 @@ textarea {
   .company-marquee-track {
     animation: none !important;
     transform: translateX(0) !important;
+    flex-wrap: nowrap;
+  }
+
+  .company-marquee-group {
     flex-wrap: wrap;
     justify-content: center;
     row-gap: 12px;

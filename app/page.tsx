@@ -329,43 +329,54 @@ export default function HomePage() {
         </div>
 
         <div className="company-marquee border border-white/10 bg-white/[0.02] py-5 sm:py-7">
-          <div className="company-marquee-track">
-            {[...allCompanies, ...allCompanies].map((company, index) => {
-              const card = (
-                <div
-                  className="company-marquee-item"
-                  key={`${company.id}-${index}`}
-                >
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 border border-white/10 bg-black/40 p-2 rounded-md flex items-center justify-center mb-2">
-                    <img
-                      src={company.logo}
-                      alt={`${company.name} logo`}
-                      loading="lazy"
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                  <p className="text-[11px] sm:text-xs text-gray-300 uppercase tracking-[0.18em] text-center">
-                    {company.name}
-                  </p>
-                </div>
-              );
+          <div className="company-marquee-track" aria-label="Companies marquee">
+            {[0, 1].map((groupIndex) => (
+              <div
+                key={`company-group-${groupIndex}`}
+                className="company-marquee-group"
+              >
+                {allCompanies.map((company) => {
+                  const card = (
+                    <div className="company-marquee-item">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 border border-white/10 bg-black/40 p-2 rounded-md flex items-center justify-center mb-2">
+                        <img
+                          src={company.logo}
+                          alt={`${company.name} logo`}
+                          loading="lazy"
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+                      <p className="text-[11px] sm:text-xs text-gray-300 uppercase tracking-[0.18em] text-center">
+                        {company.name}
+                      </p>
+                    </div>
+                  );
 
-              if (company.website) {
-                return (
-                  <a
-                    key={`${company.id}-${index}`}
-                    href={company.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="no-underline"
-                  >
-                    {card}
-                  </a>
-                );
-              }
+                  if (company.website) {
+                    return (
+                      <a
+                        key={`${groupIndex}-${company.id}`}
+                        href={company.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="company-marquee-link"
+                      >
+                        {card}
+                      </a>
+                    );
+                  }
 
-              return card;
-            })}
+                  return (
+                    <div
+                      key={`${groupIndex}-${company.id}`}
+                      className="company-marquee-link"
+                    >
+                      {card}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
       </motion.section>
