@@ -4,7 +4,7 @@ Front-end engineer and UX designer building thoughtful digital experiences.
 
 ## Links
 
-- Portfolio: [jethro.codes](https://jethro.codes)
+- Portfolio: [Jethro Adebisi](https://jethrotheuxpert.vercel.app/)
 - Email: [adebisireuel@gmail.com](mailto:adebisireuel@gmail.com)
 - X (Twitter): [x.com/jethroadebisi](https://x.com/jethroadebisi)
 - LinkedIn: [jethro-adebisi-21872a20b](https://www.linkedin.com/in/jethro-adebisi-21872a20b/)

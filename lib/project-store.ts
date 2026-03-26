@@ -2,10 +2,6 @@ import { companies, projects, type Company, type Project } from '@/lib/data';
 
 const STORAGE_KEY = 'admin-projects-v1';
 const COMPANY_STORAGE_KEY = 'admin-companies-v1';
-const REFUGEEAID_BROKEN_IMAGE =
-  'https://pixabay.com/get/g2f6c268a5562e103bd63909765133cde08ce0234e8a9c112eb6310c0771be1c4947b6b7e196f8bfd42b354c3565dd665_1920.jpg';
-const REFUGEEAID_IMAGE =
-  'https://cdn.pixabay.com/photo/2015/09/07/21/00/war-929109_1920__0956a8396d.jpg';
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -25,33 +21,6 @@ function uniqueByCompanyId(items: Company[]): Company[] {
     map.set(item.id, item);
   }
   return Array.from(map.values());
-}
-
-function normalizeProjectImage(item: Project): Project {
-  if (item.slug !== 'refugeeaid-platform') {
-    return item;
-  }
-
-  const nextImage =
-    item.image === REFUGEEAID_BROKEN_IMAGE ||
-    item.image.includes('pixabay.com/get/')
-      ? REFUGEEAID_IMAGE
-      : item.image;
-  const nextCaseStudyImage =
-    item.caseStudyImage === REFUGEEAID_BROKEN_IMAGE ||
-    item.caseStudyImage?.includes('pixabay.com/get/')
-      ? REFUGEEAID_IMAGE
-      : item.caseStudyImage;
-
-  if (nextImage === item.image && nextCaseStudyImage === item.caseStudyImage) {
-    return item;
-  }
-
-  return {
-    ...item,
-    image: nextImage,
-    caseStudyImage: nextCaseStudyImage,
-  };
 }
 
 export function getAdminProjects(): Project[] {
@@ -95,7 +64,7 @@ export function deleteAdminProject(slug: string): void {
 
 export function getAllProjects(): Project[] {
   const admin = getAdminProjects();
-  return uniqueBySlug([...projects, ...admin]).map(normalizeProjectImage);
+  return uniqueBySlug([...projects, ...admin]);
 }
 
 export function getAdminCompanies(): Company[] {
