@@ -23,6 +23,20 @@ function uniqueByCompanyId(items: Company[]): Company[] {
   return Array.from(map.values());
 }
 
+function sortProjectsByYearDesc(items: Project[]): Project[] {
+  return [...items].sort((a, b) => {
+    const yearA = Number.parseInt(a.year, 10);
+    const yearB = Number.parseInt(b.year, 10);
+
+    if (Number.isNaN(yearA) && Number.isNaN(yearB)) return 0;
+    if (Number.isNaN(yearA)) return 1;
+    if (Number.isNaN(yearB)) return -1;
+
+    if (yearA !== yearB) return yearB - yearA;
+    return a.title.localeCompare(b.title);
+  });
+}
+
 export function getAdminProjects(): Project[] {
   if (!isBrowser()) {
     return [];
@@ -64,7 +78,7 @@ export function deleteAdminProject(slug: string): void {
 
 export function getAllProjects(): Project[] {
   const admin = getAdminProjects();
-  return uniqueBySlug([...projects, ...admin]);
+  return sortProjectsByYearDesc(uniqueBySlug([...projects, ...admin]));
 }
 
 export function getAdminCompanies(): Company[] {
