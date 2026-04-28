@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CursorFollower } from "@/components/cursor-follower";
 import { ProjectCard } from "@/components/project-card";
 import { ScrollProgress } from "@/components/scroll-progress";
@@ -10,15 +10,13 @@ import { SpatialCanvas } from "@/components/spatial-canvas";
 import { TopNav } from "@/components/top-nav";
 import { companies, projects, type Company, type Project } from "@/lib/data";
 import {
-  getAdminResume,
   getAllCompanies,
   getAllProjects,
 } from "@/lib/project-store";
 
 export default function HomePage() {
-  const [allProjects, setAllProjects] = useState<Project[]>(projects);
-  const [allCompanies, setAllCompanies] = useState<Company[]>(companies);
-  const [resumeHref, setResumeHref] = useState("/resume.pdf");
+  const [allProjects] = useState<Project[]>(getAllProjects());
+  const [allCompanies] = useState<Company[]>(getAllCompanies());
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -27,21 +25,6 @@ export default function HomePage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
-
-  useEffect(() => {
-    setAllProjects(getAllProjects());
-    setAllCompanies(getAllCompanies());
-    setResumeHref(getAdminResume() || "/resume.pdf");
-
-    const onStorage = (event: StorageEvent) => {
-      if (event.key === "admin-resume-v1") {
-        setResumeHref(event.newValue || "/resume.pdf");
-      }
-    };
-
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
 
   // Display first 4 projects in 2-column staggered layout like the reference
   const featured = allProjects.slice(0, 4);
@@ -224,7 +207,7 @@ export default function HomePage() {
         id="work"
         initial={{ opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{"/resume.pdf" amount: 0.2 }}
         transition={{ ...sectionTransition, delay: 0.05 }}
         className="max-w-7xl mx-auto mb-20 sm:mb-32"
       >
