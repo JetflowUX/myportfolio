@@ -108,8 +108,11 @@ export default function ArchivePage() {
 
               {/* Content */}
               <div className="p-5 sm:p-8">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.tech.slice(0, 3).map((tag) => (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <span className="text-[9px] text-accent font-mono border border-accent/30 px-2 py-0.5 bg-accent/10">
+                    {project.year}
+                  </span>
+                  {project.tech.slice(0, 2).map((tag) => (
                     <span
                       key={tag}
                       className="text-[9px] text-gray-500 font-mono border border-white/5 px-2 py-0.5"

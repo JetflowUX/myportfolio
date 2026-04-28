@@ -9,11 +9,16 @@ import { ScrollProgress } from "@/components/scroll-progress";
 import { SpatialCanvas } from "@/components/spatial-canvas";
 import { TopNav } from "@/components/top-nav";
 import { companies, projects, type Company, type Project } from "@/lib/data";
-import { getAllCompanies, getAllProjects } from "@/lib/project-store";
+import {
+  getAdminResume,
+  getAllCompanies,
+  getAllProjects,
+} from "@/lib/project-store";
 
 export default function HomePage() {
   const [allProjects, setAllProjects] = useState<Project[]>(projects);
   const [allCompanies, setAllCompanies] = useState<Company[]>(companies);
+  const [resumeHref, setResumeHref] = useState("/resume.pdf");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,6 +31,16 @@ export default function HomePage() {
   useEffect(() => {
     setAllProjects(getAllProjects());
     setAllCompanies(getAllCompanies());
+    setResumeHref(getAdminResume() || "/resume.pdf");
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "admin-resume-v1") {
+        setResumeHref(event.newValue || "/resume.pdf");
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   // Display first 4 projects in 2-column staggered layout like the reference
@@ -193,8 +208,9 @@ export default function HomePage() {
             className="col-span-12 md:col-span-4 bento-card aqua-surface p-6 flex items-center justify-center group transition-all duration-500 hover:scale-[1.01]"
           >
             <a
-              href="/resume.pdf"
-              download
+              href={resumeHref}
+              target="_blank"
+              rel="noreferrer"
               className="text-black font-black uppercase text-lg sm:text-xl group-hover:tracking-[0.15em] sm:group-hover:tracking-[0.5em] transition-all duration-500"
             >
               Resume.PDF

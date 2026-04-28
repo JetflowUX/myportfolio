@@ -43,6 +43,30 @@ export default function ProjectCaseStudyPage() {
     project?.image ||
     "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1200";
   const galleryImages = project?.caseStudyGallery ?? [];
+  const hasProblemSolution = Boolean(
+    project?.problem?.trim() || project?.solution?.trim(),
+  );
+  const hasContextSection = Boolean(
+    project?.context?.trim() ||
+    project?.objectives?.trim() ||
+    project?.audience?.trim(),
+  );
+  const hasProcessSection = Boolean(project?.process?.trim());
+  const hasResearchSection = Boolean(
+    project?.researchInsights?.trim() ||
+    project?.informationArchitecture?.trim(),
+  );
+  const hasDesignSection = Boolean(
+    project?.wireframes?.trim() ||
+    project?.visualDesign?.trim() ||
+    project?.prototypeTesting?.trim(),
+  );
+  const hasArtifactsSection = galleryImages.some(Boolean);
+  const hasOutcomesSection = Boolean(project?.outcomes?.trim());
+  const hasLearningsSection = Boolean(
+    project?.learnings?.trim() || project?.nextSteps?.trim(),
+  );
+  const hasNarrativeSection = Boolean(project?.caseStudy?.trim());
 
   if (!mounted) {
     return (
@@ -62,7 +86,7 @@ export default function ProjectCaseStudyPage() {
     return (
       <main className="relative z-10 pt-28">
         <TopNav />
-        <div className="mx-auto max-w-4xl bento-card p-10 text-center mt-20 mx-6">
+        <div className="max-w-4xl bento-card p-10 text-center mt-20 mx-6 sm:mx-auto">
           <p className="text-[10px] tracking-[0.35em] uppercase text-gray-500 mb-4 font-mono">
             404 — Not Found
           </p>
@@ -255,166 +279,182 @@ export default function ProjectCaseStudyPage() {
             </div>
 
             {/* 01 Problem / Solution */}
-            <div id="problem">
-              <ChapterDivider number="01" label="Problem & Solution" />
-              <div className="py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 gap-0">
-                <div className="bg-white/[0.02] border border-white/[0.07] p-7 sm:p-9">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-2 h-2 bg-red-400/70 rounded-full" />
-                    <span className="text-[9px] uppercase tracking-[0.35em] text-gray-500 font-mono">
-                      The Problem
-                    </span>
-                  </div>
-                  <p
-                    className={`leading-relaxed text-sm sm:text-base whitespace-pre-wrap ${project.problem?.trim() ? "text-gray-300" : "text-gray-600 italic"}`}
-                  >
-                    {project.problem?.trim() ||
-                      "Document the core user and business problem this project addresses — add it in the admin dashboard."}
-                  </p>
-                </div>
-                <div className="bg-accent/[0.04] border border-accent/[0.18] p-7 sm:p-9">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-2 h-2 bg-accent rounded-full" />
-                    <span className="text-[9px] uppercase tracking-[0.35em] text-accent/70 font-mono">
-                      The Solution
-                    </span>
-                  </div>
-                  <p
-                    className={`leading-relaxed text-sm sm:text-base whitespace-pre-wrap ${project.solution?.trim() ? "text-gray-200" : "text-gray-600 italic"}`}
-                  >
-                    {project.solution?.trim() ||
-                      "Describe the final solution and why it effectively addressed the problem — add it in the admin dashboard."}
-                  </p>
+            {hasProblemSolution && (
+              <div id="problem">
+                <ChapterDivider number="01" label="Problem & Solution" />
+                <div className="py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 gap-0">
+                  {project.problem?.trim() && (
+                    <div className="bg-white/[0.02] border border-white/[0.07] p-7 sm:p-9">
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="w-2 h-2 bg-red-400/70 rounded-full" />
+                        <span className="text-[9px] uppercase tracking-[0.35em] text-gray-500 font-mono">
+                          The Problem
+                        </span>
+                      </div>
+                      <p className="leading-relaxed text-sm sm:text-base whitespace-pre-wrap text-gray-300">
+                        {project.problem}
+                      </p>
+                    </div>
+                  )}
+                  {project.solution?.trim() && (
+                    <div className="bg-accent/[0.04] border border-accent/[0.18] p-7 sm:p-9">
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="w-2 h-2 bg-accent rounded-full" />
+                        <span className="text-[9px] uppercase tracking-[0.35em] text-accent/70 font-mono">
+                          The Solution
+                        </span>
+                      </div>
+                      <p className="leading-relaxed text-sm sm:text-base whitespace-pre-wrap text-gray-200">
+                        {project.solution}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
 
             {/* 02 Context */}
-            <div id="context">
-              <ChapterDivider number="02" label="Context & Objectives" />
-              <NumberedSection
-                number="02.1"
-                label="Context"
-                body={project.context}
-                fallback="Include project timeline, constraints, and operational context. What sparked this project?"
-              />
-              <NumberedSection
-                number="02.2"
-                label="Objectives"
-                body={project.objectives}
-                fallback="List the measurable UX and business goals. What does success look like?"
-              />
-              <NumberedSection
-                number="02.3"
-                label="Audience & Users"
-                body={project.audience}
-                fallback="Who are the target users? Describe user groups, behaviors, and key demographics."
-              />
-            </div>
+            {hasContextSection && (
+              <div id="context">
+                <ChapterDivider number="02" label="Context & Objectives" />
+                <NumberedSection
+                  number="02.1"
+                  label="Context"
+                  body={project.context}
+                  fallback="Include project timeline, constraints, and operational context. What sparked this project?"
+                />
+                <NumberedSection
+                  number="02.2"
+                  label="Objectives"
+                  body={project.objectives}
+                  fallback="List the measurable UX and business goals. What does success look like?"
+                />
+                <NumberedSection
+                  number="02.3"
+                  label="Audience & Users"
+                  body={project.audience}
+                  fallback="Who are the target users? Describe user groups, behaviors, and key demographics."
+                />
+              </div>
+            )}
 
             {/* 03 Process */}
-            <div id="process">
-              <ChapterDivider number="03" label="Design Process" />
-              <NumberedSection
-                number="03"
-                label="How We Got There"
-                body={project.process}
-                fallback="Walk through the full design process — from discovery to delivery. What methodology did you apply?"
-              />
-            </div>
+            {hasProcessSection && (
+              <div id="process">
+                <ChapterDivider number="03" label="Design Process" />
+                <NumberedSection
+                  number="03"
+                  label="How We Got There"
+                  body={project.process}
+                  fallback="Walk through the full design process — from discovery to delivery. What methodology did you apply?"
+                />
+              </div>
+            )}
 
             {/* 04 Research */}
-            <div id="research">
-              <ChapterDivider number="04" label="Research & Insights" />
-              {project.researchInsights?.trim() ? (
-                <PullQuoteSection
-                  number="04"
-                  label="Key Insights"
-                  body={project.researchInsights}
-                />
-              ) : (
-                <NumberedSection
-                  number="04"
-                  label="Research Findings"
-                  body={project.researchInsights}
-                  fallback="What did you learn from user interviews, analytics, or desk research? Surface the most important findings."
-                />
-              )}
-              <NumberedSection
-                number="04.1"
-                label="Information Architecture"
-                body={project.informationArchitecture}
-                fallback="Document key navigation decisions, content hierarchy, and user flow structures."
-              />
-            </div>
+            {hasResearchSection && (
+              <div id="research">
+                <ChapterDivider number="04" label="Research & Insights" />
+                {project.researchInsights?.trim() ? (
+                  <PullQuoteSection
+                    number="04"
+                    label="Key Insights"
+                    body={project.researchInsights}
+                  />
+                ) : null}
+                {project.informationArchitecture?.trim() ? (
+                  <NumberedSection
+                    number="04.1"
+                    label="Information Architecture"
+                    body={project.informationArchitecture}
+                    fallback="Document key navigation decisions, content hierarchy, and user flow structures."
+                  />
+                ) : null}
+              </div>
+            )}
 
             {/* 05 Design */}
-            <div id="design">
-              <ChapterDivider number="05" label="Design Execution" />
-              <NumberedSection
-                number="05.1"
-                label="Wireframes & Iterations"
-                body={project.wireframes}
-                fallback="Describe the lo-fi exploration phase — what layouts were explored, what was discarded, and why."
-              />
-              <NumberedSection
-                number="05.2"
-                label="Visual Design System"
-                body={project.visualDesign}
-                fallback="Summarize typography, color palette, spacing rules, and component decisions."
-              />
-              <NumberedSection
-                number="05.3"
-                label="Prototyping & Testing"
-                body={project.prototypeTesting}
-                fallback="How was the prototype validated? Describe usability sessions, findings, and what changed as a result."
-              />
-            </div>
+            {hasDesignSection && (
+              <div id="design">
+                <ChapterDivider number="05" label="Design Execution" />
+                {project.wireframes?.trim() ? (
+                  <NumberedSection
+                    number="05.1"
+                    label="Wireframes & Iterations"
+                    body={project.wireframes}
+                    fallback="Describe the lo-fi exploration phase — what layouts were explored, what was discarded, and why."
+                  />
+                ) : null}
+                {project.visualDesign?.trim() ? (
+                  <>
+                    <NumberedSection
+                      number="05.2"
+                      label="Visual Design System"
+                      body={project.visualDesign}
+                      fallback="Summarize typography, color palette, spacing rules, and component decisions."
+                    />
+                    <ColorPaletteBox
+                      description={project.visualDesign}
+                      category={project.category}
+                    />
+                  </>
+                ) : null}
+                {project.prototypeTesting?.trim() ? (
+                  <NumberedSection
+                    number="05.3"
+                    label="Prototyping & Testing"
+                    body={project.prototypeTesting}
+                    fallback="How was the prototype validated? Describe usability sessions, findings, and what changed as a result."
+                  />
+                ) : null}
+              </div>
+            )}
 
             {/* 06 Visual Artifacts */}
-            <div id="artifacts">
-              <ChapterDivider number="06" label="Visual Artifacts" />
-              <VisualGallerySection images={galleryImages} />
-            </div>
+            {hasArtifactsSection && (
+              <div id="artifacts">
+                <ChapterDivider number="06" label="Visual Artifacts" />
+                <VisualGallerySection images={galleryImages} />
+              </div>
+            )}
 
             {/* 07 Outcomes */}
-            <div id="outcomes">
-              <ChapterDivider number="07" label="Impact & Outcomes" />
-              <NumberedSection
-                number="07"
-                label="Results"
-                body={project.outcomes}
-                fallback="What measurable impact did the project deliver? Include metrics, user feedback, and business outcomes."
-              />
-            </div>
+            {hasOutcomesSection && (
+              <div id="outcomes">
+                <ChapterDivider number="07" label="Impact & Outcomes" />
+                <NumberedSection
+                  number="07"
+                  label="Results"
+                  body={project.outcomes}
+                  fallback="What measurable impact did the project deliver? Include metrics, user feedback, and business outcomes."
+                />
+              </div>
+            )}
 
             {/* 08 Learnings */}
-            <div id="learnings">
-              <ChapterDivider number="08" label="Learnings & Next Steps" />
-              {project.learnings?.trim() ? (
-                <PullQuoteSection
-                  number="08.1"
-                  label="Key Learnings"
-                  body={project.learnings}
-                />
-              ) : (
-                <NumberedSection
-                  number="08.1"
-                  label="Key Learnings"
-                  body={project.learnings}
-                  fallback="What would you do differently? What surprised you most during this project?"
-                />
-              )}
-              <NumberedSection
-                number="08.2"
-                label="Next Steps"
-                body={project.nextSteps}
-                fallback="Outline the roadmap ahead — follow-up experiments, features to explore, or improvements to pursue."
-              />
-            </div>
+            {hasLearningsSection && (
+              <div id="learnings">
+                <ChapterDivider number="08" label="Learnings & Next Steps" />
+                {project.learnings?.trim() ? (
+                  <PullQuoteSection
+                    number="08.1"
+                    label="Key Learnings"
+                    body={project.learnings}
+                  />
+                ) : null}
+                {project.nextSteps?.trim() ? (
+                  <NumberedSection
+                    number="08.2"
+                    label="Next Steps"
+                    body={project.nextSteps}
+                    fallback="Outline the roadmap ahead — follow-up experiments, features to explore, or improvements to pursue."
+                  />
+                ) : null}
+              </div>
+            )}
 
             {/* 09 Full narrative (optional) */}
-            {project.caseStudy?.trim() && (
+            {hasNarrativeSection && (
               <div>
                 <ChapterDivider number="09" label="Full Narrative" />
                 <NumberedSection
@@ -591,6 +631,9 @@ function NumberedSection({
   fallback: string;
 }) {
   const text = body?.trim();
+  if (!text) {
+    return null;
+  }
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
@@ -627,6 +670,9 @@ function PullQuoteSection({
   label: string;
   body: string;
 }) {
+  if (!body.trim()) {
+    return null;
+  }
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
@@ -655,6 +701,125 @@ function PullQuoteSection({
   );
 }
 
+type PaletteSwatch = {
+  hex: string;
+  label: string;
+};
+
+function extractPaletteSwatches(description?: string): PaletteSwatch[] {
+  if (!description?.trim()) {
+    return [];
+  }
+
+  const normalized = description.replace(/\s+/g, " ");
+  const matches = [
+    ...normalized.matchAll(/#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/g),
+  ];
+  const seenHex = new Set<string>();
+  const swatches: PaletteSwatch[] = [];
+
+  for (const match of matches) {
+    const rawHex = match[0];
+    const hex = rawHex.toUpperCase();
+    if (seenHex.has(hex)) {
+      continue;
+    }
+    seenHex.add(hex);
+
+    const index = match.index ?? 0;
+    const contextStart = Math.max(0, index - 28);
+    const context = normalized.slice(contextStart, index).toLowerCase();
+    const labelMatch = context.match(
+      /(primary|secondary|accent|support(?:\s+tones?)?|background|surface|neutral)\s*:?\s*$/,
+    );
+
+    swatches.push({
+      hex,
+      label: labelMatch
+        ? labelMatch[1]
+            .replace(/\s+/g, " ")
+            .replace(/^./, (c) => c.toUpperCase())
+        : `Tone ${swatches.length + 1}`,
+    });
+  }
+
+  return swatches;
+}
+
+const CATEGORY_FALLBACK_SWATCHES: Record<Project["category"], PaletteSwatch[]> =
+  {
+    engineering: [
+      { label: "Primary", hex: "#0B132B" },
+      { label: "Secondary", hex: "#1C2541" },
+      { label: "Accent", hex: "#5BC0BE" },
+      { label: "Support", hex: "#FFD166" },
+      { label: "Background", hex: "#F4F8FB" },
+    ],
+    design: [
+      { label: "Primary", hex: "#1D3557" },
+      { label: "Secondary", hex: "#457B9D" },
+      { label: "Accent", hex: "#A8DADC" },
+      { label: "Support", hex: "#E63946" },
+      { label: "Background", hex: "#F1FAEE" },
+    ],
+  };
+
+function ColorPaletteBox({
+  description,
+  category,
+}: {
+  description?: string;
+  category: Project["category"];
+}) {
+  const extractedSwatches = extractPaletteSwatches(description);
+  const swatches = extractedSwatches.length
+    ? extractedSwatches
+    : CATEGORY_FALLBACK_SWATCHES[category];
+
+  if (!swatches.length) {
+    return null;
+  }
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="py-8 sm:py-10 border-b border-white/[0.05]"
+    >
+      <div className="border border-accent/20 bg-accent/[0.04] py-5 sm:py-6">
+        <p className="text-[9px] uppercase tracking-[0.35em] text-accent/80 mb-4 font-mono font-bold px-5 sm:px-6">
+          Color Codes
+        </p>
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 px-5 sm:px-6">
+          {swatches.map((swatch) => (
+            <div
+              key={swatch.hex}
+              className="border border-white/10 bg-black/40 p-3 sm:p-4"
+            >
+              <svg
+                className="h-12 sm:h-14 w-full border border-white/15 mb-3"
+                viewBox="0 0 100 56"
+                role="img"
+                aria-label={`${swatch.label} ${swatch.hex}`}
+              >
+                <rect width="100" height="56" fill={swatch.hex} />
+              </svg>
+              <p className="text-[9px] uppercase tracking-[0.22em] text-gray-500 font-mono mb-1">
+                {swatch.label}
+              </p>
+              <p className="text-xs font-bold text-white font-mono">
+                {swatch.hex}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
 const SLOT_LABELS = [
   "Discovery & Research",
   "Information Architecture",
@@ -663,20 +828,17 @@ const SLOT_LABELS = [
 ];
 
 function VisualGallerySection({ images }: { images: string[] }) {
-  const hasAny = images.some(Boolean);
+  const visibleImages = images.filter(Boolean);
+  if (!visibleImages.length) {
+    return null;
+  }
   return (
     <div className="py-8 sm:py-10">
-      {!hasAny && (
-        <p className="text-[9px] uppercase tracking-[0.3em] text-gray-600 font-mono mb-6">
-          Upload project screenshots via the admin dashboard to populate this
-          section.
-        </p>
-      )}
-      <VisualSlot image={images[0]} label={SLOT_LABELS[0]} tall />
+      <VisualSlot image={visibleImages[0]} label={SLOT_LABELS[0]} tall />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 mt-2 sm:mt-3">
-        <VisualSlot image={images[1]} label={SLOT_LABELS[1]} />
-        <VisualSlot image={images[2]} label={SLOT_LABELS[2]} />
-        <VisualSlot image={images[3]} label={SLOT_LABELS[3]} />
+        <VisualSlot image={visibleImages[1]} label={SLOT_LABELS[1]} />
+        <VisualSlot image={visibleImages[2]} label={SLOT_LABELS[2]} />
+        <VisualSlot image={visibleImages[3]} label={SLOT_LABELS[3]} />
       </div>
     </div>
   );

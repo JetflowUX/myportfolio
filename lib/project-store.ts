@@ -2,6 +2,7 @@ import { companies, projects, type Company, type Project } from '@/lib/data';
 
 const STORAGE_KEY = 'admin-projects-v1';
 const COMPANY_STORAGE_KEY = 'admin-companies-v1';
+const RESUME_STORAGE_KEY = 'admin-resume-v1';
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -125,6 +126,30 @@ export function deleteAdminCompany(id: string): void {
 export function getAllCompanies(): Company[] {
   const admin = getAdminCompanies();
   return uniqueByCompanyId([...companies, ...admin]);
+}
+
+export function getAdminResume(): string {
+  if (!isBrowser()) {
+    return '';
+  }
+
+  return window.localStorage.getItem(RESUME_STORAGE_KEY) ?? '';
+}
+
+export function saveAdminResume(resumeUrl: string): void {
+  if (!isBrowser()) {
+    return;
+  }
+
+  window.localStorage.setItem(RESUME_STORAGE_KEY, resumeUrl.trim());
+}
+
+export function deleteAdminResume(): void {
+  if (!isBrowser()) {
+    return;
+  }
+
+  window.localStorage.removeItem(RESUME_STORAGE_KEY);
 }
 
 export function slugify(value: string): string {

@@ -12,11 +12,14 @@ import {
   deleteAdminCompany,
   getAdminCompanies,
   deleteAdminProject,
+  deleteAdminResume,
   getAllCompanies,
   getAllProjects,
+  getAdminResume,
   getAdminProjects,
   saveAdminCompany,
   saveAdminProject,
+  saveAdminResume,
   slugify,
 } from "@/lib/project-store";
 
@@ -92,6 +95,8 @@ const initialCompanyForm: CompanyFormState = {
   website: "",
 };
 
+const DEFAULT_RESUME_URL = "/resume.pdf";
+
 export function AdminDashboard() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initialForm);
@@ -110,6 +115,7 @@ export function AdminDashboard() {
   );
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
+  const [resumeUrl, setResumeUrl] = useState(DEFAULT_RESUME_URL);
 
   const baseProjectSlugs = useMemo(
     () => new Set(projects.map((item) => item.slug)),
@@ -132,9 +138,14 @@ export function AdminDashboard() {
     setAvailableCompanies(getAllCompanies());
   }
 
+  function refreshResume() {
+    setResumeUrl(getAdminResume() || DEFAULT_RESUME_URL);
+  }
+
   useEffect(() => {
     refreshProjects();
     refreshCompanies();
+    refreshResume();
   }, []);
 
   const liveSlug = useMemo(() => {
@@ -276,6 +287,51 @@ export function AdminDashboard() {
 
     reader.readAsDataURL(file);
     event.target.value = "";
+  }
+
+  function onResumeUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const isPdf = file.type === "application/pdf" || file.name.endsWith(".pdf");
+    if (!isPdf) {
+      setStatus("Please upload a PDF file for the resume.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+
+      if (!result) {
+        setStatus("Could not read the selected resume PDF.");
+        return;
+      }
+
+      saveAdminResume(result);
+      setResumeUrl(result);
+      setStatus(
+        "Uploaded resume PDF. The homepage button now opens this file.",
+      );
+    };
+
+    reader.onerror = () => {
+      setStatus("Could not read the selected resume PDF.");
+    };
+
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  }
+
+  function onResetResume() {
+    deleteAdminResume();
+    setResumeUrl(DEFAULT_RESUME_URL);
+    setStatus("Resume reset to the default PDF.");
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -511,6 +567,59 @@ export function AdminDashboard() {
             >
               Logout
             </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl mb-8 sm:mb-10">
+        <div className="bento-card p-5 sm:p-8">
+          <h2 className="text-2xl font-bold mb-2">Resume PDF</h2>
+          <p className="text-xs text-gray-500 mb-6">
+            Upload a PDF here and the homepage resume button will open this file
+            in a new tab.
+          </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            <Field label="Current Resume URL / Data URL">
+              <textarea
+                value={resumeUrl}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setResumeUrl(value);
+                  saveAdminResume(value);
+                  setStatus("Updated resume link.");
+                }}
+                className="admin-input min-h-24 font-mono text-[11px]"
+                placeholder="Upload a PDF or paste a PDF/data URL"
+              />
+            </Field>
+            <Field label="Upload Resume PDF">
+              <div className="space-y-3">
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={onResumeUpload}
+                  className="admin-input file:mr-4 file:border-0 file:bg-accent file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-black"
+                  title="Upload resume PDF"
+                />
+                <div className="flex flex-wrap gap-3">
+                  <a
+                    href={resumeUrl || DEFAULT_RESUME_URL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="tag hover:border-accent hover:text-accent"
+                  >
+                    Preview Resume
+                  </a>
+                  <button
+                    type="button"
+                    onClick={onResetResume}
+                    className="tag hover:border-red-400 hover:text-red-300"
+                  >
+                    Reset to Default
+                  </button>
+                </div>
+              </div>
+            </Field>
           </div>
         </div>
       </section>
