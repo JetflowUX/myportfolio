@@ -9,10 +9,7 @@ import { ScrollProgress } from "@/components/scroll-progress";
 import { SpatialCanvas } from "@/components/spatial-canvas";
 import { TopNav } from "@/components/top-nav";
 import { companies, projects, type Company, type Project } from "@/lib/data";
-import {
-  getAllCompanies,
-  getAllProjects,
-} from "@/lib/project-store";
+import { getAllCompanies, getAllProjects } from "@/lib/project-store";
 
 export default function HomePage() {
   const [allProjects] = useState<Project[]>(getAllProjects());
@@ -191,7 +188,7 @@ export default function HomePage() {
             className="col-span-12 md:col-span-4 bento-card aqua-surface p-6 flex items-center justify-center group transition-all duration-500 hover:scale-[1.01]"
           >
             <a
-              href={resumeHref}
+              href="/resume.pdf"
               target="_blank"
               rel="noreferrer"
               className="text-black font-black uppercase text-lg sm:text-xl group-hover:tracking-[0.15em] sm:group-hover:tracking-[0.5em] transition-all duration-500"
@@ -207,7 +204,7 @@ export default function HomePage() {
         id="work"
         initial={{ opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{"/resume.pdf" amount: 0.2 }}
+        viewport={{ once: true, amount: 0.2 }}
         transition={{ ...sectionTransition, delay: 0.05 }}
         className="max-w-7xl mx-auto mb-20 sm:mb-32"
       >

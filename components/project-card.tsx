@@ -7,6 +7,7 @@ import type { Project } from "@/lib/data";
 
 const labelMap: Record<string, string> = {
   "ai-travel-planner": "AI",
+  "sabi-bank-app": "SABI",
   "refugeeaid-platform": "AID",
   "gigsgig-app": "GIG",
   "speed-math-battle": "MATH",

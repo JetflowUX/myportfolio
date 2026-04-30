@@ -711,7 +711,7 @@ export function AdminDashboard() {
                       onChange={(e) => onChange("title", e.target.value)}
                       className="admin-input"
                       title="Project Title"
-                      placeholder="AI Travel Planner"
+                      placeholder="AI-Powered Travel Planner (WanderSmart)"
                       required
                     />
                   </Field>
