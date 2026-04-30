@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CursorFollower } from "@/components/cursor-follower";
 import { ProjectCard } from "@/components/project-card";
 import { ScrollProgress } from "@/components/scroll-progress";
@@ -14,6 +14,9 @@ import { getAllCompanies, getAllProjects } from "@/lib/project-store";
 export default function HomePage() {
   const [allProjects] = useState<Project[]>(getAllProjects());
   const [allCompanies] = useState<Company[]>(getAllCompanies());
+  const [currentYear, setCurrentYear] = useState<number>(
+    new Date().getFullYear(),
+  );
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,9 +26,12 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
 
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
+
   // Display first 4 projects in 2-column staggered layout like the reference
   const featured = allProjects.slice(0, 4);
-  const currentYear = new Date().getFullYear();
   const sectionTransition = {
     duration: 0.9,
     ease: [0.22, 1, 0.36, 1] as const,
