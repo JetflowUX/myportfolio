@@ -8,6 +8,8 @@ export function SpatialCanvas() {
       whileHover={{ scale: 1.01 }}
       transition={{ type: "spring", stiffness: 140, damping: 18 }}
       className="bento-card p-6 sm:p-8 flex flex-col justify-between bg-black overflow-hidden relative group h-full min-h-[280px] sm:min-h-[420px] lg:min-h-[500px]"
+      role="img"
+      aria-label="Animated geometric visualization featuring rotating circles and diamond patterns representing mathematical precision in design"
     >
       <div className="relative z-10">
         <span className="text-xs text-gray-500 font-mono">

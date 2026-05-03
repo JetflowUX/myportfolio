@@ -78,30 +78,38 @@ export function ProjectCard({ project, index, staggerOffset }: Props) {
         <p className="text-gray-400 text-sm mb-6 flex-1">
           {project.description}
         </p>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
           <Link
             href={deepDiveHref}
-            className="text-xs font-bold text-accent uppercase border-b border-transparent hover:border-accent hover:tracking-[0.12em] transition-all"
+            className="inline-flex items-center gap-2 text-xs font-bold text-black bg-accent px-4 py-2.5 uppercase border-0 hover:bg-white transition-all duration-300 group"
           >
-            Case Study
+            View Case Study
+            <svg
+              className="w-3 h-3 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17 8l4 4m0 0l-4 4m4-4H3"
+              />
+            </svg>
           </Link>
           {project.projectLink ? (
             <a
               href={project.projectLink}
               target="_blank"
               rel="noreferrer"
-              className="text-xs font-bold text-gray-500 uppercase hover:text-accent transition-colors"
+              className="text-xs font-bold text-gray-400 uppercase border-b border-transparent hover:text-accent hover:border-accent transition-all"
             >
-              {project.slug === "speed-math-battle" ? "Play Now" : "Live Site"}
+              {project.slug === "speed-math-battle"
+                ? "Play Live"
+                : "Open Live →"}
             </a>
-          ) : (
-            <Link
-              href="/archive"
-              className="text-xs font-bold text-gray-500 uppercase hover:text-accent transition-colors"
-            >
-              {project.slug === "speed-math-battle" ? "Play Now" : "Live Site"}
-            </Link>
-          )}
+          ) : null}
         </div>
       </div>
     </motion.article>

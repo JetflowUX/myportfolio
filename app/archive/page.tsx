@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { projects } from "@/lib/data";
 import { getAllProjects } from "@/lib/project-store";
 import { CursorFollower } from "@/components/cursor-follower";
+import { SiteFooter } from "@/components/site-footer";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { TopNav } from "@/components/top-nav";
 
@@ -24,7 +25,7 @@ export default function ArchivePage() {
   );
 
   return (
-    <main className="relative z-10 pt-28 sm:pt-32 pb-16 sm:pb-20 px-4 sm:px-6 flex flex-col min-h-screen">
+    <main className="relative z-10 pt-28 sm:pt-32 px-4 sm:px-6 flex flex-col min-h-screen">
       <ScrollProgress />
       <CursorFollower />
       <TopNav />
@@ -133,7 +134,7 @@ export default function ArchivePage() {
                     href={`/projects/${project.slug}`}
                     className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 hover:text-accent transition-colors"
                   >
-                    View Artifact
+                    View Case Study
                     <svg
                       className="w-3 h-3 group-hover:translate-x-1 transition-transform"
                       fill="none"
@@ -177,51 +178,7 @@ export default function ArchivePage() {
         </div>
       </section>
 
-      {/* ── Footer ──────────────────────────────────────── */}
-      <footer className="py-10 sm:py-12 px-4 sm:px-6 border-t border-white/5 bg-black/40 backdrop-blur-md relative z-10 mt-16 sm:mt-20">
-        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-bold tracking-widest text-accent">
-              JETHRO ADEBISI
-            </span>
-            <span className="text-[10px] text-gray-600 font-mono uppercase tracking-tighter">
-              Handcrafted in Lagos / Built for the Web
-            </span>
-          </div>
-          <div className="flex flex-wrap justify-center gap-6 sm:gap-10 text-[10px] font-bold tracking-widest uppercase">
-            <a
-              href="https://x.com/jethroadebisi"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-accent transition-colors"
-            >
-              Twitter_X
-            </a>
-            <a
-              href="https://www.linkedin.com/in/jethro-adebisi-21872a20b/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-accent transition-colors"
-            >
-              LinkedIn
-            </a>
-            <a
-              href="https://github.com/adebisijethro"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-accent transition-colors"
-            >
-              GitHub
-            </a>
-          </div>
-          <Link
-            href="/"
-            className="text-[10px] text-gray-700 font-mono hover:text-accent transition-colors"
-          >
-            ← Back to Gateway
-          </Link>
-        </div>
-      </footer>
+      <SiteFooter variant="compact" />
     </main>
   );
 }

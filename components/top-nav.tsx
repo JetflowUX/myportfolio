@@ -30,13 +30,20 @@ export function TopNav() {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 120, damping: 20 }}
-      className={`fixed top-0 w-full z-50 pointer-events-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 transition-all duration-300 ${
+      className={`fixed top-0 w-full z-50 pointer-events-auto py-3 sm:py-4 transition-all duration-300 ${
         scrolled
           ? "bg-black/75 backdrop-blur-md border-b border-white/5"
           : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between">
+      {/* Skip to content link for accessibility */}
+      <a
+        href="#main-content"
+        className="absolute top-2 left-2 bg-accent text-black px-3 py-2 text-xs font-bold opacity-0 focus:opacity-100 -translate-y-10 focus:translate-y-0 transition-all"
+      >
+        Skip to content
+      </a>
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="flex items-center gap-2 sm:gap-3 group"
@@ -58,9 +65,17 @@ export function TopNav() {
           title="Toggle navigation menu"
           aria-label="Toggle navigation menu"
           onClick={() => setMenuOpen((prev) => !prev)}
-          className="md:hidden border border-white/20 px-4 py-3 text-[10px] uppercase tracking-[0.2em] hover:border-accent transition-colors"
+          className="md:hidden flex flex-col gap-1 p-2 hover:opacity-70 transition-opacity"
         >
-          Menu
+          <span
+            className={`block w-6 h-0.5 bg-white transition-all duration-300 ${menuOpen ? "rotate-45 translate-y-2" : ""}`}
+          />
+          <span
+            className={`block w-6 h-0.5 bg-white transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`}
+          />
+          <span
+            className={`block w-6 h-0.5 bg-white transition-all duration-300 ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`}
+          />
         </button>
 
         <div className="hidden md:flex items-center gap-3 lg:gap-6 xl:gap-8 text-[10px] font-bold tracking-[0.2em] uppercase">
@@ -96,7 +111,7 @@ export function TopNav() {
       </div>
 
       {menuOpen ? (
-        <div className="md:hidden mx-auto mt-3 w-full max-w-7xl border border-white/10 bg-black/95 backdrop-blur-md p-4">
+        <div className="md:hidden mx-auto mt-3 w-full max-w-7xl border border-white/10 bg-black/95 backdrop-blur-md p-4 sm:mx-4">
           <div className="flex flex-col gap-3 text-[10px] font-bold tracking-[0.2em] uppercase">
             <Link
               href="/#work"

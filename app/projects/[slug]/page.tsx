@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CursorFollower } from "@/components/cursor-follower";
+import { SiteFooter } from "@/components/site-footer";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { TopNav } from "@/components/top-nav";
 import { projects, type Project } from "@/lib/data";
@@ -304,7 +305,7 @@ export default function ProjectCaseStudyPage() {
                           The Solution
                         </span>
                       </div>
-                      <p className="leading-relaxed text-sm sm:text-base whitespace-pre-wrap text-gray-200">
+                      <p className="leading-relaxed text-sm sm:text-base whitespace-pre-wrap text-gray-300">
                         {project.solution}
                       </p>
                     </div>
@@ -535,51 +536,7 @@ export default function ProjectCaseStudyPage() {
         </div>
       </div>
 
-      {/* ─── FOOTER ─────────────────────────────────────────── */}
-      <footer className="py-12 sm:py-16 px-4 sm:px-6 lg:px-10 border-t border-white/[0.05] bg-black/50 backdrop-blur-md relative z-10 mt-24 sm:mt-28 overflow-hidden">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-black tracking-widest text-accent uppercase">
-              Jethro Adebisi
-            </span>
-            <span className="text-[9px] text-gray-600 font-mono uppercase tracking-tight">
-              Handcrafted in Lagos · Built for the Web
-            </span>
-          </div>
-          <div className="flex flex-wrap justify-center gap-6 sm:gap-8 text-[9px] font-bold tracking-[0.16em] sm:tracking-[0.28em] uppercase font-mono">
-            <a
-              href="https://x.com/jethroadebisi"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-accent transition-colors"
-            >
-              Twitter_X
-            </a>
-            <a
-              href="https://www.linkedin.com/in/jethro-adebisi-21872a20b/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-accent transition-colors"
-            >
-              LinkedIn
-            </a>
-            <a
-              href="https://github.com/adebisijethro"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-accent transition-colors"
-            >
-              GitHub
-            </a>
-          </div>
-          <Link
-            href="/"
-            className="text-[9px] text-gray-700 font-mono hover:text-accent transition-colors tracking-widest uppercase"
-          >
-            ← Back to Gateway
-          </Link>
-        </div>
-      </footer>
+      <SiteFooter variant="compact" />
     </main>
   );
 }
@@ -600,6 +557,21 @@ function StatCell({ label, value }: { label: string; value: string }) {
 }
 
 function ChapterDivider({ number, label }: { number: string; label: string }) {
+  // Color code sections for better visual hierarchy
+  const getColor = (label: string) => {
+    if (label.includes("Research") || label.includes("Insights"))
+      return "bg-blue-500/40";
+    if (label.includes("Design") || label.includes("Visual"))
+      return "bg-emerald-500/40";
+    if (label.includes("Problem") || label.includes("Solution"))
+      return "bg-purple-500/40";
+    if (label.includes("Impact") || label.includes("Outcome"))
+      return "bg-amber-500/40";
+    if (label.includes("Learnings") || label.includes("Next"))
+      return "bg-pink-500/40";
+    return "bg-accent/20";
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -12 }}
@@ -608,6 +580,7 @@ function ChapterDivider({ number, label }: { number: string; label: string }) {
       transition={{ duration: 0.45, ease: "easeOut" }}
       className="flex items-center gap-4 pt-16 sm:pt-20 pb-1"
     >
+      <div className={`w-1 h-8 rounded-full ${getColor(label)}`} />
       <span className="text-[9px] font-mono text-gray-600 tracking-widest tabular-nums">
         {number}
       </span>
@@ -643,7 +616,7 @@ function NumberedSection({
       className="flex gap-6 sm:gap-10 py-8 sm:py-10 border-b border-white/[0.05]"
     >
       <div className="shrink-0 w-10 sm:w-14 pt-0.5">
-        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-white/[0.035]">
+        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-white/[0.12]">
           {number.replace(".", "")}
         </span>
       </div>
@@ -682,7 +655,7 @@ function PullQuoteSection({
       className="flex gap-6 sm:gap-10 py-8 sm:py-10 border-b border-white/[0.05]"
     >
       <div className="shrink-0 w-10 sm:w-14 pt-0.5">
-        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-white/[0.035]">
+        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-white/[0.12]">
           {number.replace(".", "")}
         </span>
       </div>
@@ -692,7 +665,7 @@ function PullQuoteSection({
         </p>
         <blockquote className="relative pl-5 sm:pl-7">
           <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-accent via-accent/50 to-transparent" />
-          <p className="text-sm sm:text-base text-gray-200 leading-[1.85] italic whitespace-pre-wrap">
+          <p className="text-sm sm:text-base text-gray-300 leading-[1.85] italic whitespace-pre-wrap">
             {body}
           </p>
         </blockquote>

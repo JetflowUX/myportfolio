@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CursorFollower } from "@/components/cursor-follower";
 import { ProjectCard } from "@/components/project-card";
 import { ScrollProgress } from "@/components/scroll-progress";
+import { SiteFooter } from "@/components/site-footer";
 import { SpatialCanvas } from "@/components/spatial-canvas";
 import { TopNav } from "@/components/top-nav";
 import { companies, projects, type Company, type Project } from "@/lib/data";
@@ -14,9 +15,6 @@ import { getAllCompanies, getAllProjects } from "@/lib/project-store";
 export default function HomePage() {
   const [allProjects] = useState<Project[]>(getAllProjects());
   const [allCompanies] = useState<Company[]>(getAllCompanies());
-  const [currentYear, setCurrentYear] = useState<number>(
-    new Date().getFullYear(),
-  );
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -25,10 +23,6 @@ export default function HomePage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
-
-  useEffect(() => {
-    setCurrentYear(new Date().getFullYear());
-  }, []);
 
   // Display first 4 projects in 2-column staggered layout like the reference
   const featured = allProjects.slice(0, 4);
@@ -58,7 +52,7 @@ export default function HomePage() {
       if (response.ok) {
         setSubmitMessage("✓ Message sent! I'll get back to you soon.");
         setFormData({ name: "", email: "", message: "", website: "" });
-        setTimeout(() => setSubmitMessage(""), 5000);
+        setTimeout(() => setSubmitMessage(""), 7000);
       } else {
         setSubmitMessage("✗ Failed to send. Please try again.");
       }
@@ -71,7 +65,10 @@ export default function HomePage() {
   };
 
   return (
-    <main className="relative z-10 pt-28 sm:pt-32 px-4 sm:px-6 pb-16 sm:pb-24">
+    <main
+      className="relative z-10 pt-28 sm:pt-32 px-4 sm:px-6"
+      id="main-content"
+    >
       <ScrollProgress />
       <CursorFollower />
       <TopNav />
@@ -258,6 +255,82 @@ export default function HomePage() {
               />
             </svg>
           </Link>
+        </div>
+      </motion.section>
+
+      {/* ── ABOUT ────────────────────────────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ ...sectionTransition, delay: 0.08 }}
+        className="max-w-7xl mx-auto mb-20 sm:mb-32"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+          <div>
+            <span className="text-accent text-xs font-bold uppercase tracking-widest mb-4 block">
+              {"// About Me"}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6">
+              Mathematics to <span className="gradient-text">Design</span>
+            </h2>
+            <div className="space-y-4 text-gray-400 text-sm leading-relaxed">
+              <p>
+                I'm a UX Engineer with a mathematics background, specializing in
+                creating high-performance interfaces that feel intuitive and
+                precise. My journey began in abstract problem-solving, but I
+                quickly realized my true passion was making complex systems
+                accessible to everyday users.
+              </p>
+              <p>
+                Every project I work on blends rigorous logic with
+                human-centered design principles. I believe the best digital
+                experiences are those where users never notice the
+                engineering—they just work beautifully.
+              </p>
+              <p>
+                I'm particularly passionate about performance optimization,
+                interaction design, and building design systems that scale. When
+                I'm not coding, you'll find me exploring the intersection of
+                mathematics, motion, and meaningful user experiences.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bento-card p-5 sm:p-6">
+              <div className="text-2xl sm:text-3xl font-bold text-accent mb-2">
+                5+
+              </div>
+              <p className="text-xs uppercase tracking-widest text-gray-500">
+                Projects Shipped
+              </p>
+            </div>
+            <div className="bento-card p-5 sm:p-6">
+              <div className="text-2xl sm:text-3xl font-bold text-accent mb-2">
+                100%
+              </div>
+              <p className="text-xs uppercase tracking-widest text-gray-500">
+                Attention to Detail
+              </p>
+            </div>
+            <div className="bento-card p-5 sm:p-6">
+              <div className="text-2xl sm:text-3xl font-bold text-accent mb-2">
+                3+
+              </div>
+              <p className="text-xs uppercase tracking-widest text-gray-500">
+                Years Experience
+              </p>
+            </div>
+            <div className="bento-card p-5 sm:p-6">
+              <div className="text-2xl sm:text-3xl font-bold text-accent mb-2">
+                24h
+              </div>
+              <p className="text-xs uppercase tracking-widest text-gray-500">
+                Response Time
+              </p>
+            </div>
+          </div>
         </div>
       </motion.section>
 
@@ -477,6 +550,14 @@ export default function HomePage() {
         </div>
 
         <div className="mt-16 sm:mt-24 p-5 sm:p-8 border border-white/10 max-w-lg mx-auto bg-white/5 bento-card">
+          <div className="mb-6">
+            <p className="text-xs text-gray-400 mb-1 font-mono uppercase tracking-widest">
+              Response Time
+            </p>
+            <p className="text-sm text-gray-300">
+              I typically respond within 24 hours. Let's connect.
+            </p>
+          </div>
           <form className="text-left space-y-4" onSubmit={handleFormSubmit}>
             <input
               type="text"
@@ -542,10 +623,10 @@ export default function HomePage() {
             </div>
             {submitMessage && (
               <div
-                className={`text-xs py-2 px-3 rounded ${
+                className={`text-xs py-3 px-4 rounded font-mono ${
                   submitMessage.startsWith("✓")
-                    ? "bg-accent/20 text-accent border border-accent/30"
-                    : "bg-red-500/20 text-red-300 border border-red-500/30"
+                    ? "bg-accent/20 text-accent border border-accent/40"
+                    : "bg-red-500/20 text-red-300 border border-red-500/40"
                 }`}
               >
                 {submitMessage}
@@ -554,21 +635,15 @@ export default function HomePage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-4 bg-white text-black font-bold text-xs uppercase tracking-widest hover:bg-accent transition-colors mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 bg-white text-black font-bold text-xs uppercase tracking-widest hover:bg-accent transition-all duration-300 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Sending..." : "Initialize Contact"}
+              {isSubmitting ? "Sending Message..." : "Send Message"}
             </button>
           </form>
         </div>
       </motion.section>
 
-      {/* ── FOOTER ───────────────────────────────────────── */}
-      <footer className="py-10 sm:py-12 border-t border-white/5 text-gray-600 text-[10px] uppercase tracking-[0.12em] sm:tracking-[0.4em]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-4">
-          <p>&copy; {currentYear} JETHRO ADEBISI. BUILT WITH PRECISION.</p>
-          <p>DESIGNED AT THE INTERSECTION OF MATH &amp; CODE.</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }
