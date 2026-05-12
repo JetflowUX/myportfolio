@@ -156,7 +156,7 @@ export default function HomePage() {
               Engineering
             </h4>
             <div className="flex flex-wrap gap-2">
-              {["React/Next.js", "Tailwind", "TypeScript", "Framer Motion"].map(
+              {["React/Next.js", "Tailwind", "TypeScript", "Motion"].map(
                 (t) => (
                   <span key={t} className="tag">
                     {t}
