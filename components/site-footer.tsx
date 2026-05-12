@@ -12,7 +12,9 @@ export function SiteFooter({ variant = "full" }: SiteFooterProps) {
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
         <div
           className={`grid gap-10 ${
-            isCompact ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 lg:grid-cols-[1.2fr_0.8fr_0.8fr]"
+            isCompact
+              ? "grid-cols-1 md:grid-cols-2"
+              : "grid-cols-1 lg:grid-cols-[1.2fr_0.8fr_0.8fr]"
           }`}
         >
           <div className="space-y-4">
@@ -41,22 +43,34 @@ export function SiteFooter({ variant = "full" }: SiteFooterProps) {
               </p>
               <ul className="space-y-2.5 text-sm text-gray-400">
                 <li>
-                  <Link href="/" className="hover:text-accent transition-colors">
+                  <Link
+                    href="/"
+                    className="hover:text-accent transition-colors"
+                  >
                     Home
                   </Link>
                 </li>
                 <li>
-                  <Link href="/archive" className="hover:text-accent transition-colors">
+                  <Link
+                    href="/archive"
+                    className="hover:text-accent transition-colors"
+                  >
                     Projects
                   </Link>
                 </li>
                 <li>
-                  <Link href="/#process" className="hover:text-accent transition-colors">
+                  <Link
+                    href="/#process"
+                    className="hover:text-accent transition-colors"
+                  >
                     Process
                   </Link>
                 </li>
                 <li>
-                  <Link href="/#contact" className="hover:text-accent transition-colors">
+                  <Link
+                    href="/#contact"
+                    className="hover:text-accent transition-colors"
+                  >
                     Contact
                   </Link>
                 </li>
@@ -100,7 +114,9 @@ export function SiteFooter({ variant = "full" }: SiteFooterProps) {
             >
               adebisireuel@gmail.com
             </a>
-            <p className="mt-1 text-[11px] text-gray-500">Response within 24 hours</p>
+            <p className="mt-1 text-[11px] text-gray-500">
+              Response within 24 hours
+            </p>
           </div>
         </div>
 
