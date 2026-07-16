@@ -47,11 +47,8 @@ export function ProjectCard({ project, index, staggerOffset }: Props) {
       viewport={{ once: true, amount: 0.2 }}
       className={`bento-card hyper-border group flex flex-col ${staggerOffset ? "md:mt-20" : ""}`}
     >
-      {/* Scanline */}
-      <div className="scanline" />
-
       {/* Image area */}
-      <div className="h-52 sm:h-64 bg-zinc-900 relative overflow-hidden">
+      <div className="h-52 sm:h-64 bg-ink/5 relative overflow-hidden">
         <img
           src={imgSrc}
           alt={project.title}
@@ -71,17 +68,17 @@ export function ProjectCard({ project, index, staggerOffset }: Props) {
           <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
             {project.title}
           </h3>
-          <span className="text-[10px] border border-white/20 px-2 py-1 uppercase ml-4 shrink-0">
+          <span className="text-[10px] border border-ink/20 px-2 py-1 uppercase ml-4 shrink-0">
             {project.year}
           </span>
         </div>
-        <p className="text-gray-400 text-sm mb-6 flex-1">
+        <p className="font-sans text-text-secondary text-sm mb-6 flex-1 leading-relaxed">
           {project.description}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
           <Link
             href={deepDiveHref}
-            className="inline-flex items-center gap-2 text-xs font-bold text-black bg-accent px-4 py-2.5 uppercase border-0 hover:bg-white transition-all duration-300 group"
+            className="inline-flex items-center gap-2 text-xs font-bold text-black bg-accent px-4 py-2.5 uppercase border-0 hover:bg-ink hover:text-bg transition-all duration-300 group"
           >
             View Case Study
             <svg
@@ -103,7 +100,7 @@ export function ProjectCard({ project, index, staggerOffset }: Props) {
               href={project.projectLink}
               target="_blank"
               rel="noreferrer"
-              className="text-xs font-bold text-gray-400 uppercase border-b border-transparent hover:text-accent hover:border-accent transition-all"
+              className="text-xs font-bold text-text-secondary uppercase border-b border-transparent hover:text-accent-ink hover:border-accent-ink transition-all"
             >
               {project.slug === "speed-math-battle"
                 ? "Play Live"

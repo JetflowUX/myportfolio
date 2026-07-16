@@ -1,15 +1,42 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: #050505;
-  --accent: #00ffc2;
-  --accent-cold: #59b7ff;
-  --border: rgba(255, 255, 255, 0.08);
-  --card-bg: rgba(255, 255, 255, 0.02);
+  /* Raw channels — theme-swapped in [data-theme="light"] below.
+     Space-separated so Tailwind's <alpha-value> opacity modifiers work
+     (bg-ink/10, border-ink/20, text-accent-ink/70, etc). */
+  --bg-rgb: 5 5 5;
+  --ink-rgb: 255 255 255;
+  --accent-rgb: 0 255 194;
+  --accent-ink-rgb: 0 255 194;
+  --accent-cold-rgb: 89 183 255;
+  --accent-cold-ink-rgb: 89 183 255;
+  --text-secondary: #aeb4c2;
+  --text-tertiary: #8a90a0;
+
+  /* Derived — same formula in both themes, resolved per-element so they
+     automatically track whichever theme block set the raw channels above. */
+  --bg: rgb(var(--bg-rgb));
+  --text: rgb(var(--ink-rgb));
+  --border: rgb(var(--ink-rgb) / 0.08);
+  --card-bg: rgb(var(--ink-rgb) / 0.02);
+  --accent: rgb(var(--accent-rgb));
+  --accent-cold: rgb(var(--accent-cold-rgb));
+  --accent-ink: rgb(var(--accent-ink-rgb));
+  --accent-cold-ink: rgb(var(--accent-cold-ink-rgb));
+}
+
+:root[data-theme='light'] {
+  --bg-rgb: 246 248 249;
+  --ink-rgb: 16 21 27;
+  --accent-ink-rgb: 4 120 92;
+  --accent-cold-ink-rgb: 29 95 168;
+  --text-secondary: #454e58;
+  --text-tertiary: #6b7480;
 }
 
 * {
@@ -17,10 +44,6 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  * {
-    cursor: none !important;
-  }
-
   .cursor-follower {
     display: block;
     pointer-events: none !important;
@@ -38,11 +61,17 @@ body {
   padding: 0;
   margin: 0;
   background-color: var(--bg);
-  color: #e2e8f0;
+  color: var(--text);
   font-family: 'Space Mono', monospace;
   scroll-behavior: smooth;
   overflow-x: hidden;
   min-height: 100vh;
+  transition: background-color 320ms ease, color 320ms ease;
+}
+
+.font-sans,
+.font-sans :where(p, span, li) {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 a,
@@ -61,39 +90,8 @@ textarea {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-.grid-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
-  background-size: 50px 50px;
-  -webkit-mask-image: radial-gradient(circle at center, black, transparent 80%);
-  mask-image: radial-gradient(circle at center, black, transparent 80%);
-  opacity: 0.3;
-}
-
-.bg-blobs {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.web3-grid {
-  position: absolute;
-  inset: -15%;
-  opacity: 0.16;
-  background-image:
-    linear-gradient(rgba(89, 183, 255, 0.2) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 194, 0.28) 1px, transparent 1px);
-  background-size: 58px 58px;
-  transform: perspective(700px) rotateX(56deg) translateY(26%);
-  animation: grid-drift 18s ease-in-out infinite alternate;
-}
-
+/* Single ambient glow — replaces the old noise + grid-overlay + web3-grid +
+   3-orb stack that used to run simultaneously on every page. */
 .web3-orb {
   position: absolute;
   border-radius: 999px;
@@ -108,29 +106,7 @@ textarea {
   height: 34vw;
   max-width: 390px;
   max-height: 390px;
-  background: radial-gradient(circle at center, rgba(0, 255, 194, 0.2), transparent 70%);
-}
-
-.web3-orb-b {
-  top: 20%;
-  right: -10%;
-  width: 30vw;
-  height: 30vw;
-  max-width: 340px;
-  max-height: 340px;
-  background: radial-gradient(circle at center, rgba(89, 183, 255, 0.22), transparent 72%);
-  animation-delay: 1.8s;
-}
-
-.web3-orb-c {
-  bottom: -16%;
-  left: 28%;
-  width: 26vw;
-  height: 26vw;
-  max-width: 300px;
-  max-height: 300px;
-  background: radial-gradient(circle at center, rgba(21, 69, 123, 0.28), transparent 74%);
-  animation-delay: 0.9s;
+  background: radial-gradient(circle at center, rgb(var(--accent-rgb) / 0.2), transparent 70%);
 }
 
 .bento-card {
@@ -168,46 +144,23 @@ textarea {
   opacity: 1;
 }
 
-/* Scanline animation */
-.scanline {
-  width: 100%;
-  height: 2px;
-  background: rgba(0, 255, 194, 0.1);
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  animation: scan 4s linear infinite;
-  z-index: 5;
-}
-
-@keyframes scan {
-  0% { top: -10%; }
-  100% { top: 110%; }
-}
-
 @keyframes orb-float {
   0% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(0, -18px, 0) scale(1.08); }
   100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 
-@keyframes grid-drift {
-  0% { transform: perspective(700px) rotateX(56deg) translateY(26%) translateX(-1%); }
-  100% { transform: perspective(700px) rotateX(56deg) translateY(21%) translateX(1.5%); }
-}
-
 .gradient-text {
-  background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+  background: linear-gradient(135deg, var(--text) 30%, var(--accent-ink) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .tag {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: #6b7280;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-tertiary);
   font-family: 'Space Mono', monospace;
   font-size: 9px;
   letter-spacing: 0.04em;
@@ -223,14 +176,18 @@ textarea {
     0 0 24px rgba(0, 255, 194, 0.22);
 }
 
+/* rail-card-teal = engineering work, rail-card-cold = design work — the
+   two accents now consistently map to the Project['category'] taxonomy
+   used on the archive page and project cards. */
 .rail-card-teal,
-.rail-card-purple {
+.rail-card-cold {
+  position: relative;
   padding-left: 1.5rem;
   transition: padding-left 420ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 420ms ease;
 }
 
 .rail-card-teal::before,
-.rail-card-purple::before {
+.rail-card-cold::before {
   content: '';
   position: absolute;
   top: 0;
@@ -241,37 +198,37 @@ textarea {
 }
 
 .rail-card-teal::before {
-  background: #00ffc2;
-  box-shadow: 0 0 16px rgba(0, 255, 194, 0.45);
+  background: var(--accent);
+  box-shadow: 0 0 16px rgb(var(--accent-rgb) / 0.45);
 }
 
-.rail-card-purple::before {
-  background: #5d00ff;
-  box-shadow: 0 0 16px rgba(93, 0, 255, 0.4);
+.rail-card-cold::before {
+  background: var(--accent-cold);
+  box-shadow: 0 0 16px rgb(var(--accent-cold-rgb) / 0.4);
 }
 
 .rail-card-teal {
-  box-shadow: inset 6px 0 18px rgba(0, 255, 194, 0.08);
+  box-shadow: inset 6px 0 18px rgb(var(--accent-rgb) / 0.08);
 }
 
-.rail-card-purple {
-  box-shadow: inset 6px 0 18px rgba(93, 0, 255, 0.08);
+.rail-card-cold {
+  box-shadow: inset 6px 0 18px rgb(var(--accent-cold-rgb) / 0.08);
 }
 
-.bento-card:hover.rail-card-teal,
-.bento-card:hover.rail-card-purple {
+.rail-card-teal:hover,
+.rail-card-cold:hover {
   padding-left: 2rem;
 }
 
-.bento-card:hover.rail-card-teal::before,
-.bento-card:hover.rail-card-purple::before {
+.rail-card-teal:hover::before,
+.rail-card-cold:hover::before {
   width: 6px;
 }
 
 /* Filter button active state */
 .filter-btn-active {
-  color: var(--accent);
-  border-bottom: 1px solid var(--accent);
+  color: var(--accent-ink);
+  border-bottom: 1px solid var(--accent-ink);
   padding-bottom: 2px;
 }
 
@@ -299,9 +256,9 @@ textarea {
 
 .admin-input {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.02);
-  color: #fff;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
   padding: 0.7rem 0.8rem;
   font-size: 0.85rem;
   transition: border-color 0.2s ease;

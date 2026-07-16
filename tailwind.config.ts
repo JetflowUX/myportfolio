@@ -9,14 +9,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: 'var(--bg)',
-        accent: 'var(--accent)',
+        bg: 'rgb(var(--bg-rgb) / <alpha-value>)',
+        ink: 'rgb(var(--ink-rgb) / <alpha-value>)',
+        accent: 'rgb(var(--accent-rgb) / <alpha-value>)',
+        'accent-ink': 'rgb(var(--accent-ink-rgb) / <alpha-value>)',
+        'accent-cold': 'rgb(var(--accent-cold-rgb) / <alpha-value>)',
+        'accent-cold-ink': 'rgb(var(--accent-cold-ink-rgb) / <alpha-value>)',
         border: 'var(--border)',
-        text: 'var(--text)'
+        text: 'var(--text)',
+        'text-secondary': 'var(--text-secondary)',
+        'text-tertiary': 'var(--text-tertiary)'
       },
       fontFamily: {
         mono: ['Space Mono', 'monospace'],
-        sans: ['Plus Jakarta Sans', 'sans-serif']
+        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif']
       },
       boxShadow: {
         glow: '0 14px 40px -18px rgba(0, 255, 194, 0.45)'

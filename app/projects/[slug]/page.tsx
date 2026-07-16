@@ -74,7 +74,7 @@ export default function ProjectCaseStudyPage() {
       <main className="relative z-10 pt-28">
         <TopNav />
         <div className="mx-auto max-w-4xl mt-20 px-6 text-center">
-          <p className="text-[10px] tracking-[0.35em] uppercase text-gray-500 mb-6 font-mono">
+          <p className="text-[10px] tracking-[0.35em] uppercase text-text-tertiary mb-6 font-mono">
             Loading Case Study
           </p>
           <div className="h-1 w-24 mx-auto bg-accent/30 animate-pulse" />
@@ -88,13 +88,13 @@ export default function ProjectCaseStudyPage() {
       <main className="relative z-10 pt-28">
         <TopNav />
         <div className="max-w-4xl bento-card p-10 text-center mt-20 mx-6 sm:mx-auto">
-          <p className="text-[10px] tracking-[0.35em] uppercase text-gray-500 mb-4 font-mono">
+          <p className="text-[10px] tracking-[0.35em] uppercase text-text-tertiary mb-4 font-mono">
             404 — Not Found
           </p>
           <h1 className="text-3xl sm:text-4xl font-black mb-4 uppercase tracking-tight">
             Project Not Found
           </h1>
-          <p className="text-gray-500 mb-10 text-sm">
+          <p className="font-sans text-text-secondary mb-10 text-sm">
             No case study exists for this slug yet. Create one from the admin
             dashboard.
           </p>
@@ -107,7 +107,7 @@ export default function ProjectCaseStudyPage() {
             </Link>
             <Link
               href="/archive"
-              className="px-6 py-3 border border-white/20 text-[10px] font-bold uppercase tracking-widest hover:border-accent transition-colors"
+              className="px-6 py-3 border border-ink/20 text-[10px] font-bold uppercase tracking-widest hover:border-accent transition-colors"
             >
               Open Archive
             </Link>
@@ -130,7 +130,7 @@ export default function ProjectCaseStudyPage() {
   ];
 
   return (
-    <main className="relative z-10 min-h-screen bg-[#050505]">
+    <main className="relative z-10 min-h-screen bg-bg">
       <ScrollProgress />
       <CursorFollower />
       <TopNav />
@@ -138,16 +138,16 @@ export default function ProjectCaseStudyPage() {
       {/* ─── HEADER ─────────────────────────────────────────── */}
       <div className="pt-28 sm:pt-32 px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto">
         {/* Breadcrumb */}
-        <div className="flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.22em] sm:tracking-[0.3em] text-gray-600 mb-8 sm:mb-10 font-mono">
-          <Link href="/" className="hover:text-accent transition-colors">
+        <div className="flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.22em] sm:tracking-[0.3em] text-text-tertiary mb-8 sm:mb-10 font-mono">
+          <Link href="/" className="hover:text-accent-ink transition-colors">
             Home
           </Link>
           <span className="opacity-30">·</span>
-          <Link href="/archive" className="hover:text-accent transition-colors">
+          <Link href="/archive" className="hover:text-accent-ink transition-colors">
             Archive
           </Link>
           <span className="opacity-30">·</span>
-          <span className="text-accent/70 break-words">{project.title}</span>
+          <span className="text-accent-ink/70 break-words">{project.title}</span>
         </div>
 
         {/* Title block */}
@@ -159,7 +159,7 @@ export default function ProjectCaseStudyPage() {
         >
           <motion.p
             variants={fadeUp}
-            className="text-[10px] text-accent tracking-[0.4em] uppercase mb-4 font-mono"
+            className="text-[10px] text-accent-ink tracking-[0.4em] uppercase mb-4 font-mono"
           >
             UX Case Study — {project.year}
           </motion.p>
@@ -173,7 +173,7 @@ export default function ProjectCaseStudyPage() {
             variants={fadeUp}
             className="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-10"
           >
-            <p className="text-gray-400 text-sm sm:text-base leading-relaxed max-w-2xl flex-1">
+            <p className="font-sans text-text-secondary text-sm sm:text-base leading-relaxed max-w-2xl flex-1">
               {project.description}
             </p>
             <div className="flex flex-wrap gap-2 shrink-0">
@@ -243,7 +243,7 @@ export default function ProjectCaseStudyPage() {
 
       {/* ─── STATS BAR ──────────────────────────────────────── */}
       <div className="px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-4 border-l border-r border-b border-white/[0.07]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 border-l border-r border-b border-ink/[0.07]">
           <StatCell label="Year" value={project.year} />
           <StatCell label="Role" value={project.role} />
           <StatCell label="Category" value={project.category} />
@@ -263,15 +263,15 @@ export default function ProjectCaseStudyPage() {
             <div id="overview">
               <ChapterDivider number="00" label="Overview" />
               <div className="py-10 sm:py-12">
-                <p className="text-gray-300 text-base sm:text-lg leading-relaxed max-w-3xl">
+                <p className="font-sans text-text-secondary text-base sm:text-lg leading-relaxed max-w-3xl">
                   {project.description}
                 </p>
                 {project.role && (
-                  <div className="mt-6 inline-flex items-center gap-3 border border-white/10 px-5 py-3">
-                    <span className="text-[9px] uppercase tracking-[0.32em] text-gray-500 font-mono">
+                  <div className="mt-6 inline-flex items-center gap-3 border border-ink/10 px-5 py-3">
+                    <span className="text-[9px] uppercase tracking-[0.32em] text-text-tertiary font-mono">
                       Role
                     </span>
-                    <span className="text-xs font-bold text-white">
+                    <span className="text-xs font-bold text-text">
                       {project.role}
                     </span>
                   </div>
@@ -285,14 +285,14 @@ export default function ProjectCaseStudyPage() {
                 <ChapterDivider number="01" label="Problem & Solution" />
                 <div className="py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 gap-0">
                   {project.problem?.trim() && (
-                    <div className="bg-white/[0.02] border border-white/[0.07] p-7 sm:p-9">
+                    <div className="bg-ink/[0.02] border border-ink/[0.07] p-7 sm:p-9">
                       <div className="flex items-center gap-3 mb-5">
                         <div className="w-2 h-2 bg-red-400/70 rounded-full" />
-                        <span className="text-[9px] uppercase tracking-[0.35em] text-gray-500 font-mono">
+                        <span className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary font-mono">
                           The Problem
                         </span>
                       </div>
-                      <p className="leading-relaxed text-sm sm:text-base whitespace-pre-wrap text-gray-300">
+                      <p className="font-sans leading-relaxed text-sm sm:text-base whitespace-pre-wrap text-text-secondary">
                         {project.problem}
                       </p>
                     </div>
@@ -301,11 +301,11 @@ export default function ProjectCaseStudyPage() {
                     <div className="bg-accent/[0.04] border border-accent/[0.18] p-7 sm:p-9">
                       <div className="flex items-center gap-3 mb-5">
                         <div className="w-2 h-2 bg-accent rounded-full" />
-                        <span className="text-[9px] uppercase tracking-[0.35em] text-accent/70 font-mono">
+                        <span className="text-[9px] uppercase tracking-[0.35em] text-accent-ink/70 font-mono">
                           The Solution
                         </span>
                       </div>
-                      <p className="leading-relaxed text-sm sm:text-base whitespace-pre-wrap text-gray-300">
+                      <p className="font-sans leading-relaxed text-sm sm:text-base whitespace-pre-wrap text-text-secondary">
                         {project.solution}
                       </p>
                     </div>
@@ -471,8 +471,8 @@ export default function ProjectCaseStudyPage() {
           {/* ── STICKY SIDEBAR ──────────────────────── */}
           <aside className="lg:sticky lg:top-28 space-y-4 hidden lg:block">
             {/* TOC */}
-            <nav className="border border-white/[0.07] bg-white/[0.02] p-5">
-              <p className="text-[9px] uppercase tracking-[0.35em] text-gray-600 mb-4 font-mono">
+            <nav className="border border-ink/[0.07] bg-ink/[0.02] p-5">
+              <p className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary mb-4 font-mono">
                 Contents
               </p>
               <ul className="space-y-0.5">
@@ -480,9 +480,9 @@ export default function ProjectCaseStudyPage() {
                   <li key={item.id}>
                     <a
                       href={`#${item.id}`}
-                      className="flex items-center gap-3 py-1.5 px-2 text-[10px] text-gray-500 hover:text-accent transition-colors tracking-widest uppercase font-mono group"
+                      className="flex items-center gap-3 py-1.5 px-2 text-[10px] text-text-tertiary hover:text-accent-ink transition-colors tracking-widest uppercase font-mono group"
                     >
-                      <span className="w-3 h-px bg-white/10 group-hover:bg-accent/50 transition-colors" />
+                      <span className="w-3 h-px bg-ink/10 group-hover:bg-accent/50 transition-colors" />
                       {item.label}
                     </a>
                   </li>
@@ -504,16 +504,16 @@ export default function ProjectCaseStudyPage() {
                 </span>
               </a>
             ) : (
-              <div className="border border-white/[0.07] px-5 py-4 text-center">
-                <p className="text-[9px] text-gray-600 uppercase tracking-[0.28em] font-mono">
+              <div className="border border-ink/[0.07] px-5 py-4 text-center">
+                <p className="text-[9px] text-text-tertiary uppercase tracking-[0.28em] font-mono">
                   Live site not linked
                 </p>
               </div>
             )}
 
             {/* Tech stack */}
-            <div className="border border-white/[0.07] bg-white/[0.02] p-5">
-              <p className="text-[9px] uppercase tracking-[0.35em] text-gray-600 mb-3 font-mono">
+            <div className="border border-ink/[0.07] bg-ink/[0.02] p-5">
+              <p className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary mb-3 font-mono">
                 Tech Stack
               </p>
               <div className="flex flex-wrap gap-2">
@@ -528,7 +528,7 @@ export default function ProjectCaseStudyPage() {
             {/* Back */}
             <Link
               href="/archive"
-              className="flex items-center border border-white/[0.07] px-5 py-4 text-[9px] font-mono uppercase tracking-[0.28em] text-gray-500 hover:text-accent hover:border-accent/30 transition-colors"
+              className="flex items-center border border-ink/[0.07] px-5 py-4 text-[9px] font-mono uppercase tracking-[0.28em] text-text-tertiary hover:text-accent-ink hover:border-accent/30 transition-colors"
             >
               ← Archive
             </Link>
@@ -545,11 +545,11 @@ export default function ProjectCaseStudyPage() {
 
 function StatCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-5 sm:p-7 border-r border-b border-white/[0.07] last:border-r-0">
-      <p className="text-[8px] uppercase tracking-[0.35em] text-gray-600 mb-1.5 font-mono">
+    <div className="p-5 sm:p-7 border-r border-b border-ink/[0.07] last:border-r-0">
+      <p className="text-[8px] uppercase tracking-[0.35em] text-text-tertiary mb-1.5 font-mono">
         {label}
       </p>
-      <p className="text-xs sm:text-sm font-bold text-white capitalize leading-tight">
+      <p className="text-xs sm:text-sm font-bold text-text capitalize leading-tight">
         {value}
       </p>
     </div>
@@ -581,11 +581,11 @@ function ChapterDivider({ number, label }: { number: string; label: string }) {
       className="flex items-center gap-4 pt-16 sm:pt-20 pb-1"
     >
       <div className={`w-1 h-8 rounded-full ${getColor(label)}`} />
-      <span className="text-[9px] font-mono text-gray-600 tracking-widest tabular-nums">
+      <span className="text-[9px] font-mono text-text-tertiary tracking-widest tabular-nums">
         {number}
       </span>
-      <div className="h-px flex-1 bg-white/[0.06]" />
-      <span className="text-[9px] font-mono uppercase tracking-[0.35em] text-gray-500">
+      <div className="h-px flex-1 bg-ink/[0.06]" />
+      <span className="text-[9px] font-mono uppercase tracking-[0.35em] text-text-tertiary">
         {label}
       </span>
     </motion.div>
@@ -613,19 +613,19 @@ function NumberedSection({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="flex gap-6 sm:gap-10 py-8 sm:py-10 border-b border-white/[0.05]"
+      className="flex gap-6 sm:gap-10 py-8 sm:py-10 border-b border-ink/[0.05]"
     >
       <div className="shrink-0 w-10 sm:w-14 pt-0.5">
-        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-white/[0.12]">
+        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-ink/[0.12]">
           {number.replace(".", "")}
         </span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[9px] uppercase tracking-[0.35em] text-gray-500 mb-3 font-mono font-bold">
+        <p className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary mb-3 font-mono font-bold">
           {label}
         </p>
         <p
-          className={`leading-[1.8] whitespace-pre-wrap text-sm ${text ? "text-gray-300" : "text-gray-600 italic"}`}
+          className={`font-sans leading-[1.8] whitespace-pre-wrap text-sm ${text ? "text-text-secondary" : "text-text-tertiary italic"}`}
         >
           {text || fallback}
         </p>
@@ -652,20 +652,20 @@ function PullQuoteSection({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="flex gap-6 sm:gap-10 py-8 sm:py-10 border-b border-white/[0.05]"
+      className="flex gap-6 sm:gap-10 py-8 sm:py-10 border-b border-ink/[0.05]"
     >
       <div className="shrink-0 w-10 sm:w-14 pt-0.5">
-        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-white/[0.12]">
+        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-ink/[0.12]">
           {number.replace(".", "")}
         </span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[9px] uppercase tracking-[0.35em] text-gray-500 mb-5 font-mono font-bold">
+        <p className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary mb-5 font-mono font-bold">
           {label}
         </p>
         <blockquote className="relative pl-5 sm:pl-7">
           <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-accent via-accent/50 to-transparent" />
-          <p className="text-sm sm:text-base text-gray-300 leading-[1.85] italic whitespace-pre-wrap">
+          <p className="font-sans text-sm sm:text-base text-text-secondary leading-[1.85] italic whitespace-pre-wrap">
             {body}
           </p>
         </blockquote>
@@ -759,30 +759,30 @@ function ColorPaletteBox({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="py-8 sm:py-10 border-b border-white/[0.05]"
+      className="py-8 sm:py-10 border-b border-ink/[0.05]"
     >
       <div className="border border-accent/20 bg-accent/[0.04] py-5 sm:py-6">
-        <p className="text-[9px] uppercase tracking-[0.35em] text-accent/80 mb-4 font-mono font-bold px-5 sm:px-6">
+        <p className="text-[9px] uppercase tracking-[0.35em] text-accent-ink/80 mb-4 font-mono font-bold px-5 sm:px-6">
           Color Codes
         </p>
         <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 px-5 sm:px-6">
           {swatches.map((swatch) => (
             <div
               key={swatch.hex}
-              className="border border-white/10 bg-black/40 p-3 sm:p-4"
+              className="border border-ink/10 bg-bg/40 p-3 sm:p-4"
             >
               <svg
-                className="h-12 sm:h-14 w-full border border-white/15 mb-3"
+                className="h-12 sm:h-14 w-full border border-ink/15 mb-3"
                 viewBox="0 0 100 56"
                 role="img"
                 aria-label={`${swatch.label} ${swatch.hex}`}
               >
                 <rect width="100" height="56" fill={swatch.hex} />
               </svg>
-              <p className="text-[9px] uppercase tracking-[0.22em] text-gray-500 font-mono mb-1">
+              <p className="text-[9px] uppercase tracking-[0.22em] text-text-tertiary font-mono mb-1">
                 {swatch.label}
               </p>
-              <p className="text-xs font-bold text-white font-mono">
+              <p className="text-xs font-bold text-text font-mono">
                 {swatch.hex}
               </p>
             </div>
@@ -834,7 +834,7 @@ function VisualSlot({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="overflow-hidden border border-white/[0.07] group"
+        className="overflow-hidden border border-ink/[0.07] group"
       >
         <div className={`${h} overflow-hidden`}>
           <img
@@ -843,23 +843,23 @@ function VisualSlot({
             className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           />
         </div>
-        <figcaption className="flex items-center justify-between px-4 py-2.5 border-t border-white/[0.07] bg-white/[0.02]">
-          <span className="text-[8px] uppercase tracking-[0.28em] text-gray-500 font-mono">
+        <figcaption className="flex items-center justify-between px-4 py-2.5 border-t border-ink/[0.07] bg-ink/[0.02]">
+          <span className="text-[8px] uppercase tracking-[0.28em] text-text-tertiary font-mono">
             {label}
           </span>
-          <span className="text-[8px] text-gray-700 font-mono">↑</span>
+          <span className="text-[8px] text-text-tertiary font-mono">↑</span>
         </figcaption>
       </motion.figure>
     );
   }
   return (
     <div
-      className={`${h} border border-dashed border-white/[0.1] bg-white/[0.01] flex flex-col items-center justify-center gap-2`}
+      className={`${h} border border-dashed border-ink/[0.1] bg-ink/[0.01] flex flex-col items-center justify-center gap-2`}
     >
-      <div className="w-6 h-6 border border-dashed border-accent/25 flex items-center justify-center">
-        <span className="text-accent/30 text-sm leading-none">+</span>
+      <div className="w-6 h-6 border border-dashed border-accent-ink/25 flex items-center justify-center">
+        <span className="text-accent-ink/30 text-sm leading-none">+</span>
       </div>
-      <p className="text-[8px] text-gray-700 uppercase tracking-[0.22em] font-mono text-center px-4">
+      <p className="text-[8px] text-text-tertiary uppercase tracking-[0.22em] font-mono text-center px-4">
         {label}
       </p>
     </div>

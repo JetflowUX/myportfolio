@@ -12,10 +12,10 @@ export function SpatialCanvas() {
       aria-label="Animated geometric visualization featuring rotating circles and diamond patterns representing mathematical precision in design"
     >
       <div className="relative z-10">
-        <span className="text-xs text-gray-500 font-mono">
+        <span className="text-xs text-gray-400 font-mono">
           {"// Precision_Engine"}
         </span>
-        <h3 className="text-xl font-bold mt-2">Math-in-Design</h3>
+        <h3 className="text-xl font-bold mt-2 text-white">Math-in-Design</h3>
       </div>
 
       {/* Rotating SVG geometry */}
