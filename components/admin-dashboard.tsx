@@ -7,7 +7,7 @@ import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { CursorFollower } from "@/components/cursor-follower";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { TopNav } from "@/components/top-nav";
-import { companies, projects, type Company, type Project } from "@/lib/data";
+import { projects, type Company, type Project } from "@/lib/data";
 import {
   deleteAdminCompany,
   deleteAdminProject,
@@ -107,9 +107,6 @@ export function AdminDashboard() {
   const [companyForm, setCompanyForm] =
     useState<CompanyFormState>(initialCompanyForm);
   const [availableCompanies, setAvailableCompanies] = useState<Company[]>([]);
-  const [adminCompanyIds, setAdminCompanyIds] = useState<Set<string>>(
-    new Set(),
-  );
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
   const [resumeUrl, setResumeUrl] = useState(DEFAULT_RESUME_URL);
@@ -119,17 +116,12 @@ export function AdminDashboard() {
     () => new Set(projects.map((item) => item.slug)),
     [],
   );
-  const baseCompanyIds = useMemo(
-    () => new Set(companies.map((item) => item.id)),
-    [],
-  );
 
   async function refreshAll() {
     const content = await getSiteContent();
     setAvailableProjects(content.projects);
     setAdminProjectSlugs(new Set(content.adminProjectSlugs));
     setAvailableCompanies(content.companies);
-    setAdminCompanyIds(new Set(content.adminCompanyIds));
     setResumeUrl(content.resumeUrl || DEFAULT_RESUME_URL);
   }
 
@@ -511,11 +503,6 @@ export function AdminDashboard() {
   }
 
   async function onDeleteCompany(id: string) {
-    if (!adminCompanyIds.has(id)) {
-      setStatus("Default company entries cannot be deleted here.");
-      return;
-    }
-
     setIsBusy(true);
     try {
       await deleteAdminCompany(id);
@@ -1100,9 +1087,6 @@ export function AdminDashboard() {
               <p className="text-sm text-gray-500">No company entries yet.</p>
             ) : (
               availableCompanies.map((item) => {
-                const isDefault = baseCompanyIds.has(item.id);
-                const isCustomOverride = adminCompanyIds.has(item.id);
-
                 return (
                   <div key={item.id} className="border border-white/10 p-4">
                     <div className="flex items-center gap-3">
@@ -1127,18 +1111,12 @@ export function AdminDashboard() {
                       >
                         Edit
                       </button>
-                      {isCustomOverride ? (
-                        <button
-                          onClick={() => onDeleteCompany(item.id)}
-                          className="tag hover:border-red-400 hover:text-red-300"
-                        >
-                          Delete
-                        </button>
-                      ) : (
-                        <span className="tag text-gray-500 border-white/10">
-                          {isDefault ? "Default" : "Read Only"}
-                        </span>
-                      )}
+                      <button
+                        onClick={() => onDeleteCompany(item.id)}
+                        className="tag hover:border-red-400 hover:text-red-300"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 );

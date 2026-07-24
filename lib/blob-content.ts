@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { head, put } from '@vercel/blob';
+import { get, put } from '@vercel/blob';
 import { companies as staticCompanies, projects as staticProjects, type Company, type Project } from '@/lib/data';
 
 // The admin dashboard used to write everything to the visitor's own
@@ -19,16 +19,22 @@ type Overlay = {
   projects: Project[];
   companies: Company[];
   resumeUrl: string;
+  // Companies are fully editable/deletable, defaults included — there's no
+  // "Default / Read Only" distinction for them the way there still is for
+  // projects. Deleting a static company (from lib/data.ts) can't remove it
+  // from that array, so its id is tombstoned here and filtered out at read
+  // time instead. Re-adding/editing a company with that id clears the
+  // tombstone (see upsertCompany).
+  deletedCompanyIds: string[];
 };
 
-const EMPTY_OVERLAY: Overlay = { projects: [], companies: [], resumeUrl: '' };
+const EMPTY_OVERLAY: Overlay = { projects: [], companies: [], resumeUrl: '', deletedCompanyIds: [] };
 
 export type SiteContentPayload = {
   projects: Project[];
   companies: Company[];
   resumeUrl: string;
   adminProjectSlugs: string[];
-  adminCompanyIds: string[];
 };
 
 function uniqueBySlug(items: Project[]): Project[] {
@@ -70,20 +76,26 @@ async function readOverlay(): Promise<Overlay> {
   }
 
   try {
-    const meta = await head(CONTENT_PATHNAME);
-    const res = await fetch(meta.url, { cache: 'no-store' });
-    if (!res.ok) {
+    // useCache: false is required here — a plain fetch() against the blob's
+    // public URL (even with Next's `cache: 'no-store'`) still hits Vercel
+    // Blob's own CDN edge cache, which can serve up to ~60s-stale content
+    // after a write. This route needs to read its own writes immediately
+    // (e.g. right after an admin save), so it goes straight to origin.
+    const result = await get(CONTENT_PATHNAME, { access: 'public', useCache: false });
+    if (!result || result.statusCode !== 200 || !result.stream) {
       return EMPTY_OVERLAY;
     }
-    const data = (await res.json()) as Partial<Overlay>;
+    const text = await new Response(result.stream).text();
+    const data = JSON.parse(text) as Partial<Overlay>;
     return {
       projects: Array.isArray(data.projects) ? data.projects : [],
       companies: Array.isArray(data.companies) ? data.companies : [],
       resumeUrl: typeof data.resumeUrl === 'string' ? data.resumeUrl : '',
+      deletedCompanyIds: Array.isArray(data.deletedCompanyIds) ? data.deletedCompanyIds : [],
     };
   } catch {
-    // Most commonly BlobNotFoundError on the very first run, before any
-    // admin save has ever happened.
+    // Most commonly on the very first run, before any admin save has
+    // ever happened, or a transient network/auth error.
     return EMPTY_OVERLAY;
   }
 }
@@ -106,12 +118,15 @@ async function writeOverlay(overlay: Overlay): Promise<void> {
 
 export async function getSiteContentPayload(): Promise<SiteContentPayload> {
   const overlay = await readOverlay();
+  const deleted = new Set(overlay.deletedCompanyIds);
+  const mergedCompanies = uniqueByCompanyId([...staticCompanies, ...overlay.companies]).filter(
+    (item) => !deleted.has(item.id),
+  );
   return {
     projects: sortProjectsByYearDesc(uniqueBySlug([...staticProjects, ...overlay.projects])),
-    companies: uniqueByCompanyId([...staticCompanies, ...overlay.companies]),
+    companies: mergedCompanies,
     resumeUrl: overlay.resumeUrl.trim() || DEFAULT_RESUME_URL,
     adminProjectSlugs: overlay.projects.map((item) => item.slug),
-    adminCompanyIds: overlay.companies.map((item) => item.id),
   };
 }
 
@@ -129,12 +144,26 @@ export async function removeProject(slug: string): Promise<void> {
 export async function upsertCompany(company: Company): Promise<void> {
   const overlay = await readOverlay();
   const next = [...overlay.companies.filter((item) => item.id !== company.id), company];
-  await writeOverlay({ ...overlay, companies: uniqueByCompanyId(next) });
+  await writeOverlay({
+    ...overlay,
+    companies: uniqueByCompanyId(next),
+    // Saving/editing a company supersedes any earlier deletion of that id.
+    deletedCompanyIds: overlay.deletedCompanyIds.filter((deletedId) => deletedId !== company.id),
+  });
 }
 
 export async function removeCompany(id: string): Promise<void> {
   const overlay = await readOverlay();
-  await writeOverlay({ ...overlay, companies: overlay.companies.filter((item) => item.id !== id) });
+  await writeOverlay({
+    ...overlay,
+    companies: overlay.companies.filter((item) => item.id !== id),
+    // Tombstone the id too, in case it's one of the static defaults from
+    // lib/data.ts rather than an overlay entry — removing it from the
+    // overlay array alone wouldn't stop it reappearing from the static list.
+    deletedCompanyIds: overlay.deletedCompanyIds.includes(id)
+      ? overlay.deletedCompanyIds
+      : [...overlay.deletedCompanyIds, id],
+  });
 }
 
 export async function setResumeUrl(resumeUrl: string): Promise<void> {

@@ -7,7 +7,6 @@ export type SiteContent = {
   companies: Company[];
   resumeUrl: string;
   adminProjectSlugs: string[];
-  adminCompanyIds: string[];
 };
 
 const FALLBACK_CONTENT: SiteContent = {
@@ -15,7 +14,6 @@ const FALLBACK_CONTENT: SiteContent = {
   companies,
   resumeUrl: DEFAULT_RESUME_URL,
   adminProjectSlugs: [],
-  adminCompanyIds: [],
 };
 
 // Everything below used to read/write window.localStorage directly, which
@@ -35,7 +33,6 @@ export async function getSiteContent(): Promise<SiteContent> {
       companies: Array.isArray(data.companies) ? data.companies : companies,
       resumeUrl: typeof data.resumeUrl === 'string' && data.resumeUrl ? data.resumeUrl : DEFAULT_RESUME_URL,
       adminProjectSlugs: Array.isArray(data.adminProjectSlugs) ? data.adminProjectSlugs : [],
-      adminCompanyIds: Array.isArray(data.adminCompanyIds) ? data.adminCompanyIds : [],
     };
   } catch {
     return FALLBACK_CONTENT;
