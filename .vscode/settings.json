@@ -1,0 +1,10 @@
+{
+  "editor.cursorSmoothCaretAnimation": "off",
+  "workbench.editor.autoLockGroups": {
+    "workbench.editor.chatSession": true
+  },
+  "chat.useClaudeSkills": true,
+  "claudeCode.disableLoginPrompt": true,
+  "claudeCode.preferredLocation": "panel",
+  "claudeCode.respectGitIgnore": true
+}

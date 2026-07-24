@@ -1,155 +1,137 @@
 import { companies, projects, type Company, type Project } from '@/lib/data';
 
-const STORAGE_KEY = 'admin-projects-v1';
-const COMPANY_STORAGE_KEY = 'admin-companies-v1';
-const RESUME_STORAGE_KEY = 'admin-resume-v1';
+const DEFAULT_RESUME_URL = '/resume.pdf';
 
-function isBrowser(): boolean {
-  return typeof window !== 'undefined';
-}
+export type SiteContent = {
+  projects: Project[];
+  companies: Company[];
+  resumeUrl: string;
+  adminProjectSlugs: string[];
+  adminCompanyIds: string[];
+};
 
-function uniqueBySlug(items: Project[]): Project[] {
-  const map = new Map<string, Project>();
-  for (const item of items) {
-    map.set(item.slug, item);
+const FALLBACK_CONTENT: SiteContent = {
+  projects,
+  companies,
+  resumeUrl: DEFAULT_RESUME_URL,
+  adminProjectSlugs: [],
+  adminCompanyIds: [],
+};
+
+// Everything below used to read/write window.localStorage directly, which
+// only ever affected the one browser it ran in — nothing an admin "saved"
+// ever reached the deployed site or other visitors. It now talks to the
+// /api/admin/* routes, which persist to a shared Vercel Blob store instead.
+
+export async function getSiteContent(): Promise<SiteContent> {
+  try {
+    const res = await fetch('/api/admin/content', { cache: 'no-store' });
+    if (!res.ok) {
+      return FALLBACK_CONTENT;
+    }
+    const data = (await res.json()) as Partial<SiteContent>;
+    return {
+      projects: Array.isArray(data.projects) ? data.projects : projects,
+      companies: Array.isArray(data.companies) ? data.companies : companies,
+      resumeUrl: typeof data.resumeUrl === 'string' && data.resumeUrl ? data.resumeUrl : DEFAULT_RESUME_URL,
+      adminProjectSlugs: Array.isArray(data.adminProjectSlugs) ? data.adminProjectSlugs : [],
+      adminCompanyIds: Array.isArray(data.adminCompanyIds) ? data.adminCompanyIds : [],
+    };
+  } catch {
+    return FALLBACK_CONTENT;
   }
-  return Array.from(map.values());
 }
 
-function uniqueByCompanyId(items: Company[]): Company[] {
-  const map = new Map<string, Company>();
-  for (const item of items) {
-    map.set(item.id, item);
+export async function getAllProjects(): Promise<Project[]> {
+  return (await getSiteContent()).projects;
+}
+
+export async function getAllCompanies(): Promise<Company[]> {
+  return (await getSiteContent()).companies;
+}
+
+async function parseJsonError(res: Response, fallback: string): Promise<string> {
+  try {
+    const body = (await res.json()) as { error?: string };
+    return body.error ?? fallback;
+  } catch {
+    return fallback;
   }
-  return Array.from(map.values());
 }
 
-function sortProjectsByYearDesc(items: Project[]): Project[] {
-  return [...items].sort((a, b) => {
-    const yearA = Number.parseInt(a.year, 10);
-    const yearB = Number.parseInt(b.year, 10);
-
-    if (Number.isNaN(yearA) && Number.isNaN(yearB)) return 0;
-    if (Number.isNaN(yearA)) return 1;
-    if (Number.isNaN(yearB)) return -1;
-
-    if (yearA !== yearB) return yearB - yearA;
-    return a.title.localeCompare(b.title);
+export async function saveAdminProject(project: Project): Promise<void> {
+  const res = await fetch('/api/admin/projects', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(project),
   });
-}
-
-export function getAdminProjects(): Project[] {
-  if (!isBrowser()) {
-    return [];
-  }
-
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Project[];
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.filter((item) => typeof item?.slug === 'string' && typeof item?.title === 'string');
-  } catch {
-    return [];
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to save project.'));
   }
 }
 
-export function saveAdminProjects(items: Project[]): void {
-  if (!isBrowser()) {
-    return;
-  }
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueBySlug(items)));
-}
-
-export function saveAdminProject(project: Project): void {
-  const current = getAdminProjects();
-  const next = [...current.filter((item) => item.slug !== project.slug), project];
-  saveAdminProjects(next);
-}
-
-export function deleteAdminProject(slug: string): void {
-  const current = getAdminProjects();
-  saveAdminProjects(current.filter((item) => item.slug !== slug));
-}
-
-export function getAllProjects(): Project[] {
-  const admin = getAdminProjects();
-  return sortProjectsByYearDesc(uniqueBySlug([...projects, ...admin]));
-}
-
-export function getAdminCompanies(): Company[] {
-  if (!isBrowser()) {
-    return [];
-  }
-
-  const raw = window.localStorage.getItem(COMPANY_STORAGE_KEY);
-  if (!raw) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Company[];
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.filter(
-      (item) => typeof item?.id === 'string' && typeof item?.name === 'string' && typeof item?.logo === 'string'
-    );
-  } catch {
-    return [];
+export async function deleteAdminProject(slug: string): Promise<void> {
+  const res = await fetch(`/api/admin/projects?slug=${encodeURIComponent(slug)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to delete project.'));
   }
 }
 
-export function saveAdminCompanies(items: Company[]): void {
-  if (!isBrowser()) {
-    return;
+export async function saveAdminCompany(company: Company): Promise<void> {
+  const res = await fetch('/api/admin/companies', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(company),
+  });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to save company.'));
   }
-  window.localStorage.setItem(COMPANY_STORAGE_KEY, JSON.stringify(uniqueByCompanyId(items)));
 }
 
-export function saveAdminCompany(company: Company): void {
-  const current = getAdminCompanies();
-  const next = [...current.filter((item) => item.id !== company.id), company];
-  saveAdminCompanies(next);
+export async function deleteAdminCompany(id: string): Promise<void> {
+  const res = await fetch(`/api/admin/companies?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to delete company.'));
+  }
 }
 
-export function deleteAdminCompany(id: string): void {
-  const current = getAdminCompanies();
-  saveAdminCompanies(current.filter((item) => item.id !== id));
+export async function saveAdminResume(resumeUrl: string): Promise<void> {
+  const res = await fetch('/api/admin/resume', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resumeUrl }),
+  });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to save resume link.'));
+  }
 }
 
-export function getAllCompanies(): Company[] {
-  const admin = getAdminCompanies();
-  return uniqueByCompanyId([...companies, ...admin]);
+export async function deleteAdminResume(): Promise<void> {
+  const res = await fetch('/api/admin/resume', { method: 'DELETE' });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to reset resume link.'));
+  }
 }
 
-export function getAdminResume(): string {
-  if (!isBrowser()) {
-    return '';
+export async function uploadAdminFile(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch('/api/admin/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to upload file.'));
   }
 
-  return window.localStorage.getItem(RESUME_STORAGE_KEY) ?? '';
-}
-
-export function saveAdminResume(resumeUrl: string): void {
-  if (!isBrowser()) {
-    return;
-  }
-
-  window.localStorage.setItem(RESUME_STORAGE_KEY, resumeUrl.trim());
-}
-
-export function deleteAdminResume(): void {
-  if (!isBrowser()) {
-    return;
-  }
-
-  window.localStorage.removeItem(RESUME_STORAGE_KEY);
+  const data = (await res.json()) as { url: string };
+  return data.url;
 }
 
 export function slugify(value: string): string {

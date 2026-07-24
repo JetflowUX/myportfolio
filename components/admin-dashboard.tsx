@@ -10,17 +10,14 @@ import { TopNav } from "@/components/top-nav";
 import { companies, projects, type Company, type Project } from "@/lib/data";
 import {
   deleteAdminCompany,
-  getAdminCompanies,
   deleteAdminProject,
   deleteAdminResume,
-  getAllCompanies,
-  getAllProjects,
-  getAdminResume,
-  getAdminProjects,
+  getSiteContent,
   saveAdminCompany,
   saveAdminProject,
   saveAdminResume,
   slugify,
+  uploadAdminFile,
 } from "@/lib/project-store";
 
 type FormState = {
@@ -116,6 +113,7 @@ export function AdminDashboard() {
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
   const [resumeUrl, setResumeUrl] = useState(DEFAULT_RESUME_URL);
+  const [isBusy, setIsBusy] = useState(false);
 
   const baseProjectSlugs = useMemo(
     () => new Set(projects.map((item) => item.slug)),
@@ -126,26 +124,17 @@ export function AdminDashboard() {
     [],
   );
 
-  function refreshProjects() {
-    const adminProjects = getAdminProjects();
-    setAdminProjectSlugs(new Set(adminProjects.map((item) => item.slug)));
-    setAvailableProjects(getAllProjects());
-  }
-
-  function refreshCompanies() {
-    const adminCompanies = getAdminCompanies();
-    setAdminCompanyIds(new Set(adminCompanies.map((item) => item.id)));
-    setAvailableCompanies(getAllCompanies());
-  }
-
-  function refreshResume() {
-    setResumeUrl(getAdminResume() || DEFAULT_RESUME_URL);
+  async function refreshAll() {
+    const content = await getSiteContent();
+    setAvailableProjects(content.projects);
+    setAdminProjectSlugs(new Set(content.adminProjectSlugs));
+    setAvailableCompanies(content.companies);
+    setAdminCompanyIds(new Set(content.adminCompanyIds));
+    setResumeUrl(content.resumeUrl || DEFAULT_RESUME_URL);
   }
 
   useEffect(() => {
-    refreshProjects();
-    refreshCompanies();
-    refreshResume();
+    refreshAll();
   }, []);
 
   const liveSlug = useMemo(() => {
@@ -173,11 +162,12 @@ export function AdminDashboard() {
     setCompanyForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function onProjectImageUpload(
+  async function onProjectImageUpload(
     event: ChangeEvent<HTMLInputElement>,
     field: "image" | "caseStudyImage",
   ) {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
     if (!file) {
       return;
@@ -185,33 +175,31 @@ export function AdminDashboard() {
 
     if (!file.type.startsWith("image/")) {
       setStatus("Please upload an image file.");
-      event.target.value = "";
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      if (!result) {
-        setStatus("Could not read the selected image.");
-        return;
-      }
-      setForm((prev) => ({ ...prev, [field]: result }));
+    setIsBusy(true);
+    setStatus("Uploading image…");
+    try {
+      const url = await uploadAdminFile(file);
+      setForm((prev) => ({ ...prev, [field]: url }));
       setStatus(
         field === "image"
           ? "Uploaded project thumbnail image."
           : "Uploaded case study hero image.",
       );
-    };
-    reader.onerror = () => {
-      setStatus("Could not read the selected image.");
-    };
-    reader.readAsDataURL(file);
-    event.target.value = "";
+    } catch (error) {
+      setStatus(
+        error instanceof Error ? error.message : "Could not upload the selected image.",
+      );
+    } finally {
+      setIsBusy(false);
+    }
   }
 
-  function onProjectGalleryUpload(event: ChangeEvent<HTMLInputElement>) {
+  async function onProjectGalleryUpload(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
 
     if (!files.length) {
       return;
@@ -220,42 +208,34 @@ export function AdminDashboard() {
     const imageFiles = files.filter((file) => file.type.startsWith("image/"));
     if (!imageFiles.length) {
       setStatus("Please select image files for the project gallery.");
-      event.target.value = "";
       return;
     }
 
-    Promise.all(
-      imageFiles.map(
-        (file) =>
-          new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () =>
-              typeof reader.result === "string"
-                ? resolve(reader.result)
-                : reject(new Error("invalid result"));
-            reader.onerror = () => reject(new Error("read error"));
-            reader.readAsDataURL(file);
-          }),
-      ),
-    )
-      .then((images) => {
-        setForm((prev) => {
-          const existing = prev.caseStudyGallery
-            .split(/\n|,/)
-            .map((item) => item.trim())
-            .filter(Boolean);
-          const merged = [...existing, ...images];
-          return { ...prev, caseStudyGallery: merged.join("\n") };
-        });
-        setStatus(`Added ${images.length} image(s) to project gallery.`);
-      })
-      .catch(() => setStatus("Could not read one or more gallery images."));
-
-    event.target.value = "";
+    setIsBusy(true);
+    setStatus(`Uploading ${imageFiles.length} image(s)…`);
+    try {
+      const images = await Promise.all(imageFiles.map((file) => uploadAdminFile(file)));
+      setForm((prev) => {
+        const existing = prev.caseStudyGallery
+          .split(/\n|,/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+        const merged = [...existing, ...images];
+        return { ...prev, caseStudyGallery: merged.join("\n") };
+      });
+      setStatus(`Added ${images.length} image(s) to project gallery.`);
+    } catch (error) {
+      setStatus(
+        error instanceof Error ? error.message : "Could not upload one or more gallery images.",
+      );
+    } finally {
+      setIsBusy(false);
+    }
   }
 
-  function onCompanyLogoUpload(event: ChangeEvent<HTMLInputElement>) {
+  async function onCompanyLogoUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
     if (!file) {
       return;
@@ -263,34 +243,27 @@ export function AdminDashboard() {
 
     if (!file.type.startsWith("image/")) {
       setStatus("Please upload an image file for the company logo.");
-      event.target.value = "";
       return;
     }
 
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-
-      if (!result) {
-        setStatus("Could not read the selected image.");
-        return;
-      }
-
-      setCompanyForm((prev) => ({ ...prev, logo: result }));
+    setIsBusy(true);
+    setStatus("Uploading logo…");
+    try {
+      const url = await uploadAdminFile(file);
+      setCompanyForm((prev) => ({ ...prev, logo: url }));
       setStatus(`Uploaded logo for ${companyForm.name || "company entry"}.`);
-    };
-
-    reader.onerror = () => {
-      setStatus("Could not read the selected image.");
-    };
-
-    reader.readAsDataURL(file);
-    event.target.value = "";
+    } catch (error) {
+      setStatus(
+        error instanceof Error ? error.message : "Could not upload the selected image.",
+      );
+    } finally {
+      setIsBusy(false);
+    }
   }
 
-  function onResumeUpload(event: ChangeEvent<HTMLInputElement>) {
+  async function onResumeUpload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
     if (!file) {
       return;
@@ -299,42 +272,41 @@ export function AdminDashboard() {
     const isPdf = file.type === "application/pdf" || file.name.endsWith(".pdf");
     if (!isPdf) {
       setStatus("Please upload a PDF file for the resume.");
-      event.target.value = "";
       return;
     }
 
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-
-      if (!result) {
-        setStatus("Could not read the selected resume PDF.");
-        return;
-      }
-
-      saveAdminResume(result);
-      setResumeUrl(result);
+    setIsBusy(true);
+    setStatus("Uploading resume…");
+    try {
+      const url = await uploadAdminFile(file);
+      await saveAdminResume(url);
+      setResumeUrl(url);
       setStatus(
         "Uploaded resume PDF. The homepage button now opens this file.",
       );
-    };
-
-    reader.onerror = () => {
-      setStatus("Could not read the selected resume PDF.");
-    };
-
-    reader.readAsDataURL(file);
-    event.target.value = "";
+    } catch (error) {
+      setStatus(
+        error instanceof Error ? error.message : "Could not upload the selected resume PDF.",
+      );
+    } finally {
+      setIsBusy(false);
+    }
   }
 
-  function onResetResume() {
-    deleteAdminResume();
-    setResumeUrl(DEFAULT_RESUME_URL);
-    setStatus("Resume reset to the default PDF.");
+  async function onResetResume() {
+    setIsBusy(true);
+    try {
+      await deleteAdminResume();
+      setResumeUrl(DEFAULT_RESUME_URL);
+      setStatus("Resume reset to the default PDF.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not reset the resume link.");
+    } finally {
+      setIsBusy(false);
+    }
   }
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!form.title.trim()) {
@@ -385,15 +357,22 @@ export function AdminDashboard() {
       caseStudy: form.caseStudy.trim(),
     };
 
-    saveAdminProject(project);
-    refreshProjects();
-    const action = editingSlug ? "Updated" : "Saved";
-    setEditingSlug(null);
-    setForm(initialForm);
-    setIsFormOpen(false);
-    setStatus(
-      `${action} ${project.title}. Added to archive and case-study page: /projects/${project.slug}`,
-    );
+    setIsBusy(true);
+    try {
+      await saveAdminProject(project);
+      await refreshAll();
+      const action = editingSlug ? "Updated" : "Saved";
+      setEditingSlug(null);
+      setForm(initialForm);
+      setIsFormOpen(false);
+      setStatus(
+        `${action} ${project.title}. Added to archive and case-study page: /projects/${project.slug}`,
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not save project.");
+    } finally {
+      setIsBusy(false);
+    }
   }
 
   function onEdit(project: Project) {
@@ -444,15 +423,22 @@ export function AdminDashboard() {
     setStatus("Form cleared.");
   }
 
-  function onDelete(slug: string) {
+  async function onDelete(slug: string) {
     if (!adminProjectSlugs.has(slug)) {
       setStatus("Default portfolio entries cannot be deleted here.");
       return;
     }
 
-    deleteAdminProject(slug);
-    refreshProjects();
-    setStatus(`Deleted ${slug}`);
+    setIsBusy(true);
+    try {
+      await deleteAdminProject(slug);
+      await refreshAll();
+      setStatus(`Deleted ${slug}`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not delete project.");
+    } finally {
+      setIsBusy(false);
+    }
   }
 
   async function onLogout() {
@@ -486,7 +472,7 @@ export function AdminDashboard() {
     setStatus("Company form cleared.");
   }
 
-  function onSubmitCompany(event: FormEvent<HTMLFormElement>) {
+  async function onSubmitCompany(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!companyForm.name.trim()) {
@@ -508,24 +494,38 @@ export function AdminDashboard() {
       website: companyForm.website.trim(),
     };
 
-    saveAdminCompany(company);
-    refreshCompanies();
-    const action = editingCompanyId ? "Updated" : "Saved";
-    setEditingCompanyId(null);
-    setCompanyForm(initialCompanyForm);
-    setIsCompanyFormOpen(false);
-    setStatus(`${action} ${company.name} in company list.`);
+    setIsBusy(true);
+    try {
+      await saveAdminCompany(company);
+      await refreshAll();
+      const action = editingCompanyId ? "Updated" : "Saved";
+      setEditingCompanyId(null);
+      setCompanyForm(initialCompanyForm);
+      setIsCompanyFormOpen(false);
+      setStatus(`${action} ${company.name} in company list.`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not save company.");
+    } finally {
+      setIsBusy(false);
+    }
   }
 
-  function onDeleteCompany(id: string) {
+  async function onDeleteCompany(id: string) {
     if (!adminCompanyIds.has(id)) {
       setStatus("Default company entries cannot be deleted here.");
       return;
     }
 
-    deleteAdminCompany(id);
-    refreshCompanies();
-    setStatus(`Deleted company ${id}`);
+    setIsBusy(true);
+    try {
+      await deleteAdminCompany(id);
+      await refreshAll();
+      setStatus(`Deleted company ${id}`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not delete company.");
+    } finally {
+      setIsBusy(false);
+    }
   }
 
   return (
@@ -582,11 +582,23 @@ export function AdminDashboard() {
             <Field label="Current Resume URL / Data URL">
               <textarea
                 value={resumeUrl}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setResumeUrl(value);
-                  saveAdminResume(value);
-                  setStatus("Updated resume link.");
+                onChange={(e) => setResumeUrl(e.target.value)}
+                onBlur={async (e) => {
+                  const value = e.target.value.trim();
+                  if (!value || value === DEFAULT_RESUME_URL) {
+                    return;
+                  }
+                  setIsBusy(true);
+                  try {
+                    await saveAdminResume(value);
+                    setStatus("Updated resume link.");
+                  } catch (error) {
+                    setStatus(
+                      error instanceof Error ? error.message : "Could not save resume link.",
+                    );
+                  } finally {
+                    setIsBusy(false);
+                  }
                 }}
                 className="admin-input min-h-24 font-mono text-[11px]"
                 placeholder="Upload a PDF or paste a PDF/data URL"
@@ -1041,14 +1053,16 @@ export function AdminDashboard() {
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <button
                   type="submit"
-                  className="px-8 py-4 bg-accent text-black font-bold uppercase tracking-widest text-xs"
+                  disabled={isBusy}
+                  className="px-8 py-4 bg-accent text-black font-bold uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingSlug ? "Update Project" : "Save to Archive"}
+                  {isBusy ? "Saving…" : editingSlug ? "Update Project" : "Save to Archive"}
                 </button>
                 <button
                   type="button"
                   onClick={onResetForm}
-                  className="px-6 py-4 border border-white/20 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors"
+                  disabled={isBusy}
+                  className="px-6 py-4 border border-white/20 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
@@ -1229,14 +1243,16 @@ export function AdminDashboard() {
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <button
                   type="submit"
-                  className="px-8 py-4 bg-accent text-black font-bold uppercase tracking-widest text-xs"
+                  disabled={isBusy}
+                  className="px-8 py-4 bg-accent text-black font-bold uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingCompanyId ? "Update Company" : "Save Company"}
+                  {isBusy ? "Saving…" : editingCompanyId ? "Update Company" : "Save Company"}
                 </button>
                 <button
                   type="button"
                   onClick={onResetCompanyForm}
-                  className="px-6 py-4 border border-white/20 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors"
+                  disabled={isBusy}
+                  className="px-6 py-4 border border-white/20 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>

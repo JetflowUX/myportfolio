@@ -36,7 +36,7 @@ export default function ArchivePage() {
   const [allProjects, setAllProjects] = useState(projects);
 
   useEffect(() => {
-    setAllProjects(getAllProjects());
+    getAllProjects().then(setAllProjects);
   }, []);
 
   const visible = allProjects.filter(

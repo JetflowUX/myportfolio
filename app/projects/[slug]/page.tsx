@@ -33,8 +33,14 @@ export default function ProjectCaseStudyPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setAllProjects(getAllProjects());
-    setMounted(true);
+    // Wait for the fetch to resolve before flipping `mounted` — otherwise
+    // an admin-added project (only in the fetched overlay, not the static
+    // list) would flash "Project Not Found" for the instant before the
+    // network response lands.
+    getAllProjects().then((data) => {
+      setAllProjects(data);
+      setMounted(true);
+    });
   }, []);
 
   const project = allProjects.find((item) => item.slug === slug);

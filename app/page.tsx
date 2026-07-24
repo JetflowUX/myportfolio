@@ -14,18 +14,18 @@ import { getAllCompanies, getAllProjects } from "@/lib/project-store";
 
 export default function HomePage() {
   // Seed with the static lists (matches the server render exactly), then
-  // upgrade to admin-edited data — which only exists in localStorage — once
-  // mounted. Reading localStorage inside useState's initializer would make
-  // the client's first render diverge from the server render whenever any
-  // project/company had been added or edited from /admin, which throws a
-  // hydration mismatch. archive/page.tsx and the case-study page already
-  // use this same safe pattern; the homepage was the one place that didn't.
+  // upgrade to the live admin-edited data — fetched from Vercel Blob via
+  // /api/admin/content — once mounted. Seeding useState directly from an
+  // async fetch isn't possible anyway, and this also keeps the server
+  // render and the client's first render identical, avoiding a hydration
+  // mismatch. archive/page.tsx and the case-study page use the same
+  // seed-then-upgrade pattern.
   const [allProjects, setAllProjects] = useState<Project[]>(projects);
   const [allCompanies, setAllCompanies] = useState<Company[]>(companies);
 
   useEffect(() => {
-    setAllProjects(getAllProjects());
-    setAllCompanies(getAllCompanies());
+    getAllProjects().then(setAllProjects);
+    getAllCompanies().then(setAllCompanies);
   }, []);
   const [formData, setFormData] = useState({
     name: "",
