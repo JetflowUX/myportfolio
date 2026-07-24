@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { projects } from "@/lib/data";
 import { getAllProjects } from "@/lib/project-store";
 import { CursorFollower } from "@/components/cursor-follower";
+import { ImagePlaceholder } from "@/components/image-placeholder";
 import { SiteFooter } from "@/components/site-footer";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { TopNav } from "@/components/top-nav";
@@ -114,13 +115,17 @@ export default function ArchivePage() {
             >
               {/* Image */}
               <div className="h-56 sm:h-72 overflow-hidden relative archive-image-mask">
-                <Image
-                  src={project.image}
-                  alt={project.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
-                />
+                {project.image ? (
+                  <Image
+                    src={project.image}
+                    alt={project.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                  />
+                ) : (
+                  <ImagePlaceholder />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                 <div
                   className={`absolute top-6 left-6 px-3 py-1 bg-black/80 backdrop-blur-md border border-white/10 text-[8px] uppercase tracking-widest ${cat.badgeText}`}

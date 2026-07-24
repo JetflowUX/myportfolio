@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ImagePlaceholder } from "@/components/image-placeholder";
 import type { Project } from "@/lib/data";
 
 const labelMap: Record<string, string> = {
@@ -21,17 +22,16 @@ type Props = {
   staggerOffset?: boolean;
 };
 
-const DEFAULT_PROJECT_IMAGE =
-  "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1200";
-
 export function ProjectCard({ project, index, staggerOffset }: Props) {
   const deepDiveHref = `/projects/${project.slug}`;
   const label =
     labelMap[project.slug] ?? project.slug.toUpperCase().slice(0, 4);
-  const [imgSrc, setImgSrc] = useState(project.image || DEFAULT_PROJECT_IMAGE);
+  // Empty string once the image is cleared or fails to load → show the
+  // neutral placeholder rather than a hardcoded stock photo.
+  const [imgSrc, setImgSrc] = useState(project.image);
 
   useEffect(() => {
-    setImgSrc(project.image || DEFAULT_PROJECT_IMAGE);
+    setImgSrc(project.image);
   }, [project.image]);
 
   return (
@@ -50,14 +50,18 @@ export function ProjectCard({ project, index, staggerOffset }: Props) {
     >
       {/* Image area */}
       <div className="h-52 sm:h-64 bg-ink/5 relative overflow-hidden">
-        <Image
-          src={imgSrc}
-          alt={project.title}
-          fill
-          sizes="(max-width: 640px) 100vw, 50vw"
-          onError={() => setImgSrc(DEFAULT_PROJECT_IMAGE)}
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
-        />
+        {imgSrc ? (
+          <Image
+            src={imgSrc}
+            alt={project.title}
+            fill
+            sizes="(max-width: 640px) 100vw, 50vw"
+            onError={() => setImgSrc("")}
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        ) : (
+          <ImagePlaceholder />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/20" />
         <div className="absolute inset-0 flex items-center justify-center text-6xl sm:text-8xl font-black opacity-5 group-hover:scale-110 group-hover:blur-[1px] transition-all duration-700 text-white">
           {label}

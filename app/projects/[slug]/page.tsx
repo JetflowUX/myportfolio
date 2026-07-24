@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Maximize2 } from "lucide-react";
 import { CursorFollower } from "@/components/cursor-follower";
+import { ImagePlaceholder } from "@/components/image-placeholder";
 import { LightboxProvider, useLightbox } from "@/components/image-lightbox";
 import { SiteFooter } from "@/components/site-footer";
 import { ScrollProgress } from "@/components/scroll-progress";
@@ -48,10 +49,7 @@ export default function ProjectCaseStudyPage() {
 
   const project = allProjects.find((item) => item.slug === slug);
 
-  const caseStudyImage =
-    project?.caseStudyImage ||
-    project?.image ||
-    "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1200";
+  const caseStudyImage = project?.caseStudyImage || project?.image || "";
   const galleryImages = project?.caseStudyGallery ?? [];
   const hasProblemSolution = Boolean(
     project?.problem?.trim() || project?.solution?.trim(),
@@ -523,39 +521,51 @@ function HeroMedia({
   caseStudyImage: string;
 }) {
   const { open } = useLightbox();
+  const hasImage = Boolean(caseStudyImage);
+  const interactive = hasImage
+    ? {
+        onClick: () => open({ src: caseStudyImage, alt: project.title }),
+        role: "button" as const,
+        tabIndex: 0,
+        "aria-label": `View ${project.title} hero image`,
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            open({ src: caseStudyImage, alt: project.title });
+          }
+        },
+      }
+    : {};
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-      className="group relative overflow-hidden cursor-zoom-in"
+      className={`group relative overflow-hidden ${hasImage ? "cursor-zoom-in" : ""}`}
       style={{ aspectRatio: "21/9" }}
-      onClick={() => open({ src: caseStudyImage, alt: project.title })}
-      role="button"
-      tabIndex={0}
-      aria-label={`View ${project.title} hero image`}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          open({ src: caseStudyImage, alt: project.title });
-        }
-      }}
+      {...interactive}
     >
-      <Image
-        src={caseStudyImage}
-        alt={project.title}
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-      />
+      {hasImage ? (
+        <Image
+          src={caseStudyImage}
+          alt={project.title}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+        />
+      ) : (
+        <ImagePlaceholder label="No hero image" />
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/40 via-transparent to-transparent" />
 
       {/* zoom affordance */}
-      <span className="absolute top-7 left-7 flex items-center gap-1.5 border border-white/20 bg-black/30 px-3 py-1.5 text-[8px] font-mono uppercase tracking-[0.25em] text-white/80 opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
-        <Maximize2 className="h-3 w-3" strokeWidth={2.5} /> Click to expand
-      </span>
+      {hasImage && (
+        <span className="absolute top-7 left-7 flex items-center gap-1.5 border border-white/20 bg-black/30 px-3 py-1.5 text-[8px] font-mono uppercase tracking-[0.25em] text-white/80 opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
+          <Maximize2 className="h-3 w-3" strokeWidth={2.5} /> Click to expand
+        </span>
+      )}
 
       {/* bottom-left caption */}
       <div className="absolute bottom-5 left-5 sm:bottom-8 sm:left-8">
@@ -924,12 +934,6 @@ function VisualSlot({
             </span>
           </span>
         </button>
-        <figcaption className="flex items-center justify-between px-4 py-2.5 border-t border-ink/[0.07] bg-ink/[0.02]">
-          <span className="text-[8px] uppercase tracking-[0.28em] text-text-tertiary font-mono">
-            {label}
-          </span>
-          <span className="text-[8px] text-text-tertiary font-mono">↑</span>
-        </figcaption>
       </motion.figure>
     );
   }

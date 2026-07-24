@@ -341,9 +341,10 @@ export function AdminDashboard() {
         .map((item) => item.trim())
         .filter(Boolean),
       category: form.category,
-      image:
-        form.image.trim() ||
-        "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1200",
+      // Blank stays blank — no hardcoded stock-photo fallback, so a cleared
+      // image genuinely clears. caseStudyImage still defaults to the
+      // thumbnail when only the thumbnail is provided.
+      image: form.image.trim(),
       caseStudyImage: form.caseStudyImage.trim() || form.image.trim(),
       caseStudyGallery: form.caseStudyGallery
         .split(/\n|,/)

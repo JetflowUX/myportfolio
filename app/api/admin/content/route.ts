@@ -9,18 +9,19 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Default path (every visitor, every page load): read through Vercel
-    // Blob's CDN cache and let Vercel's edge cache this response too — a
-    // live Blob fetch on every single page view was adding ~1s to every
-    // page. ?fresh=1 (used only by the admin dashboard's own post-save
-    // refresh) skips both caches so an edit is visible immediately.
-    const fresh = request.nextUrl.searchParams.get('fresh') === '1';
-    const payload = await getSiteContentPayload({ fresh });
+    // Read straight from the Blob origin (bypassing Blob's own ~60s CDN
+    // cache) so admin edits surface quickly. The short s-maxage below still
+    // lets Vercel's edge cache coalesce bursts, so not every page view pays
+    // for a live Blob fetch — at most one origin read per ~10s per region.
+    // ?fresh=1 (the admin dashboard's own post-save refresh) additionally
+    // sends no-store so the editor sees their change instantly.
+    const adminFresh = request.nextUrl.searchParams.get('fresh') === '1';
+    const payload = await getSiteContentPayload({ fresh: true });
     return NextResponse.json(payload, {
       headers: {
-        'Cache-Control': fresh
+        'Cache-Control': adminFresh
           ? 'no-store'
-          : 'public, s-maxage=30, stale-while-revalidate=120',
+          : 'public, s-maxage=10, stale-while-revalidate=20',
       },
     });
   } catch (error) {
