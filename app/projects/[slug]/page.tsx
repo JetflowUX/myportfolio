@@ -790,6 +790,26 @@ const CATEGORY_FALLBACK_SWATCHES: Record<Project["category"], PaletteSwatch[]> =
     ],
   };
 
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  let h = hex.replace("#", "");
+  if (h.length === 3) {
+    h = h
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+  const int = Number.parseInt(h, 16);
+  return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
+}
+
+// White label on dark swatches, near-black on light ones — keeps the name
+// legible regardless of the colour (perceived-luminance threshold).
+function readableTextColor(hex: string): string {
+  const { r, g, b } = hexToRgb(hex);
+  const luminance = (r * 299 + g * 587 + b * 114) / 1000;
+  return luminance > 150 ? "#1A1A1A" : "#FFFFFF";
+}
+
 function ColorPaletteBox({
   description,
   category,
@@ -814,33 +834,37 @@ function ColorPaletteBox({
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="py-8 sm:py-10 border-b border-ink/[0.05]"
     >
-      <div className="border border-accent/20 bg-accent/[0.04]">
-        <p className="text-[9px] uppercase tracking-[0.35em] text-accent-ink/80 py-4 px-5 sm:px-6 font-mono font-bold border-b border-accent/20">
-          Color Codes
-        </p>
-        <div className="divide-y divide-ink/[0.07]">
-          {swatches.map((swatch) => (
-            <div
-              key={swatch.hex}
-              className="flex items-center gap-4 px-5 sm:px-6 py-4"
-            >
-              <svg
-                className="h-9 w-9 shrink-0"
-                viewBox="0 0 100 100"
-                role="img"
-                aria-label={`${swatch.label} ${swatch.hex}`}
+      <p className="text-[9px] uppercase tracking-[0.35em] text-accent-ink/80 mb-5 sm:mb-6 font-mono font-bold">
+        Colour Palette
+      </p>
+      <div className="flex flex-wrap gap-4 sm:gap-6">
+        {swatches.map((swatch) => {
+          const { r, g, b } = hexToRgb(swatch.hex);
+          const textColor = readableTextColor(swatch.hex);
+          return (
+            <figure key={swatch.hex} className="w-[calc(50%-0.5rem)] sm:w-40">
+              <div
+                className="relative h-44 sm:h-52 rounded-2xl p-4 flex items-start"
+                style={{ backgroundColor: swatch.hex }}
               >
-                <circle cx="50" cy="50" r="46" fill={swatch.hex} stroke="currentColor" className="text-ink/20" strokeWidth="3" />
-              </svg>
-              <p className="text-[9px] uppercase tracking-[0.22em] text-text-tertiary font-mono flex-1 min-w-0">
-                {swatch.label}
-              </p>
-              <p className="text-xs font-bold text-text font-mono tabular-nums shrink-0">
-                {swatch.hex}
-              </p>
-            </div>
-          ))}
-        </div>
+                <figcaption
+                  className="text-base sm:text-lg font-medium leading-tight"
+                  style={{ color: textColor }}
+                >
+                  {swatch.label}
+                </figcaption>
+              </div>
+              <div className="mt-3 space-y-0.5">
+                <p className="text-[11px] sm:text-xs text-text-secondary font-mono tabular-nums">
+                  R{r} G{g} B{b}
+                </p>
+                <p className="text-[11px] sm:text-xs text-text-secondary font-mono">
+                  {swatch.hex}
+                </p>
+              </div>
+            </figure>
+          );
+        })}
       </div>
     </motion.section>
   );
