@@ -82,6 +82,10 @@ export async function POST(req: NextRequest) {
     });
 
     if (result.error) {
+      // Previously silent — a bad/revoked API key or an unverified sender
+      // domain both land here, and with nothing logged there was no way to
+      // tell the two apart from a deployment's function logs.
+      console.error('Resend API error:', result.error);
       return NextResponse.json(
         { error: 'Failed to send email' },
         { status: 500 }

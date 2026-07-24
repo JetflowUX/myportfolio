@@ -118,7 +118,11 @@ export function AdminDashboard() {
   );
 
   async function refreshAll() {
-    const content = await getSiteContent();
+    // Always fresh — this only runs a handful of times per admin session
+    // (on mount, and right after each save/delete), so bypassing the
+    // public cache here costs nothing and guarantees the dashboard shows
+    // its own edits immediately instead of possibly-stale cached data.
+    const content = await getSiteContent({ fresh: true });
     setAvailableProjects(content.projects);
     setAdminProjectSlugs(new Set(content.adminProjectSlugs));
     setAvailableCompanies(content.companies);

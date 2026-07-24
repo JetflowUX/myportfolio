@@ -67,7 +67,7 @@ function sortProjectsByYearDesc(items: Project[]): Project[] {
   });
 }
 
-async function readOverlay(): Promise<Overlay> {
+async function readOverlay(options?: { fresh?: boolean }): Promise<Overlay> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     // No Blob store linked yet (e.g. local dev before running
     // `vercel env pull`, or a fresh deploy before storage is set up).
@@ -76,12 +76,14 @@ async function readOverlay(): Promise<Overlay> {
   }
 
   try {
-    // useCache: false is required here — a plain fetch() against the blob's
-    // public URL (even with Next's `cache: 'no-store'`) still hits Vercel
-    // Blob's own CDN edge cache, which can serve up to ~60s-stale content
-    // after a write. This route needs to read its own writes immediately
-    // (e.g. right after an admin save), so it goes straight to origin.
-    const result = await get(CONTENT_PATHNAME, { access: 'public', useCache: false });
+    // useCache: false bypasses Vercel Blob's own CDN edge cache and reads
+    // straight from origin — required right after a write (e.g. the admin
+    // dashboard's own refresh, or merging before another write) so it never
+    // reads stale data. But it's also meaningfully slower, so the public
+    // read path (every visitor, every page load — see getSiteContentPayload)
+    // must NOT default to this, or every page view pays for a live Blob
+    // fetch. Only pass `fresh: true` where correctness genuinely needs it.
+    const result = await get(CONTENT_PATHNAME, { access: 'public', useCache: !options?.fresh });
     if (!result || result.statusCode !== 200 || !result.stream) {
       return EMPTY_OVERLAY;
     }
@@ -116,8 +118,8 @@ async function writeOverlay(overlay: Overlay): Promise<void> {
   });
 }
 
-export async function getSiteContentPayload(): Promise<SiteContentPayload> {
-  const overlay = await readOverlay();
+export async function getSiteContentPayload(options?: { fresh?: boolean }): Promise<SiteContentPayload> {
+  const overlay = await readOverlay(options);
   const deleted = new Set(overlay.deletedCompanyIds);
   const mergedCompanies = uniqueByCompanyId([...staticCompanies, ...overlay.companies]).filter(
     (item) => !deleted.has(item.id),
@@ -131,18 +133,18 @@ export async function getSiteContentPayload(): Promise<SiteContentPayload> {
 }
 
 export async function upsertProject(project: Project): Promise<void> {
-  const overlay = await readOverlay();
+  const overlay = await readOverlay({ fresh: true });
   const next = [...overlay.projects.filter((item) => item.slug !== project.slug), project];
   await writeOverlay({ ...overlay, projects: uniqueBySlug(next) });
 }
 
 export async function removeProject(slug: string): Promise<void> {
-  const overlay = await readOverlay();
+  const overlay = await readOverlay({ fresh: true });
   await writeOverlay({ ...overlay, projects: overlay.projects.filter((item) => item.slug !== slug) });
 }
 
 export async function upsertCompany(company: Company): Promise<void> {
-  const overlay = await readOverlay();
+  const overlay = await readOverlay({ fresh: true });
   const next = [...overlay.companies.filter((item) => item.id !== company.id), company];
   await writeOverlay({
     ...overlay,
@@ -153,7 +155,7 @@ export async function upsertCompany(company: Company): Promise<void> {
 }
 
 export async function removeCompany(id: string): Promise<void> {
-  const overlay = await readOverlay();
+  const overlay = await readOverlay({ fresh: true });
   await writeOverlay({
     ...overlay,
     companies: overlay.companies.filter((item) => item.id !== id),
@@ -167,11 +169,11 @@ export async function removeCompany(id: string): Promise<void> {
 }
 
 export async function setResumeUrl(resumeUrl: string): Promise<void> {
-  const overlay = await readOverlay();
+  const overlay = await readOverlay({ fresh: true });
   await writeOverlay({ ...overlay, resumeUrl: resumeUrl.trim() });
 }
 
 export async function clearResumeUrl(): Promise<void> {
-  const overlay = await readOverlay();
+  const overlay = await readOverlay({ fresh: true });
   await writeOverlay({ ...overlay, resumeUrl: '' });
 }

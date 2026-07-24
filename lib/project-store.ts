@@ -21,9 +21,15 @@ const FALLBACK_CONTENT: SiteContent = {
 // ever reached the deployed site or other visitors. It now talks to the
 // /api/admin/* routes, which persist to a shared Vercel Blob store instead.
 
-export async function getSiteContent(): Promise<SiteContent> {
+export async function getSiteContent(options?: { fresh?: boolean }): Promise<SiteContent> {
   try {
-    const res = await fetch('/api/admin/content', { cache: 'no-store' });
+    // Public pages leave this at the default — the browser/CDN can serve a
+    // cached response, which is the point (see /api/admin/content). Only
+    // the admin dashboard passes fresh:true, right after it saves or
+    // deletes something, so it sees its own edit immediately rather than
+    // waiting out the cache window.
+    const url = options?.fresh ? '/api/admin/content?fresh=1' : '/api/admin/content';
+    const res = await fetch(url, options?.fresh ? { cache: 'no-store' } : undefined);
     if (!res.ok) {
       return FALLBACK_CONTENT;
     }

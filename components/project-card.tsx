@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Project } from "@/lib/data";
@@ -49,12 +50,13 @@ export function ProjectCard({ project, index, staggerOffset }: Props) {
     >
       {/* Image area */}
       <div className="h-52 sm:h-64 bg-ink/5 relative overflow-hidden">
-        <img
+        <Image
           src={imgSrc}
           alt={project.title}
-          loading="lazy"
+          fill
+          sizes="(max-width: 640px) 100vw, 50vw"
           onError={() => setImgSrc(DEFAULT_PROJECT_IMAGE)}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/20" />
         <div className="absolute inset-0 flex items-center justify-center text-6xl sm:text-8xl font-black opacity-5 group-hover:scale-110 group-hover:blur-[1px] transition-all duration-700 text-white">

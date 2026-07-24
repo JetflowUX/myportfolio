@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -202,10 +203,13 @@ export default function ProjectCaseStudyPage() {
           className="relative overflow-hidden"
           style={{ aspectRatio: "21/9" }}
         >
-          <img
+          <Image
             src={caseStudyImage}
             alt={project.title}
-            className="w-full h-full object-cover"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/40 via-transparent to-transparent" />
@@ -767,28 +771,28 @@ function ColorPaletteBox({
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="py-8 sm:py-10 border-b border-ink/[0.05]"
     >
-      <div className="border border-accent/20 bg-accent/[0.04] py-5 sm:py-6">
-        <p className="text-[9px] uppercase tracking-[0.35em] text-accent-ink/80 mb-4 font-mono font-bold px-5 sm:px-6">
+      <div className="border border-accent/20 bg-accent/[0.04]">
+        <p className="text-[9px] uppercase tracking-[0.35em] text-accent-ink/80 py-4 px-5 sm:px-6 font-mono font-bold border-b border-accent/20">
           Color Codes
         </p>
-        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 px-5 sm:px-6">
+        <div className="divide-y divide-ink/[0.07]">
           {swatches.map((swatch) => (
             <div
               key={swatch.hex}
-              className="border border-ink/10 bg-bg/40 p-3 sm:p-4"
+              className="flex items-center gap-4 px-5 sm:px-6 py-4"
             >
               <svg
-                className="h-12 sm:h-14 w-full border border-ink/15 mb-3"
-                viewBox="0 0 100 56"
+                className="h-9 w-9 shrink-0"
+                viewBox="0 0 100 100"
                 role="img"
                 aria-label={`${swatch.label} ${swatch.hex}`}
               >
-                <rect width="100" height="56" fill={swatch.hex} />
+                <circle cx="50" cy="50" r="46" fill={swatch.hex} stroke="currentColor" className="text-ink/20" strokeWidth="3" />
               </svg>
-              <p className="text-[9px] uppercase tracking-[0.22em] text-text-tertiary font-mono mb-1">
+              <p className="text-[9px] uppercase tracking-[0.22em] text-text-tertiary font-mono flex-1 min-w-0">
                 {swatch.label}
               </p>
-              <p className="text-xs font-bold text-text font-mono">
+              <p className="text-xs font-bold text-text font-mono tabular-nums shrink-0">
                 {swatch.hex}
               </p>
             </div>
@@ -842,11 +846,13 @@ function VisualSlot({
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="overflow-hidden border border-ink/[0.07] group"
       >
-        <div className={`${h} overflow-hidden`}>
-          <img
+        <div className={`${h} overflow-hidden relative`}>
+          <Image
             src={image}
             alt={label}
-            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           />
         </div>
         <figcaption className="flex items-center justify-between px-4 py-2.5 border-t border-ink/[0.07] bg-ink/[0.02]">
