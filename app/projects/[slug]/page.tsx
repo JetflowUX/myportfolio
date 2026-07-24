@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { Maximize2 } from "lucide-react";
 import { CursorFollower } from "@/components/cursor-follower";
+import { LightboxProvider, useLightbox } from "@/components/image-lightbox";
 import { SiteFooter } from "@/components/site-footer";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { TopNav } from "@/components/top-nav";
@@ -137,6 +139,7 @@ export default function ProjectCaseStudyPage() {
   ];
 
   return (
+    <LightboxProvider>
     <main className="relative z-10 min-h-screen bg-bg">
       <ScrollProgress />
       <CursorFollower />
@@ -196,49 +199,7 @@ export default function ProjectCaseStudyPage() {
 
       {/* ─── HERO IMAGE ─────────────────────────────────────── */}
       <div className="w-full px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto mb-0">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-          className="relative overflow-hidden"
-          style={{ aspectRatio: "21/9" }}
-        >
-          <Image
-            src={caseStudyImage}
-            alt={project.title}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/40 via-transparent to-transparent" />
-
-          {/* bottom-left caption */}
-          <div className="absolute bottom-5 left-5 sm:bottom-8 sm:left-8">
-            <p className="text-[9px] font-mono uppercase tracking-[0.35em] text-white/40 mb-1">
-              {project.category} · {project.year}
-            </p>
-            <p className="text-white/60 text-xs sm:text-sm max-w-sm leading-relaxed">
-              {project.solution
-                ? project.solution.split(" ").slice(0, 14).join(" ") +
-                  (project.solution.split(" ").length > 14 ? "…" : "")
-                : ""}
-            </p>
-          </div>
-
-          {/* Live CTA */}
-          {project.projectLink && (
-            <a
-              href={project.projectLink}
-              target="_blank"
-              rel="noreferrer"
-              className="hidden sm:flex absolute top-7 right-7 bg-accent text-black px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.25em] hover:brightness-110 transition-all z-10 items-center gap-2"
-            >
-              Live Site <span className="text-[11px]">↗</span>
-            </a>
-          )}
-        </motion.div>
+        <HeroMedia project={project} caseStudyImage={caseStudyImage} />
         {project.projectLink && (
           <a
             href={project.projectLink}
@@ -548,10 +509,82 @@ export default function ProjectCaseStudyPage() {
 
       <SiteFooter variant="compact" />
     </main>
+    </LightboxProvider>
   );
 }
 
 /* ── HELPER COMPONENTS ──────────────────────────────────────── */
+
+function HeroMedia({
+  project,
+  caseStudyImage,
+}: {
+  project: Project;
+  caseStudyImage: string;
+}) {
+  const { open } = useLightbox();
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+      className="group relative overflow-hidden cursor-zoom-in"
+      style={{ aspectRatio: "21/9" }}
+      onClick={() => open({ src: caseStudyImage, alt: project.title })}
+      role="button"
+      tabIndex={0}
+      aria-label={`View ${project.title} hero image`}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          open({ src: caseStudyImage, alt: project.title });
+        }
+      }}
+    >
+      <Image
+        src={caseStudyImage}
+        alt={project.title}
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/40 via-transparent to-transparent" />
+
+      {/* zoom affordance */}
+      <span className="absolute top-7 left-7 flex items-center gap-1.5 border border-white/20 bg-black/30 px-3 py-1.5 text-[8px] font-mono uppercase tracking-[0.25em] text-white/80 opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
+        <Maximize2 className="h-3 w-3" strokeWidth={2.5} /> Click to expand
+      </span>
+
+      {/* bottom-left caption */}
+      <div className="absolute bottom-5 left-5 sm:bottom-8 sm:left-8">
+        <p className="text-[9px] font-mono uppercase tracking-[0.35em] text-white/40 mb-1">
+          {project.category} · {project.year}
+        </p>
+        <p className="text-white/60 text-xs sm:text-sm max-w-sm leading-relaxed">
+          {project.solution
+            ? project.solution.split(" ").slice(0, 14).join(" ") +
+              (project.solution.split(" ").length > 14 ? "…" : "")
+            : ""}
+        </p>
+      </div>
+
+      {/* Live CTA */}
+      {project.projectLink && (
+        <a
+          href={project.projectLink}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="hidden sm:flex absolute top-7 right-7 bg-accent text-black px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.25em] hover:brightness-110 transition-all z-10 items-center gap-2"
+        >
+          Live Site <span className="text-[11px]">↗</span>
+        </a>
+      )}
+    </motion.div>
+  );
+}
 
 function StatCell({ label, value }: { label: string; value: string }) {
   return (
@@ -836,6 +869,7 @@ function VisualSlot({
   label: string;
   tall?: boolean;
 }) {
+  const { open } = useLightbox();
   const h = tall ? "h-56 sm:h-72 lg:h-80" : "h-36 sm:h-44";
   if (image) {
     return (
@@ -846,7 +880,12 @@ function VisualSlot({
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="overflow-hidden border border-ink/[0.07] group"
       >
-        <div className={`${h} overflow-hidden relative`}>
+        <button
+          type="button"
+          onClick={() => open({ src: image, alt: label })}
+          aria-label={`View ${label} image`}
+          className={`${h} w-full block overflow-hidden relative cursor-zoom-in`}
+        >
           <Image
             src={image}
             alt={label}
@@ -854,7 +893,12 @@ function VisualSlot({
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           />
-        </div>
+          <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/30 group-hover:opacity-100">
+            <span className="flex items-center gap-1.5 border border-white/25 bg-black/40 px-3 py-1.5 text-[8px] font-mono uppercase tracking-[0.25em] text-white backdrop-blur-md">
+              <Maximize2 className="h-3 w-3" strokeWidth={2.5} /> Expand
+            </span>
+          </span>
+        </button>
         <figcaption className="flex items-center justify-between px-4 py-2.5 border-t border-ink/[0.07] bg-ink/[0.02]">
           <span className="text-[8px] uppercase tracking-[0.28em] text-text-tertiary font-mono">
             {label}
