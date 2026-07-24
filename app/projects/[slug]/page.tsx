@@ -844,17 +844,42 @@ const SLOT_LABELS = [
 ];
 
 function VisualGallerySection({ images }: { images: string[] }) {
-  const visibleImages = images.filter(Boolean);
+  // Only render boxes for images that were actually uploaded — never show
+  // empty placeholder slots. Cap at the number of labelled stages.
+  const visibleImages = images.filter(Boolean).slice(0, SLOT_LABELS.length);
   if (!visibleImages.length) {
     return null;
   }
+
+  // A single image → one showcase box.
+  if (visibleImages.length === 1) {
+    return (
+      <div className="py-8 sm:py-10">
+        <VisualSlot image={visibleImages[0]} label={SLOT_LABELS[0]} tall />
+      </div>
+    );
+  }
+
+  // Two images → a balanced side-by-side pair.
+  if (visibleImages.length === 2) {
+    return (
+      <div className="py-8 sm:py-10 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+        <VisualSlot image={visibleImages[0]} label={SLOT_LABELS[0]} tall />
+        <VisualSlot image={visibleImages[1]} label={SLOT_LABELS[1]} tall />
+      </div>
+    );
+  }
+
+  // Three or four → a full-width hero followed by the rest in a row.
+  const [firstImage, ...restImages] = visibleImages;
+  const restCols = restImages.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3";
   return (
     <div className="py-8 sm:py-10">
-      <VisualSlot image={visibleImages[0]} label={SLOT_LABELS[0]} tall />
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 mt-2 sm:mt-3">
-        <VisualSlot image={visibleImages[1]} label={SLOT_LABELS[1]} />
-        <VisualSlot image={visibleImages[2]} label={SLOT_LABELS[2]} />
-        <VisualSlot image={visibleImages[3]} label={SLOT_LABELS[3]} />
+      <VisualSlot image={firstImage} label={SLOT_LABELS[0]} tall />
+      <div className={`grid grid-cols-1 ${restCols} gap-2 sm:gap-3 mt-2 sm:mt-3`}>
+        {restImages.map((image, i) => (
+          <VisualSlot key={i} image={image} label={SLOT_LABELS[i + 1]} />
+        ))}
       </div>
     </div>
   );
