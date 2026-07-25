@@ -142,7 +142,7 @@ export default function ArchivePage() {
                   >
                     {project.year}
                   </span>
-                  {project.tech.slice(0, 2).map((tag) => (
+                  {(project.tech ?? []).slice(0, 2).map((tag) => (
                     <span
                       key={tag}
                       className="text-[9px] text-text-tertiary font-mono border border-ink/5 px-2 py-0.5"

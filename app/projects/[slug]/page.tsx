@@ -124,17 +124,20 @@ export default function ProjectCaseStudyPage() {
     );
   }
 
+  // Only list sections that actually render — otherwise the sidebar shows
+  // links whose anchors don't exist in the DOM (a project missing, say,
+  // "Context" would still get a Context link that scrolls nowhere).
   const toc = [
-    { id: "overview", label: "Overview" },
-    { id: "problem", label: "Problem" },
-    { id: "context", label: "Context" },
-    { id: "process", label: "Process" },
-    { id: "research", label: "Research" },
-    { id: "design", label: "Design" },
-    { id: "artifacts", label: "Artifacts" },
-    { id: "outcomes", label: "Outcomes" },
-    { id: "learnings", label: "Learnings" },
-  ];
+    { id: "overview", label: "Overview", show: true },
+    { id: "problem", label: "Problem", show: hasProblemSolution },
+    { id: "context", label: "Context", show: hasContextSection },
+    { id: "process", label: "Process", show: hasProcessSection },
+    { id: "research", label: "Research", show: hasResearchSection },
+    { id: "design", label: "Design", show: hasDesignSection },
+    { id: "artifacts", label: "Artifacts", show: hasArtifactsSection },
+    { id: "outcomes", label: "Outcomes", show: hasOutcomesSection },
+    { id: "learnings", label: "Learnings", show: hasLearningsSection },
+  ].filter((item) => item.show);
 
   return (
     <LightboxProvider>
@@ -185,7 +188,7 @@ export default function ProjectCaseStudyPage() {
               {project.description}
             </p>
             <div className="flex flex-wrap gap-2 shrink-0">
-              {project.tech.slice(0, 4).map((t) => (
+              {(project.tech ?? []).slice(0, 4).map((t) => (
                 <span key={t} className="tag">
                   {t}
                 </span>
@@ -218,7 +221,7 @@ export default function ProjectCaseStudyPage() {
           <StatCell label="Category" value={project.category} />
           <StatCell
             label="Stack"
-            value={project.tech.slice(0, 2).join(" · ")}
+            value={(project.tech ?? []).slice(0, 2).join(" · ")}
           />
         </div>
       </div>
@@ -486,7 +489,7 @@ export default function ProjectCaseStudyPage() {
                 Tech Stack
               </p>
               <div className="flex flex-wrap gap-2">
-                {project.tech.map((item) => (
+                {(project.tech ?? []).map((item) => (
                   <span key={item} className="tag">
                     {item}
                   </span>

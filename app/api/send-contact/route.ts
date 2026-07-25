@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Escape user-supplied values before interpolating them into the notification
+// email's HTML, so a message like `<img src=x onerror=...>` renders as inert
+// text instead of live markup in the owner's inbox.
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.RESEND_API_KEY;
@@ -49,6 +61,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const safeName = escapeHtml(trimmedName);
+    const safeEmail = escapeHtml(trimmedEmail);
+    const safeMessage = escapeHtml(trimmedMessage);
+
     const result = await resend.emails.send({
       from: `Portfolio Contact <${fromEmail}>`,
       to: toEmail,
@@ -63,14 +79,14 @@ export async function POST(req: NextRequest) {
             </div>
 
             <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 16px; margin-bottom: 16px;">
-              <p style="margin: 0 0 12px 0;"><strong style="color: #00ffc2;">From:</strong> ${trimmedName}</p>
-              <p style="margin: 0 0 12px 0;"><strong style="color: #00ffc2;">Email:</strong> <a href="mailto:${trimmedEmail}" style="color: #00ffc2; text-decoration: none;">${trimmedEmail}</a></p>
-              <p style="margin: 12px 0; color: #9ca3af; font-size: 13px;">Reply-To: ${trimmedEmail}</p>
+              <p style="margin: 0 0 12px 0;"><strong style="color: #00ffc2;">From:</strong> ${safeName}</p>
+              <p style="margin: 0 0 12px 0;"><strong style="color: #00ffc2;">Email:</strong> <a href="mailto:${safeEmail}" style="color: #00ffc2; text-decoration: none;">${safeEmail}</a></p>
+              <p style="margin: 12px 0; color: #9ca3af; font-size: 13px;">Reply-To: ${safeEmail}</p>
             </div>
 
             <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 16px; margin-bottom: 24px;">
               <h3 style="color: #e2e8f0; margin: 0 0 12px 0;">Message:</h3>
-              <p style="margin: 0; white-space: pre-wrap; color: #d1d5db; line-height: 1.6;">${trimmedMessage}</p>
+              <p style="margin: 0; white-space: pre-wrap; color: #d1d5db; line-height: 1.6;">${safeMessage}</p>
             </div>
 
             <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 16px; text-align: center; font-size: 12px; color: #6b7280;">
