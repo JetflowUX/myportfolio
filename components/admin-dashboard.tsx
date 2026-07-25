@@ -140,6 +140,13 @@ export function AdminDashboard() {
     return slugify(form.title);
   }, [form.slug, form.title]);
 
+  // When editing an existing project, keep its ORIGINAL slug no matter what
+  // the title/slug fields say. Otherwise a title that doesn't slugify back to
+  // the same slug (every default project except backup-line / speed-math-
+  // battle) saves a brand-new overlay entry at a different slug instead of
+  // overriding the project being edited — so the edit never shows up.
+  const effectiveSlug = editingSlug ?? liveSlug;
+
   const liveCompanyId = useMemo(() => {
     if (companyForm.id.trim()) {
       return slugify(companyForm.id);
@@ -310,13 +317,13 @@ export function AdminDashboard() {
       return;
     }
 
-    if (!liveSlug) {
+    if (!effectiveSlug) {
       setStatus("Slug could not be generated.");
       return;
     }
 
     const project: Project = {
-      slug: liveSlug,
+      slug: effectiveSlug,
       title: form.title.trim(),
       year: form.year.trim() || new Date().getFullYear().toString(),
       description:
@@ -729,11 +736,18 @@ export function AdminDashboard() {
                   </Field>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Slug (auto-generated if empty)">
+                  <Field
+                    label={
+                      editingSlug
+                        ? "Slug (locked while editing)"
+                        : "Slug (auto-generated if empty)"
+                    }
+                  >
                     <input
                       value={form.slug}
                       onChange={(e) => onChange("slug", e.target.value)}
-                      className="admin-input"
+                      disabled={editingSlug !== null}
+                      className="admin-input disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="auto-generated-from-title"
                     />
                   </Field>
@@ -1059,11 +1073,11 @@ export function AdminDashboard() {
                   Cancel
                 </button>
                 <span className="text-xs text-gray-500">
-                  Generated slug:{" "}
-                  <span className="text-accent">{liveSlug || "-"}</span>
+                  {editingSlug ? "Slug: " : "Generated slug: "}
+                  <span className="text-accent">{effectiveSlug || "-"}</span>
                 </span>
-                {liveSlug ? (
-                  <Link href={`/projects/${liveSlug}`} className="tag">
+                {effectiveSlug ? (
+                  <Link href={`/projects/${effectiveSlug}`} className="tag">
                     Open Case Study
                   </Link>
                 ) : null}
