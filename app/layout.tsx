@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,6 +9,13 @@ export const metadata: Metadata = {
     icon: "/icon.svg",
     shortcut: "/icon.svg",
   },
+};
+
+// Explicit mobile scaling. maximumScale is intentionally left unset so users
+// can still pinch-zoom (accessibility).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 // Sets data-theme before paint so a persisted "light" choice doesn't

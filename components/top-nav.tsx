@@ -68,7 +68,7 @@ export function TopNav() {
             title="Toggle navigation menu"
             aria-label="Toggle navigation menu"
             onClick={() => setMenuOpen((prev) => !prev)}
-            className="flex flex-col gap-1 p-2 hover:opacity-70 transition-opacity"
+            className="flex flex-col items-center justify-center gap-1 min-h-[44px] min-w-[44px] p-2 hover:opacity-70 transition-opacity"
           >
             <span
               className={`block w-6 h-0.5 bg-ink transition-all duration-300 ${menuOpen ? "rotate-45 translate-y-2" : ""}`}
@@ -116,7 +116,7 @@ export function TopNav() {
       </div>
 
       {menuOpen ? (
-        <div className="md:hidden mx-auto mt-3 w-full max-w-7xl border border-ink/10 bg-bg/95 backdrop-blur-md p-4 sm:mx-4">
+        <div className="md:hidden mx-4 mt-3 max-w-7xl border border-ink/10 bg-bg/95 backdrop-blur-md p-4">
           <div className="flex flex-col gap-3 text-[10px] font-bold tracking-[0.2em] uppercase">
             <Link
               href="/#work"

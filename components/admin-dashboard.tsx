@@ -1112,13 +1112,13 @@ export function AdminDashboard() {
                       <img
                         src={item.logo}
                         alt={`${item.name} logo`}
-                        className="w-10 h-10 rounded border border-white/10 object-contain bg-black/40 p-1"
+                        className="w-10 h-10 shrink-0 rounded border border-white/10 object-contain bg-black/40 p-1"
                       />
-                      <div>
-                        <p className="font-bold uppercase tracking-tight">
+                      <div className="min-w-0">
+                        <p className="font-bold uppercase tracking-tight break-words">
                           {item.name}
                         </p>
-                        <p className="text-[10px] text-gray-500 mt-1">
+                        <p className="text-[10px] text-gray-500 mt-1 break-all">
                           /{item.id}
                         </p>
                       </div>

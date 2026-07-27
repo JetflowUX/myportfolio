@@ -28,7 +28,7 @@ export function ThemeToggle({ className = '' }: Props) {
       onClick={toggle}
       aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
       title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-      className={`flex h-8 w-8 items-center justify-center border border-ink/15 text-text-tertiary transition-colors hover:border-accent-ink/50 hover:text-accent-ink ${className}`}
+      className={`flex h-11 w-11 md:h-8 md:w-8 items-center justify-center border border-ink/15 text-text-tertiary transition-colors hover:border-accent-ink/50 hover:text-accent-ink ${className}`}
     >
       {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
     </button>

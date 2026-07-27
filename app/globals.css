@@ -167,6 +167,19 @@ textarea {
   padding: 2px 8px;
 }
 
+/* Tags used as buttons/links (Edit, Delete, Case Study, …) need a real
+   touch target on phones; static <span> chips keep their compact size. */
+@media (max-width: 639px) {
+  a.tag,
+  button.tag {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
 .aqua-surface {
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.18), transparent 35%),

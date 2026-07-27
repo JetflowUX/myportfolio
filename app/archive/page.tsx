@@ -81,7 +81,7 @@ export default function ArchivePage() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`transition-colors ${filter === f ? "filter-btn-active" : "text-text-tertiary hover:text-text"}`}
+                className={`inline-flex min-h-[44px] items-center transition-colors ${filter === f ? "filter-btn-active" : "text-text-tertiary hover:text-text"}`}
               >
                 {f === "all"
                   ? "All_Systems"

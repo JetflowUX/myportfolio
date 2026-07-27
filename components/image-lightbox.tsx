@@ -66,7 +66,7 @@ export function LightboxProvider({ children }: { children: ReactNode }) {
               type="button"
               onClick={close}
               aria-label="Close image viewer"
-              className="fixed top-5 right-5 z-[101] flex items-center gap-2 border border-white/20 bg-white/5 px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.25em] text-white backdrop-blur-md transition-colors hover:bg-white/15"
+              className="fixed top-4 right-4 z-[101] flex min-h-[44px] items-center gap-2 border border-white/20 bg-white/5 px-4 py-3 text-[10px] font-black uppercase tracking-[0.25em] text-white backdrop-blur-md transition-colors hover:bg-white/15"
             >
               Cancel <X className="h-3.5 w-3.5" strokeWidth={2.5} />
             </button>

@@ -231,6 +231,28 @@ export default function ProjectCaseStudyPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-14 lg:gap-16 items-start">
           {/* ── ARTICLE ─────────────────────────────── */}
           <article className="min-w-0">
+            {/* Compact section nav for tablet/phone — the sticky sidebar TOC
+                is desktop-only, so this keeps jump-to-section on smaller
+                screens. */}
+            {toc.length > 1 && (
+              <nav className="lg:hidden mb-10" aria-label="Sections">
+                <p className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary mb-3 font-mono">
+                  Jump to
+                </p>
+                <ul className="flex flex-wrap gap-2">
+                  {toc.map((item) => (
+                    <li key={item.id}>
+                      <a
+                        href={`#${item.id}`}
+                        className="inline-flex items-center border border-ink/[0.08] bg-ink/[0.02] px-3 py-2 text-[10px] font-mono uppercase tracking-[0.18em] text-text-tertiary hover:text-accent-ink hover:border-accent/30 transition-colors"
+                      >
+                        {item.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
             {/* 00 Overview */}
             <div id="overview">
               <ChapterDivider number="00" label="Overview" />
