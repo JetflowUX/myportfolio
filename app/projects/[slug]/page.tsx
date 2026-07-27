@@ -234,12 +234,10 @@ export default function ProjectCaseStudyPage() {
             {/* 00 Overview */}
             <div id="overview">
               <ChapterDivider number="00" label="Overview" />
-              <div className="py-10 sm:py-12">
-                <p className="font-sans text-text-secondary text-base sm:text-lg leading-relaxed max-w-3xl">
-                  {project.description}
-                </p>
+              <div className="pt-1">
+                <Prose text={project.description} />
                 {project.role && (
-                  <div className="mt-6 inline-flex items-center gap-3 border border-ink/10 px-5 py-3">
+                  <div className="mt-7 inline-flex items-center gap-3 border border-ink/10 px-5 py-3">
                     <span className="text-[9px] uppercase tracking-[0.32em] text-text-tertiary font-mono">
                       Role
                     </span>
@@ -255,31 +253,27 @@ export default function ProjectCaseStudyPage() {
             {hasProblemSolution && (
               <div id="problem">
                 <ChapterDivider number="01" label="Problem & Solution" />
-                <div className="py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 gap-0">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {project.problem?.trim() && (
-                    <div className="bg-ink/[0.02] border border-ink/[0.07] p-7 sm:p-9">
-                      <div className="flex items-center gap-3 mb-5">
-                        <div className="w-2 h-2 bg-red-400/70 rounded-full" />
-                        <span className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary font-mono">
+                    <div className="rounded-xl border border-ink/[0.07] bg-ink/[0.02] p-6 sm:p-8">
+                      <div className="mb-5 flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-red-400/70" />
+                        <span className="text-[10px] uppercase tracking-[0.28em] text-text-tertiary font-mono font-bold">
                           The Problem
                         </span>
                       </div>
-                      <p className="font-sans leading-relaxed text-sm sm:text-base whitespace-pre-wrap text-text-secondary">
-                        {project.problem}
-                      </p>
+                      <Prose text={project.problem} />
                     </div>
                   )}
                   {project.solution?.trim() && (
-                    <div className="bg-accent/[0.04] border border-accent/[0.18] p-7 sm:p-9">
-                      <div className="flex items-center gap-3 mb-5">
-                        <div className="w-2 h-2 bg-accent rounded-full" />
-                        <span className="text-[9px] uppercase tracking-[0.35em] text-accent-ink/70 font-mono">
+                    <div className="rounded-xl border border-accent/[0.18] bg-accent/[0.04] p-6 sm:p-8">
+                      <div className="mb-5 flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-accent" />
+                        <span className="text-[10px] uppercase tracking-[0.28em] text-accent-ink/70 font-mono font-bold">
                           The Solution
                         </span>
                       </div>
-                      <p className="font-sans leading-relaxed text-sm sm:text-base whitespace-pre-wrap text-text-secondary">
-                        {project.solution}
-                      </p>
+                      <Prose text={project.solution} />
                     </div>
                   )}
                 </div>
@@ -612,47 +606,134 @@ function StatCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ChapterDivider({ number, label }: { number: string; label: string }) {
-  // Color code sections for better visual hierarchy
-  const getColor = (label: string) => {
-    if (label.includes("Research") || label.includes("Insights"))
-      return "bg-blue-500/40";
-    if (label.includes("Design") || label.includes("Visual"))
-      return "bg-emerald-500/40";
-    if (label.includes("Problem") || label.includes("Solution"))
-      return "bg-purple-500/40";
-    if (label.includes("Impact") || label.includes("Outcome"))
-      return "bg-amber-500/40";
-    if (label.includes("Learnings") || label.includes("Next"))
-      return "bg-pink-500/40";
-    return "bg-accent/20";
-  };
+// Color code sections for a subtle visual hierarchy between chapters.
+function sectionAccent(label: string) {
+  if (label.includes("Research") || label.includes("Insights"))
+    return "bg-blue-500/50";
+  if (label.includes("Design") || label.includes("Visual"))
+    return "bg-emerald-500/50";
+  if (label.includes("Problem") || label.includes("Solution"))
+    return "bg-purple-500/50";
+  if (label.includes("Impact") || label.includes("Outcome"))
+    return "bg-amber-500/50";
+  if (label.includes("Learnings") || label.includes("Next"))
+    return "bg-pink-500/50";
+  return "bg-accent/50";
+}
 
+type ProseBlock = { type: "p"; text: string } | { type: "ol"; items: string[] };
+
+// Turn the long single-string case-study fields into something readable:
+// respect any real line breaks, promote inline "(1) … (2) …" enumerations to
+// a numbered list, and otherwise chunk a wall of text into ~3-sentence
+// paragraphs.
+function splitProse(raw: string): ProseBlock[] {
+  const clean = raw.replace(/\r/g, "").trim();
+  if (!clean) return [];
+
+  let blocks = clean
+    .split(/\n{2,}/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+  if (blocks.length === 1) {
+    const lines = clean
+      .split(/\n+/)
+      .map((b) => b.trim())
+      .filter(Boolean);
+    if (lines.length > 1) blocks = lines;
+  }
+
+  const out: ProseBlock[] = [];
+  for (const block of blocks) {
+    const markers = block.match(/\(\d+\)/g);
+    const firstIdx = block.search(/\(\d+\)\s/);
+    if (markers && markers.length >= 2 && firstIdx >= 0) {
+      const lead = block.slice(0, firstIdx).trim();
+      if (lead) out.push({ type: "p", text: lead });
+      const items = block
+        .slice(firstIdx)
+        .split(/(?=\(\d+\)\s)/)
+        .map((s) => s.replace(/^\(\d+\)\s*/, "").trim())
+        .filter(Boolean);
+      out.push({ type: "ol", items });
+      continue;
+    }
+
+    if (block.length > 300) {
+      // Split on sentence boundaries using a lookahead only (widely
+      // supported) — a sentinel avoids consuming the space and never
+      // breaks decimals like "4.2/5".
+      const sentences = block
+        .replace(/([.!?])\s+(?=[A-Z(])/g, "$1|__SENT__|")
+        .split("|__SENT__|")
+        .filter(Boolean);
+      if (sentences.length > 1) {
+        for (let i = 0; i < sentences.length; i += 3) {
+          out.push({
+            type: "p",
+            text: sentences.slice(i, i + 3).join(" ").trim(),
+          });
+        }
+        continue;
+      }
+    }
+    out.push({ type: "p", text: block });
+  }
+  return out;
+}
+
+function Prose({ text, className = "" }: { text: string; className?: string }) {
+  const blocks = splitProse(text);
+  if (!blocks.length) return null;
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -12 }}
-      whileInView={{ opacity: 1, x: 0 }}
+    <div
+      className={`max-w-[68ch] space-y-4 font-sans text-[15px] sm:text-[17px] leading-[1.75] text-text-secondary ${className}`}
+    >
+      {blocks.map((block, i) =>
+        block.type === "ol" ? (
+          <ol key={i} className="space-y-2.5">
+            {block.items.map((item, j) => (
+              <li key={j} className="flex gap-3">
+                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 font-mono text-[10px] font-bold tabular-nums text-accent-ink">
+                  {j + 1}
+                </span>
+                <span className="flex-1">{item}</span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p key={i}>{block.text}</p>
+        ),
+      )}
+    </div>
+  );
+}
+
+function ChapterDivider({ number, label }: { number: string; label: string }) {
+  return (
+    <motion.header
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.45, ease: "easeOut" }}
-      className="flex items-center gap-4 pt-16 sm:pt-20 pb-1"
+      className="pt-20 sm:pt-24 mb-6 sm:mb-7"
     >
-      <div className={`w-1 h-8 rounded-full ${getColor(label)}`} />
-      <span className="text-[9px] font-mono text-text-tertiary tracking-widest tabular-nums">
-        {number}
-      </span>
-      <div className="h-px flex-1 bg-ink/[0.06]" />
-      <span className="text-[9px] font-mono uppercase tracking-[0.35em] text-text-tertiary">
+      <div className="mb-3 flex items-center gap-3">
+        <span className={`h-5 w-1.5 rounded-full ${sectionAccent(label)}`} />
+        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-text-tertiary tabular-nums">
+          {number}
+        </span>
+      </div>
+      <h2 className="text-[1.55rem] sm:text-[2rem] font-bold leading-tight tracking-tight text-text">
         {label}
-      </span>
-    </motion.div>
+      </h2>
+    </motion.header>
   );
 }
 
 function NumberedSection({
-  number,
   label,
   body,
-  fallback,
 }: {
   number: string;
   label: string;
@@ -665,33 +746,21 @@ function NumberedSection({
   }
   return (
     <motion.section
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="flex gap-6 sm:gap-10 py-8 sm:py-10 border-b border-ink/[0.05]"
+      className="border-b border-ink/[0.05] py-6 sm:py-7 last:border-b-0"
     >
-      <div className="shrink-0 w-10 sm:w-14 pt-0.5">
-        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-ink/[0.12]">
-          {number.replace(".", "")}
-        </span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary mb-3 font-mono font-bold">
-          {label}
-        </p>
-        <p
-          className={`font-sans leading-[1.8] whitespace-pre-wrap text-sm ${text ? "text-text-secondary" : "text-text-tertiary italic"}`}
-        >
-          {text || fallback}
-        </p>
-      </div>
+      <h3 className="mb-4 text-lg sm:text-xl font-bold tracking-tight text-text">
+        {label}
+      </h3>
+      <Prose text={text} />
     </motion.section>
   );
 }
 
 function PullQuoteSection({
-  number,
   label,
   body,
 }: {
@@ -704,27 +773,17 @@ function PullQuoteSection({
   }
   return (
     <motion.section
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="flex gap-6 sm:gap-10 py-8 sm:py-10 border-b border-ink/[0.05]"
+      className="border-b border-ink/[0.05] py-6 sm:py-7"
     >
-      <div className="shrink-0 w-10 sm:w-14 pt-0.5">
-        <span className="text-3xl sm:text-4xl font-black leading-none font-mono select-none text-ink/[0.12]">
-          {number.replace(".", "")}
-        </span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary mb-5 font-mono font-bold">
-          {label}
-        </p>
-        <blockquote className="relative pl-5 sm:pl-7">
-          <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-accent via-accent/50 to-transparent" />
-          <p className="font-sans text-sm sm:text-base text-text-secondary leading-[1.85] italic whitespace-pre-wrap">
-            {body}
-          </p>
-        </blockquote>
+      <h3 className="mb-4 text-lg sm:text-xl font-bold tracking-tight text-text">
+        {label}
+      </h3>
+      <div className="rounded-xl border border-accent/15 bg-accent/[0.04] p-5 sm:p-7">
+        <Prose text={body} />
       </div>
     </motion.section>
   );
@@ -837,9 +896,9 @@ function ColorPaletteBox({
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="py-8 sm:py-10 border-b border-ink/[0.05]"
     >
-      <p className="text-[9px] uppercase tracking-[0.35em] text-accent-ink/80 mb-5 sm:mb-6 font-mono font-bold">
+      <h3 className="mb-5 text-lg sm:text-xl font-bold tracking-tight text-text">
         Colour Palette
-      </p>
+      </h3>
       <div className="flex flex-wrap gap-4 sm:gap-6">
         {swatches.map((swatch) => {
           const { r, g, b } = hexToRgb(swatch.hex);
