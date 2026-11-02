@@ -215,3 +215,183 @@ export const companies: Company[] = [
     logo: 'https://dummyimage.com/240x240/111827/ffffff&text=L',
   },
 ];
+
+/* ---------------------------------------------------------------------------
+   MOTION WORK
+
+   Deliberately NOT a Project. The Project type is a UX case-study schema —
+   researchInsights, informationArchitecture, wireframes, prototypeTesting —
+   and a thirty-second brand film has none of those. Forcing video into it
+   would produce case studies with a dozen empty fields.
+
+   A motion piece is a much smaller thing: a poster, a silent loop for the
+   grid, a watchable cut, and one sentence about what it does.
+   --------------------------------------------------------------------------- */
+export type MotionPiece = {
+  slug: string;
+  title: string;
+  kind: 'Brand film' | 'Explainer' | 'Motion graphics' | 'Long form' | 'Product film' | '3D product film';
+  blurb: string;
+  meta: string;
+  poster: string;
+  loop: string;
+  watch: string;
+  /** A Google Drive file id: the film plays in Drive's own player, inside the site. */
+  drive?: string;
+};
+
+/** The id out of any Drive share link (…/file/d/<id>/view, ?id=<id>), or the id itself. */
+export function driveId(link: string): string {
+  return link.match(/\/d\/([\w-]{20,})/)?.[1] ?? link.match(/[?&]id=([\w-]{20,})/)?.[1] ?? link.trim();
+}
+
+/** A film kept on Google Drive, played in Drive's player. The file must be shared
+    "Anyone with the link" or visitors get a sign-in box. `local` names the poster
+    and 4 s hover loop cut from his own copy into public/films/; without it the
+    card falls back to Drive's thumbnail and has no hover loop. */
+export function driveFilm(link: string, title: string, meta: string, local?: string): MotionPiece {
+  const id = driveId(link);
+  return {
+    slug: `drive-${id}`,
+    title,
+    kind: 'Brand film',
+    blurb: '',
+    meta,
+    poster: local ? `/films/poster/${local}.jpg` : `https://drive.google.com/thumbnail?id=${id}&sz=w1280`,
+    loop: local ? `/films/loop/${local}.mp4` : '',
+    watch: `https://drive.google.com/file/d/${id}/preview`,
+    drive: id,
+  };
+}
+
+/* His films, from his Drive folder "1oO9xMhvtDVgV3OOiKCWHLykc1vOCe4QH" (shared
+   "anyone with the link", 2026-11-02). The Films section shows these: hover plays
+   the local loop, click plays the full film in Drive's player. One per film: the
+   folder's other sizes (1x1, 4x5, 9x16, vertical) are left out, and so are the two
+   Orca launch films while that deal is live. Lengths read from his local copies. */
+export const driveFilms: MotionPiece[] = [
+  driveFilm('1LWl6lnUFCB6gYw4X3bUhbuTjGio3jCU1', 'Jethro Adebisi · Showreel 2026', '0:45 · showreel', 'jethro-adebisi-showreel-2026'),
+  driveFilm('1UOc6FHYd7nvAIqT1pFkg8Uo9auavrFNY', 'Capveon · The Integration', '0:40 · film', 'capveon-the-integration'),
+  driveFilm('1-ZJ6IigcSnx_PzsHeGhu2XDe48_SReEd', 'Call4Me · On The Line', '0:57 · film', 'call4me-on-the-line'),
+  driveFilm('1Zg3C88kf38o9T5HqtXI96zVzROUkZU5g', 'Alter · Own Keys', '0:41 · film', 'alter-own-keys'),
+  driveFilm('1iYnT8fDryySico-WT_N0iwN6K66H8IGC', 'Pragma · In The Open', '0:49 · film', 'pragma-in-the-open'),
+  driveFilm('1cMZ_8KBANvZz7d6Z3I335dRV-bX1hx68', 'KeepMe · Antares In Action', '1:17 · film', 'keepme-antares-in-action'),
+  driveFilm('1bKkVn2cszqnkAU4ORohuzWfkYJLf0kMg', 'Andamio · Get Started', '3:30 · film', 'andamio-get-started'),
+  driveFilm('1yBOwMEeSg_yjH5DCs90ISDiMPtiV42bh', 'BillMender · Find Yours', '0:30 · film', 'billmender-find-yours'),
+  driveFilm('1sJGP0hPukrsQDnGii8YTbl_Eo3ko9Tmh', 'Vesta · In The File', '0:38 · film', 'vesta-in-the-file'),
+  driveFilm('1rY25gMniuxoobxZyMjI4lRtMRnu2rP96', 'HH Land Estates · Valued', '0:30 · film', 'hh-land-estates-valued'),
+  driveFilm('1vDG8XE0S4r2zo767GyEhHeSzSIPC8EuL', '1604 ENT · Keep It All', '0:34 · film', '1604-ent-keep-it-all'),
+  driveFilm('1htHzhnb0Ko9F20u10GX6iUbDJ5jTfI-h', 'Cyberette · Show Where', '0:30 · film', 'cyberette-show-where'),
+  driveFilm('16vYSnvWDaNLxKb9h_SUL7DiN4YpnedxM', 'ControlSeat · Between Checks', '0:28 · film', 'controlseat-between-checks'),
+  driveFilm('1X03VtSk-WFviBXtQ6y1KGkFhYIclkpNh', 'The Nursery Store · Got You', '0:28 · film', 'the-nursery-store-got-you'),
+  driveFilm('1rsFgpU3QfZK0-XVTO5uOs5O0hjNzo9mR', 'Act+Acre · Pre-wash', '0:30 · film', 'act-acre-pre-wash'),
+  driveFilm('1WGLtNY_b601y3lPrsFwl3FU1H6xQU8e7', 'Lomi · In The Chat', '0:29 · film', 'lomi-in-the-chat'),
+  driveFilm('12gW9ag5sG6t4MhWzXOdurfpUrBcFowCN', 'Stormy · On It', '0:29 · film', 'stormy-on-it'),
+  driveFilm('1dD0TGZHnbsq7dAKzeVzIs4rO1ahzfBld', 'Context · One Call', '0:40 · film', 'context-one-call'),
+  driveFilm('1cweYyscyCGMeHI8Qg7pvBWvsr3t4pVNN', 'Zana Kids · Zana Friends', '0:41 · film', 'zana-kids-zana-friends'),
+  driveFilm('1aPT7wzidMkOahRbLdhc6VKFxwYN4eZag', 'Educato · Ready For It', '0:34 · film', 'educato-ready-for-it'),
+  driveFilm('1uYfagv1-q_FLI8MJi-voih82u4ufZf5F', 'Brainbase · Hillclimb', '0:32 · film', 'brainbase-hillclimb'),
+  driveFilm('1S-Ww4OW05WY-TZVAwWd5uK7T9Oj2AbWk', 'Protolabs Network · Get It Made', '0:33 · film', 'protolabs-network-get-it-made'),
+  driveFilm('1N5xgcriK6EPTdIu2Pt5DSQkBNaJo1Mm5', 'Protolabs · Tolerance', '0:32 · film', 'protolabs-tolerance'),
+  driveFilm('1EJIo901jlnRHZDwA3qpZ2ZAL02DrbfLi', 'Pragma · Deliberate', '0:30 · film', 'pragma-deliberate'),
+  driveFilm('1CoopWoSd91K-qYfLiKp39sqGD70osrcI', 'Pragma · The Path', '0:39 · film', 'pragma-the-path'),
+  driveFilm('1AxyG-2MCVWs4OW_JU27-7DJMjH1DALt8', 'Pragma · Toolchain', '0:30 · film', 'pragma-toolchain'),
+  driveFilm('18cf57Wz5OMywng8SXflifgkwORlpW6uF', 'CTGT · Ruled', '0:33 · film', 'ctgt-ruled'),
+  driveFilm('1VDtjEfHYWPB55tnfLW76D9v7RvWe1m4b', 'Andustry · One Thread', '0:32 · film', 'andustry-one-thread'),
+  driveFilm('1sFTxVR5WvpeZ9J647nrITBzCuaGuhCnq', 'Trash Day · The Plan', '0:31 · film', 'trash-day-the-plan'),
+  driveFilm('1gqDCyJtKW9AKrOYdSKicWINFJmN-m-2g', 'UDC 2026 · Human By Design', '0:38 · film', 'udc-2026-human-by-design'),
+  driveFilm('18g7X_zDU8zWACOSoXv7JqHwjQ3uW5G0O', 'The Jackets City · Drafted', '0:36 · film', 'the-jackets-city-drafted'),
+  driveFilm('1FfHv_5OywE3-se-ZpmJWF7vuZz0U0pXH', 'The Jackets City · Unzipped', '0:38 · film', 'the-jackets-city-unzipped'),
+  driveFilm('1DheSqwQN-WAxmMAvvKWb-10dvoCYYaHV', 'Pragma · Build On', '0:44 · film', 'pragma-build-on'),
+  driveFilm('1yV7NFBD3FXhWKN1yc9wDSnyQiEG78pT1', 'Airfordable · Piece By Piece', '0:50 · film', 'airfordable-piece-by-piece'),
+  driveFilm('1J8BVwdEONdMKN-WXRpqlxBsci4hAZKgq', 'Adialante · Out Of The Basement', '0:48 · film', 'adialante-out-of-the-basement'),
+  driveFilm('1Yy9iRnSwYTsHJjwQ_XCp9o6-zCpx5ubZ', 'Acely · Session', '0:38 · film', 'acely-session'),
+  driveFilm('1Ffd7ZL4IuXVKkMFxuW_g7l2kYJUnS9eH', 'Acely · Follows You', '0:41 · film', 'acely-follows-you'),
+  driveFilm('1sE9lvzOlx1yuNttinO_b-5wAoyH3vGcL', 'AdCellerant · Signal', '0:50 · film', 'adcellerant-signal'),
+  driveFilm('1k6W3CoRE4eFx6dLtrs0sxTa9SVgtk__s', 'Jobescape · The Path', '0:48 · film', 'jobescape-the-path'),
+  driveFilm('1Ubl9fg7jjKaKdrRTvRjeKy9CiprVRYP7', 'Adam · To Work', '0:40 · film', 'adam-to-work'),
+  driveFilm('1NQp-xw5sJtdUn6J74ftDlkafx6k9tc_G', 'Black Holes · Explainer', '5:46 · explainer', 'black-holes-explainer'),
+];
+
+export const motionWork: MotionPiece[] = [
+  {
+    slug: 'inthefile',
+    title: 'Vesta · In the File',
+    kind: 'Product film',
+    blurb: 'AI loan software, shown working: one loan file, with people and agents clearing it side by side.',
+    meta: '0:38 · spec ad',
+    poster: '/motion/poster/inthefile.jpg',
+    loop: '/motion/loop/inthefile.mp4',
+    watch: '/motion/watch/inthefile.mp4',
+  },
+  {
+    slug: 'onit',
+    title: 'Stormy · On It',
+    kind: 'Product film',
+    blurb: "An AI employee for a heating firm: it takes the call, books the job and counts what it caught in a week.",
+    meta: '0:28 · spec ad',
+    poster: '/motion/poster/onit.jpg',
+    loop: '/motion/loop/onit.mp4',
+    watch: '/motion/watch/onit.mp4',
+  },
+  {
+    slug: 'tolerance',
+    title: 'Protolabs · Tolerance',
+    kind: '3D product film',
+    blurb: 'A sourced 3D impeller machined to tolerance, from uploaded file to production run.',
+    meta: '0:32 · spec ad',
+    poster: '/motion/poster/tolerance.jpg',
+    loop: '/motion/loop/tolerance.mp4',
+    watch: '/motion/watch/tolerance.mp4',
+  },
+  {
+    slug: 'hillclimb',
+    title: 'Brainbase · Hillclimb',
+    kind: 'Product film',
+    blurb: 'Agents that improve themselves, drawn as a climb: every run, every eval score, every blocked release.',
+    meta: '0:32 · spec ad',
+    poster: '/motion/poster/hillclimb.jpg',
+    loop: '/motion/loop/hillclimb.mp4',
+    watch: '/motion/watch/hillclimb.mp4',
+  },
+  {
+    slug: 'askedbefore',
+    title: 'Innerloop · Asked Before',
+    kind: 'Product film',
+    blurb: "A local AI assistant that remembers last month's answer, told inside its own interface.",
+    meta: '0:40 · spec ad',
+    poster: '/motion/poster/askedbefore.jpg',
+    loop: '/motion/loop/askedbefore.mp4',
+    watch: '/motion/watch/askedbefore.mp4',
+  },
+  {
+    slug: 'gotyou',
+    title: 'The Nursery Store · Got You',
+    kind: 'Brand film',
+    blurb: 'New-parent firsts, each answered by a product and a delivery promise that lands on the clock.',
+    meta: '0:28 · spec ad',
+    poster: '/motion/poster/gotyou.jpg',
+    loop: '/motion/loop/gotyou.mp4',
+    watch: '/motion/watch/gotyou.mp4',
+  },
+  {
+    slug: 'prewash',
+    title: 'Act+Acre · Pre-wash',
+    kind: 'Brand film',
+    blurb: "A scalp oil's twenty-minute ritual, timed on screen, ending on the result customers reported.",
+    meta: '0:30 · spec ad',
+    poster: '/motion/poster/prewash.jpg',
+    loop: '/motion/loop/prewash.mp4',
+    watch: '/motion/watch/prewash.mp4',
+  },
+  {
+    slug: 'becomes',
+    title: 'Autositu · Becomes',
+    kind: 'Motion graphics',
+    blurb: 'A planning platform for builders: one site followed from parcel to approved building.',
+    meta: '0:48 · spec ad',
+    poster: '/motion/poster/becomes.jpg',
+    loop: '/motion/loop/becomes.mp4',
+    watch: '/motion/watch/becomes.mp4',
+  },
+];

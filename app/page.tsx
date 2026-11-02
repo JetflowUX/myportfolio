@@ -1,66 +1,321 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { CursorFollower } from "@/components/cursor-follower";
-import { ProjectCard } from "@/components/project-card";
+import { ArrowRight } from "lucide-react";
+import { LightboxProvider, useLightbox } from "@/components/image-lightbox";
+import { Overture } from "@/components/overture";
+import { FilmColumns } from "@/components/film-columns";
+import { HeroProcess } from "@/components/hero-process";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { SiteFooter } from "@/components/site-footer";
-import { SpatialCanvas } from "@/components/spatial-canvas";
 import { TopNav } from "@/components/top-nav";
-import { companies, projects, type Company, type Project } from "@/lib/data";
-import { getAllCompanies, getAllProjects } from "@/lib/project-store";
+import { driveFilms, motionWork, type MotionPiece } from "@/lib/data";
+import { getSiteContent } from "@/lib/project-store";
+
+/* ---------------------------------------------------------------------------
+   HOME, fifth pass (2026-11-02)
+
+   Jethro: "i want my portfolio site to look like this https://nader.io/ ...
+   also use the animation on this website https://edisonfangworkshop.com/".
+
+   So: nader.io's Swiss grid on warm grey paper, hairline cells sharing their
+   borders, and his sections laid out the way that site lays out its own: a
+   three-cell "what I do", case studies as an accordion of spines, films as a
+   grey image grid, process as a card grid, experience as a dated list, and an
+   accent banner to close. Edison Fang's opening plays first (components/
+   overture.tsx), and the hero rises in as it fades.
+
+   The hero is components/hero-process.tsx (design it, build it, film it, on
+   the SabiBank screen). Three heroes were tried the same day: a copy of
+   nader.io's letter grid ("looks like a direct copy"), this one ("looks
+   basic"), and a 3D room ("even worse"). He chose this one: "not his style
+   the second one you created".
+
+   His accent stays his aqua, used as a fill, never as text on the paper.
+   Copy carries no em dashes (his rule). The previous page is in
+   portfolio/myportfolio-backup-2026-11-02.
+   --------------------------------------------------------------------------- */
+
+const EMAIL = "adebisireuel@gmail.com";
+
+type Case = {
+  slug: string;
+  title: string;
+  meta: string;
+  line: string;
+  image: string;
+  bg: string;
+  dark?: boolean;
+};
+
+const CASES: Case[] = [
+  {
+    slug: "sabi-bank-app",
+    title: "SabiBank",
+    meta: "Fintech · 2024",
+    line: "A personal-finance app for students who find banking apps confusing, slow and built for someone else. Plain language, ready-made student budgets, automatic categories.",
+    image: "/work/sabibank-cover.webp",
+    bg: "#DDE7FB",
+  },
+  {
+    slug: "gigsgig-app",
+    title: "GigsGig",
+    meta: "Marketplace · 2025",
+    line: "A gig marketplace for UNILAG students. Research showed people feared each other more than the app, so the design is built around visible commitment. +40% trust score in testing.",
+    image: "/work/gigsgig-cover.webp",
+    bg: "#9DCBA4",
+  },
+  {
+    slug: "ai-travel-planner",
+    title: "WanderSmart",
+    meta: "Travel · AI product · 2024",
+    line: "A travel planner that writes a full day-by-day trip from four answers, then lets the traveller change any part of it.",
+    image: "/work/wandersmart-cover.webp",
+    bg: "#16151A",
+    dark: true,
+  },
+  {
+    slug: "speed-math-battle",
+    title: "Speed Math",
+    meta: "Front-end · Live · 2025",
+    line: "Designed and built end to end: 60 fps on mid-range phones, 44 px touch targets, keyboard play and WCAG AA contrast.",
+    image: "/work/speedmath-cover.webp",
+    bg: "#0B1C2E",
+    dark: true,
+  },
+  {
+    slug: "backup-line-cloud-storage",
+    title: "Backup Line",
+    meta: "B2B · Cloud storage · 2024",
+    line: "Cloud storage for business teams, reorganised around projects so files are found in seconds and never lost by accident.",
+    image: "/work/backupline-cover.webp",
+    bg: "#E6EDCF",
+  },
+];
+
+const DOING = [
+  {
+    title: "Designing products people trust",
+    body: "User interviews, flows, prototypes and usability testing, through to a design system an engineer can build from.",
+  },
+  {
+    title: "Building them in code",
+    body: "React, Next.js, TypeScript and Tailwind. What I design ships the way it was designed.",
+  },
+  {
+    title: "Films that explain them",
+    body: "Launch films, explainers and adverts, cut and animated. 60 made so far.",
+  },
+];
+
+const PROCESS = [
+  { tag: "Understand", title: "Interviews first", body: "Interviews, surveys and an audit of what people use today, in their words." },
+  { tag: "Design", title: "Flows to high fidelity", body: "Flows and wireframes, then high fidelity on a component system." },
+  { tag: "Test", title: "Real people, real prototype", body: "Where they hesitate is where the next version starts." },
+  { tag: "Build", title: "React and Next.js", body: "Built in code, or handed off with specs an engineer can build from." },
+  { tag: "Film", title: "The launch film", body: "A film that shows the product working, made by the person who designed it." },
+  { tag: "Result", title: "GigsGig, +40% trust", body: "Trust score in usability testing after the redesign, and 3.2× faster task completion." },
+];
+
+const EXPERIENCE = [
+  {
+    when: "2023 to now",
+    role: "Freelance product designer & front-end engineer",
+    note: "Fintech, Web3 and consumer apps, from research to production React. Cardano ecosystem work with Gimbalabs and Andamio.",
+  },
+  { when: "2024", role: "Designer, GDG UNILAG, Lagos", note: "Design for the Google Developer Group at the University of Lagos." },
+  { when: "2022", role: "Digital designer, Filtar.Africa", note: "Web, social and marketing design. Google UX Design certificate." },
+  { when: "2019 to 2022", role: "Instructor, Kavit Digital", note: "Taught Photoshop, Illustrator, InDesign, Premiere Pro and After Effects." },
+];
+
+const PHOTOS = [
+  { src: "/photos/gimbalabs-session.webp", alt: "Jethro presenting a Cardano x Gimbalabs session", caption: "Gimbalabs session" },
+  { src: "/photos/cardano-summit-2026.webp", alt: "Jethro at the Cardano Africa Tech Summit 2026", caption: "Cardano Summit 2026" },
+  { src: "/photos/flaskcon-africa-2025.webp", alt: "Jethro at FlaskCon Africa 2025", caption: "FlaskCon Africa 2025" },
+  { src: "/photos/udc-2024.webp", alt: "Jethro at UDC 2024", caption: "UDC 2024" },
+  { src: "/photos/cardano-summit-gimbalabs.webp", alt: "Jethro with the Gimbalabs team", caption: "Gimbalabs team" },
+  { src: "/photos/nithub-meta-unilag.webp", alt: "Jethro at a Nithub x Meta event at UNILAG", caption: "Nithub x Meta" },
+];
+
+const REEL: MotionPiece = {
+  slug: "reel",
+  title: "Showreel",
+  kind: "Motion graphics",
+  blurb: "",
+  meta: "0:45 · press play for sound",
+  poster: "/motion/poster/reel-poster.jpg",
+  loop: "/motion/reel.mp4",
+  watch: "/motion/reel.mp4",
+};
+
+/* ------------------------------------------------------------------ pieces */
+
+function Label({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <h2 className={`label ${className}`}>{children}</h2>;
+}
+
+function More({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="label mt-6 inline-flex items-center gap-2 transition-colors hover:text-text">
+      {children} <ArrowRight className="h-3.5 w-3.5" />
+    </Link>
+  );
+}
+
+/* -------------------------------------------------------------------- hero */
+
+function Hero({ ready, resumeUrl }: { ready: boolean; resumeUrl: string }) {
+  const { open } = useLightbox();
+  return (
+    <HeroProcess
+      ready={ready}
+      resumeUrl={resumeUrl}
+      onReel={() => open({ src: REEL.watch, alt: "Jethro Adebisi showreel", kind: "video", title: REEL.title, meta: REEL.meta })}
+    />
+  );
+}
+
+/* --------------------------------------------------------------- the work */
+
+function Work() {
+  const [active, setActive] = useState(0);
+
+  return (
+    <section id="work" className="scroll-mt-10">
+      <Label>Selected work</Label>
+
+      {/* wide screens: an accordion of spines, one case open at a time */}
+      <div className="mt-10 hidden h-[340px] gap-1.5 md:flex">
+        {CASES.map((c, i) => {
+          const isOpen = i === active;
+          const ink = c.dark ? "text-white" : "text-black";
+          return (
+            <div
+              key={c.slug}
+              onMouseEnter={() => setActive(i)}
+              onFocus={() => setActive(i)}
+              className="relative flex overflow-hidden border border-black/10 transition-[flex-grow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{ background: c.bg, flexGrow: isOpen ? 7 : 1, flexBasis: 0 }}
+            >
+              {/* the spine */}
+              <button
+                type="button"
+                onClick={() => setActive(i)}
+                aria-expanded={isOpen}
+                aria-label={`${c.title}, ${c.meta}`}
+                className={`flex shrink-0 flex-col items-center justify-between py-6 ${ink} ${isOpen ? "w-[60px] border-r border-black/10 lg:w-[72px]" : "w-full"}`}
+              >
+                <span className="text-[17px] font-semibold tracking-tight [writing-mode:vertical-rl]">{c.title}</span>
+                <span className="block h-2.5 w-full" style={{ background: "linear-gradient(90deg,#00FFC2 0 33%,#111 33% 66%,#59B7FF 66%)" }} />
+              </button>
+
+              {/* the open case */}
+              <div
+                className={`flex min-w-0 flex-1 items-center gap-8 p-6 transition-opacity duration-500 lg:p-7 ${isOpen ? "opacity-100 delay-200" : "pointer-events-none opacity-0"}`}
+                aria-hidden={!isOpen}
+              >
+                <Link
+                  href={`/projects/${c.slug}`}
+                  tabIndex={isOpen ? 0 : -1}
+                  className="block h-full w-[52%] shrink-0 overflow-hidden border border-black/10"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={c.image} alt={`${c.title} case study`} className="h-full w-full object-cover" loading="lazy" />
+                </Link>
+                <div className={`min-w-[220px] ${ink}`}>
+                  <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${c.dark ? "text-white/60" : "text-black/55"}`}>
+                    {i === 0 ? "Featured · " : ""}
+                    {c.meta}
+                  </p>
+                  <h3 className="mt-3 text-[22px] font-bold tracking-[-0.02em]">{c.title}</h3>
+                  <p className={`mt-3 text-[14px] leading-[1.6] ${c.dark ? "text-white/75" : "text-black/70"}`}>{c.line}</p>
+                  <Link
+                    href={`/projects/${c.slug}`}
+                    tabIndex={isOpen ? 0 : -1}
+                    className="mt-5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] hover:underline"
+                  >
+                    Read the case study <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* phones: the same cases, stacked */}
+      <div className="mt-8 grid gap-1.5 md:hidden">
+        {CASES.map((c) => (
+          <Link key={c.slug} href={`/projects/${c.slug}`} className="block border border-black/10" style={{ background: c.bg }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={c.image} alt={`${c.title} case study`} className="aspect-[16/10] w-full object-cover" loading="lazy" />
+            <div className={`p-5 ${c.dark ? "text-white" : "text-black"}`}>
+              <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${c.dark ? "text-white/60" : "text-black/55"}`}>{c.meta}</p>
+              <h3 className="mt-2 text-[20px] font-bold tracking-[-0.02em]">{c.title}</h3>
+              <p className={`mt-2 text-[14px] leading-[1.6] ${c.dark ? "text-white/75" : "text-black/70"}`}>{c.line}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <More href="/archive">All projects</More>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ films */
+
+function Films() {
+  const { open } = useLightbox();
+  const pieces = driveFilms.length ? driveFilms : [REEL, ...motionWork];
+  return (
+    <section id="films" className="scroll-mt-10">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <Label>Films</Label>
+        <p className="max-w-[420px] text-[13px] leading-[1.55] text-text-secondary">
+          Launch films and explainer videos, written, cut and animated. Click one to watch it with sound.
+        </p>
+      </div>
+      <div className="mt-10">
+        <FilmColumns pieces={pieces} onOpen={(p) => open({ src: p.watch, alt: p.title, kind: p.drive ? "embed" : "video", title: p.title, meta: p.meta })} />
+      </div>
+      <More href={`mailto:${EMAIL}?subject=A%20film`}>Commission one</More>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------- page */
 
 export default function HomePage() {
-  // Seed with the static lists (matches the server render exactly), then
-  // upgrade to the live admin-edited data — fetched from Vercel Blob via
-  // /api/admin/content — once mounted. Seeding useState directly from an
-  // async fetch isn't possible anyway, and this also keeps the server
-  // render and the client's first render identical, avoiding a hydration
-  // mismatch. archive/page.tsx and the case-study page use the same
-  // seed-then-upgrade pattern.
-  const [allProjects, setAllProjects] = useState<Project[]>(projects);
-  const [allCompanies, setAllCompanies] = useState<Company[]>(companies);
+  const [ready, setReady] = useState(false);
 
+  // The résumé link is admin-managed (Vercel Blob); fall back to /resume.pdf.
+  const [resumeUrl, setResumeUrl] = useState("/resume.pdf");
   useEffect(() => {
-    getAllProjects().then(setAllProjects);
-    getAllCompanies().then(setAllCompanies);
+    getSiteContent().then((c) => {
+      if (c.resumeUrl) setResumeUrl(c.resumeUrl);
+    });
   }, []);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    message: "",
-    website: "",
-  });
+
+  const [formData, setFormData] = useState({ name: "", email: "", message: "", website: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
 
-  // Display first 4 projects in 2-column staggered layout like the reference
-  const featured = allProjects.slice(0, 4);
-  const sectionTransition = {
-    duration: 0.9,
-    ease: [0.22, 1, 0.36, 1] as const,
-  };
-
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!formData.name || !formData.email || !formData.message) {
       setSubmitMessage("Please fill in all fields");
       return;
     }
-
     setIsSubmitting(true);
     setSubmitMessage("");
-
     try {
       const response = await fetch("/api/send-contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       if (response.ok) {
         setSubmitMessage("✓ Message sent! I'll get back to you soon.");
         setFormData({ name: "", email: "", message: "", website: "" });
@@ -76,647 +331,203 @@ export default function HomePage() {
     }
   };
 
+  const input =
+    "w-full border border-border bg-transparent px-4 py-3.5 text-[15px] outline-none transition-colors placeholder:text-text-tertiary focus:border-text";
+
   return (
-    <main
-      className="relative z-10 pt-28 sm:pt-32 px-4 sm:px-6"
-      id="main-content"
-    >
+    <LightboxProvider>
+      <Overture onFinish={() => setReady(true)} />
       <ScrollProgress />
-      <CursorFollower />
       <TopNav />
 
-      {/* ── HERO (The Gateway) ───────────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={sectionTransition}
-        className="max-w-7xl mx-auto mb-20 sm:mb-32"
-      >
-        <div className="grid grid-cols-12 gap-4">
-          {/* Main header card — the one focal point: headline + a single
-              primary CTA. Everything else in the hero is a secondary layer
-              the eye finds on its second pass, not competing with this. */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="col-span-12 lg:col-span-8 bento-card hyper-border p-6 sm:p-10 flex flex-col justify-between min-h-[420px] sm:min-h-[500px]"
-          >
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 border border-accent/30 text-accent-ink text-[10px] uppercase tracking-[0.2em]">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
-                </span>
-                Available for new projects
-              </div>
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-[1.1] tracking-tight break-words">
-                Front-End Engineer crafting{" "}
-                <span className="gradient-text">thoughtful</span> digital
-                experiences.
-              </h1>
-            </div>
+      <main id="main-content">
+        <div className="mx-auto max-w-[1104px] space-y-28 px-6 pb-28 pt-36 sm:px-8 sm:pt-32 lg:px-8 lg:pt-[120px] xl:px-0">
+        <Hero ready={ready} resumeUrl={resumeUrl} />
 
-            <div className="max-w-xl">
-              <p className="font-sans text-text-secondary text-sm md:text-base leading-relaxed mb-8">
-                Mathematics student turned UX Engineer. I bridge the gap between
-                abstract logic and human centered design through high
-                performance web interfaces.
-              </p>
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
-                <a
-                  href="#work"
-                  className="aqua-surface px-6 sm:px-8 py-4 text-black font-bold uppercase tracking-widest text-xs hover:scale-[1.02] transition-all duration-300 text-center w-full sm:w-auto inline-flex items-center justify-center gap-2 shadow-[0_0_28px_rgba(0,255,194,0.18)]"
-                >
-                  View Projects
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 8l4 4m0 0l-4 4m4-4H3"
-                    />
-                  </svg>
-                </a>
-                <a
-                  href="#contact"
-                  className="group inline-flex items-center justify-center gap-1.5 w-full sm:w-auto border border-border px-6 sm:px-8 py-4 text-text-secondary hover:text-accent-ink hover:border-accent/40 transition-colors font-bold uppercase tracking-widest text-xs"
-                >
-                  Contact Me
-                  <span className="transition-transform group-hover:translate-x-1">→</span>
-                </a>
+        {/* ------------------------------------------------------- what I do */}
+        <section>
+          <Label>What I do</Label>
+          <div className="cells mt-10 grid md:grid-cols-3">
+            {DOING.map((d) => (
+              <div key={d.title} className="p-6">
+                <h3 className="text-[18px] font-semibold tracking-[-0.01em]">{d.title}</h3>
+                <p className="mt-3 max-w-[290px] text-[14px] leading-[1.6] text-text-secondary">{d.body}</p>
               </div>
-            </div>
-          </motion.div>
-
-          {/* Math Visualizer Block */}
-          <div className="col-span-12 lg:col-span-4">
-            <SpatialCanvas />
+            ))}
           </div>
+        </section>
 
-          {/* Focus — engineering + design in one card instead of two, so the
-              secondary row reads as a single quieter beat, not three more
-              bordered cards competing with the headline above. */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="col-span-12 md:col-span-8 bento-card p-6"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="rail-card-teal">
-                <h4 className="text-xs uppercase text-text-tertiary mb-3 tracking-widest">
-                  Engineering
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {["React/Next.js", "Tailwind", "TypeScript", "Motion"].map(
-                    (t) => (
-                      <span key={t} className="tag">
-                        {t}
-                      </span>
-                    ),
-                  )}
-                </div>
+        <Work />
+        <Films />
+
+        {/* --------------------------------------------------------- process */}
+        <section id="process" className="scroll-mt-10">
+          <Label>How I work</Label>
+          <div className="cells mt-10 grid sm:grid-cols-2 lg:grid-cols-3">
+            {PROCESS.map((p, i) => (
+              <div key={p.tag} className="group p-4 pb-5">
+                <p className="label !text-[10px]">
+                  0{i + 1} · {p.tag}
+                </p>
+                <h3 className="mt-5 text-[20px] font-bold tracking-[-0.02em]">{p.title}</h3>
+                <p className="mt-2 text-[13px] leading-[1.55] text-text-secondary">{p.body}</p>
+                <span className="mt-5 block h-px w-16 bg-text-tertiary transition-all duration-500 group-hover:w-28 group-hover:bg-accent-ink" />
               </div>
-              <div className="rail-card-cold">
-                <h4 className="text-xs uppercase text-text-tertiary mb-3 tracking-widest">
-                  Design
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {["Figma", "Motion Design", "Interaction", "Systems"].map((t) => (
-                    <span key={t} className="tag">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="col-span-12 md:col-span-4 bento-card aqua-surface p-6 flex items-center justify-center group transition-all duration-500 hover:scale-[1.01]"
-          >
-            <a
-              href="/resume.pdf"
-              target="_blank"
-              rel="noreferrer"
-              className="text-black font-black uppercase text-lg sm:text-xl group-hover:tracking-[0.15em] sm:group-hover:tracking-[0.5em] transition-all duration-500"
-            >
-              Resume.PDF
-            </a>
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* ── FEATURED PROJECTS ───────────────────────────── */}
-      <motion.section
-        id="work"
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ ...sectionTransition, delay: 0.05 }}
-        className="max-w-7xl mx-auto mb-20 sm:mb-32"
-      >
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 sm:mb-12">
-          <div>
-            <span className="text-accent-ink text-xs font-bold uppercase tracking-widest mb-2 block">
-              {"// Selected Works"}
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-bold">
-              Featured Projects
-            </h2>
+            ))}
           </div>
-          <div className="h-px bg-ink/10 flex-grow mx-8 mb-1 hidden md:block" />
-          <div className="text-xs text-text-tertiary mb-1">01 — 05</div>
-        </div>
+        </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {featured.map((project, index) => (
-            <ProjectCard
-              key={project.slug}
-              project={project}
-              index={index}
-              staggerOffset={index % 2 === 1}
-            />
-          ))}
-        </div>
-
-        <div className="flex justify-center mt-10 sm:mt-14">
-          <Link
-            href="/archive"
-            className="group inline-flex items-center gap-2 px-6 py-3 border border-ink/20 text-sm font-medium tracking-widest uppercase hover:border-accent hover:text-accent-ink transition-colors duration-300"
-          >
-            View All Projects
-            <svg
-              className="w-4 h-4 translate-x-0 group-hover:translate-x-1 transition-transform duration-300"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.5}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
+        {/* ----------------------------------------------------------- about */}
+        <section id="about" className="scroll-mt-10">
+          <Label>About</Label>
+          <div className="cells mt-10 grid md:grid-cols-[1fr_2fr]">
+            <div className="overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/photos/portrait-studio.webp"
+                alt="Jethro Adebisi, studio portrait"
+                loading="lazy"
+                className="aspect-[4/5] h-full w-full object-cover grayscale transition-[filter] duration-500 hover:grayscale-0"
               />
-            </svg>
-          </Link>
-        </div>
-      </motion.section>
-
-      {/* ── ABOUT ────────────────────────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ ...sectionTransition, delay: 0.08 }}
-        className="max-w-7xl mx-auto mb-20 sm:mb-32"
-      >
-        <SectionDivider number="01" label="About Me" accent="accent" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
-          <div>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-              Mathematics to <span className="gradient-text">Design</span>
-            </h2>
-            <div className="font-sans space-y-4 text-text-secondary text-sm leading-relaxed">
-              <p>
-                I'm a UX Engineer with a mathematics background, specializing in
-                creating high-performance interfaces that feel intuitive and
-                precise. My journey began in abstract problem-solving, but I
-                quickly realized my true passion was making complex systems
-                accessible to everyday users.
-              </p>
-              <p>
-                Every project I work on blends rigorous logic with
-                human-centered design principles. I believe the best digital
-                experiences are those where users never notice the
-                engineering—they just work beautifully.
-              </p>
-              <p>
-                I'm particularly passionate about performance optimization,
-                interaction design, and building design systems that scale. When
-                I'm not coding, you'll find me exploring the intersection of
-                mathematics, motion, and meaningful user experiences.
-              </p>
+            </div>
+            <div className="flex flex-col justify-between gap-8 p-6 sm:p-8">
+              <h3 className="max-w-[560px] text-[30px] font-bold leading-[1.08] tracking-[-0.03em] sm:text-[40px]">
+                Maths taught me to look for the structure.
+              </h3>
+              <div className="max-w-[540px] space-y-4 text-[15px] leading-[1.65] text-text-secondary">
+                <p>
+                  I studied mathematics education at the University of Lagos and taught design and
+                  editing for three years before designing products full time. Both left the same
+                  habit: find the structure under a messy problem, then explain it so anyone can
+                  follow.
+                </p>
+                <p>I volunteer as a designer with GDG Lagos, MLSA Lagos and ACM SIGCHI Lagos.</p>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bento-card p-5 sm:p-6">
-              <div className="text-2xl sm:text-3xl font-bold text-accent-ink mb-2">
-                5+
-              </div>
-              <p className="text-xs uppercase tracking-widest text-text-tertiary">
-                Projects Shipped
-              </p>
-            </div>
-            <div className="bento-card p-5 sm:p-6">
-              <div className="text-2xl sm:text-3xl font-bold text-accent-ink mb-2">
-                100%
-              </div>
-              <p className="text-xs uppercase tracking-widest text-text-tertiary">
-                Attention to Detail
-              </p>
-            </div>
-            <div className="bento-card p-5 sm:p-6">
-              <div className="text-2xl sm:text-3xl font-bold text-accent-ink mb-2">
-                3+
-              </div>
-              <p className="text-xs uppercase tracking-widest text-text-tertiary">
-                Years Experience
-              </p>
-            </div>
-            <div className="bento-card p-5 sm:p-6">
-              <div className="text-2xl sm:text-3xl font-bold text-accent-ink mb-2">
-                24h
-              </div>
-              <p className="text-xs uppercase tracking-widest text-text-tertiary">
-                Response Time
-              </p>
-            </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* ── DESIGN PROCESS ───────────────────────────────── */}
-      <motion.section
-        id="process"
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ ...sectionTransition, delay: 0.1 }}
-        className="max-w-7xl mx-auto mb-20 sm:mb-32"
-      >
-        <SectionDivider number="02" label="How I Think" accent="accent-cold" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="md:col-span-1">
-            <h2 className="text-3xl font-bold mb-4">
-              How I<br />
-              <span className="text-accent-cold-ink">Think</span>
-            </h2>
-            <p className="text-text-tertiary text-xs uppercase leading-loose tracking-widest">
-              Bridging Mathematics and User Experience
-            </p>
-          </div>
-          <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                num: "01.",
-                title: "Research",
-                body: "Identifying variables. Understanding the problem set before writing a single line of code.",
-              },
-              {
-                num: "02.",
-                title: "Design",
-                body: "Geometry and flow. Crafting visual hierarchies that feel intuitive and balanced.",
-              },
-              {
-                num: "03.",
-                title: "Engineering",
-                body: "Transformation. Turning pixels into performant, scalable, and responsive systems.",
-              },
-            ].map((step) => (
-              <div
-                key={step.title}
-                className="bento-card p-8 border border-ink/10 bg-ink/[0.02]"
-              >
-                <span className="text-accent-cold-ink text-lg font-bold mb-4 block">
-                  {step.num} {step.title}
-                </span>
-                <p className="font-sans text-sm text-text-secondary">{step.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* ── PLAYGROUND ───────────────────────────────────── */}
-      <motion.section
-        id="companies"
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ ...sectionTransition, delay: 0.11 }}
-        className="max-w-7xl mx-auto mb-12 sm:mb-16"
-      >
-        <div className="mb-4 sm:mb-6 text-center">
-          <span className="text-accent-ink text-xs font-bold uppercase tracking-widest block mb-2">
-            {"// Trusted Collaborations"}
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-bold">
-            Companies I&apos;ve Worked With
-          </h2>
-        </div>
-
-        <div className="company-marquee border border-ink/10 bg-ink/[0.02] py-5 sm:py-7">
-          <div className="company-marquee-track" aria-label="Companies marquee">
-            {[0, 1].map((groupIndex) => (
-              <div
-                key={`company-group-${groupIndex}`}
-                className="company-marquee-group"
-              >
-                {allCompanies.map((company) => {
-                  const card = (
-                    <div className="company-marquee-item">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 border border-ink/10 bg-bg/40 p-2 rounded-md flex items-center justify-center mb-2">
-                        <img
-                          src={company.logo}
-                          alt={`${company.name} logo`}
-                          loading="lazy"
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      </div>
-                      <p className="font-sans text-[11px] sm:text-xs text-text-secondary uppercase tracking-[0.18em] text-center">
-                        {company.name}
-                      </p>
-                    </div>
-                  );
-
-                  if (company.website) {
-                    return (
-                      <a
-                        key={`${groupIndex}-${company.id}`}
-                        href={company.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="company-marquee-link"
-                      >
-                        {card}
-                      </a>
-                    );
-                  }
-
-                  return (
-                    <div
-                      key={`${groupIndex}-${company.id}`}
-                      className="company-marquee-link"
-                    >
-                      {card}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* ── LAB ──────────────────────────────────────────── */}
-      <motion.section
-        id="lab"
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ ...sectionTransition, delay: 0.12 }}
-        className="max-w-7xl mx-auto mb-20 sm:mb-32 bg-ink/[0.02] p-5 sm:p-10 md:p-12 border-y border-ink/5 relative"
-      >
-        <div className="mb-8 sm:mb-12">
-          <span className="text-accent-cold-ink text-xs font-bold uppercase tracking-widest mb-2 block">
-            {"// From the Codebase"}
-          </span>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 tracking-tight">
-            Math, rendered.
-          </h2>
-          <p className="font-sans text-text-secondary text-sm max-w-2xl">
-            The rotating geometry in the visualizer above isn&apos;t a stock
-            animation — it&apos;s two SVG orbits driven by real coordinates,
-            straight from this site&apos;s own source.
-          </p>
-        </div>
-
-        <div className="bento-card overflow-hidden">
-          <div className="flex items-center gap-2 px-4 sm:px-5 py-3 border-b border-ink/10 bg-ink/[0.02]">
-            <span className="w-2.5 h-2.5 rounded-full bg-accent-cold/40" />
-            <span className="w-2.5 h-2.5 rounded-full bg-accent/40" />
-            <span className="text-[10px] font-mono text-text-tertiary ml-2 tracking-widest">
-              components/spatial-canvas.tsx
-            </span>
-          </div>
-          <pre className="p-4 sm:p-6 overflow-x-auto text-xs sm:text-sm leading-relaxed font-mono">
-            <code>
-              {CODE_SNIPPET.map((line, i) => (
-                <div key={i}>
-                  {line.map((seg, j) => (
-                    <span key={j} className={TOKEN_TONE[seg.t]}>
-                      {seg.s}
-                    </span>
-                  ))}
+          <ol className="mt-16 border-t border-border">
+            {EXPERIENCE.map((e, i) => (
+              <li key={e.role} className="grid gap-2 border-b border-border py-6 sm:grid-cols-[1fr_auto] sm:gap-10">
+                <div>
+                  <h3 className={`text-[20px] font-semibold tracking-[-0.02em] ${i === 0 ? "text-accent-ink" : ""}`}>{e.role}</h3>
+                  <p className="mt-2 max-w-[560px] text-[14px] leading-[1.6] text-text-secondary">{e.note}</p>
                 </div>
-              ))}
-            </code>
-          </pre>
-        </div>
-      </motion.section>
+                <p className="label !text-[11px] sm:pt-2">{e.when}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
 
-      {/* ── CONTACT ──────────────────────────────────────── */}
-      <motion.section
-        id="contact"
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ ...sectionTransition, delay: 0.15 }}
-        className="max-w-4xl mx-auto mb-20 sm:mb-32 text-center"
-      >
-        <h2 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-8 sm:mb-12 tracking-tighter">
-          Let&apos;s build something{" "}
-          <span className="gradient-text">meaningful.</span>
-        </h2>
-        <div className="flex flex-col md:flex-row justify-center gap-8 items-center">
-          <a
-            href="mailto:adebisireuel@gmail.com"
-            className="text-base sm:text-xl md:text-3xl border-b border-ink/20 hover:border-accent transition-all pb-2 break-all"
-          >
-            adebisireuel@gmail.com
-          </a>
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-            <a
-              href="https://x.com/jethroadebisi"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-text-tertiary hover:text-accent-ink transition-colors"
-            >
-              Twitter/X
-            </a>
-            <a
-              href="https://www.linkedin.com/in/jethro-adebisi-21872a20b/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-text-tertiary hover:text-accent-ink transition-colors"
-            >
-              LinkedIn
-            </a>
-            <a
-              href="https://github.com/adebisijethro"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-text-tertiary hover:text-accent-ink transition-colors"
-            >
-              GitHub
-            </a>
+        {/* ------------------------------------------------------- community */}
+        <section>
+          <Label>Where I show up</Label>
+          <div className="cells mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+            {PHOTOS.map((p) => (
+              <figure key={p.src} className="group relative aspect-square overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.src} alt={p.alt} loading="lazy" className="h-full w-full object-cover grayscale transition-[filter] duration-500 group-hover:grayscale-0" />
+                <figcaption className="absolute inset-x-0 bottom-0 translate-y-full bg-bg/95 px-3 py-2 text-[12px] font-medium transition-transform duration-300 group-hover:translate-y-0">
+                  {p.caption}
+                </figcaption>
+              </figure>
+            ))}
           </div>
-        </div>
+        </section>
 
-        <div className="mt-16 sm:mt-24 p-5 sm:p-8 border border-ink/10 max-w-lg mx-auto bg-ink/5 bento-card">
-          <div className="mb-6">
-            <p className="text-xs text-text-secondary mb-1 font-mono uppercase tracking-widest">
-              Response Time
-            </p>
-            <p className="font-sans text-sm text-text-secondary">
-              I typically respond within 24 hours. Let's connect.
-            </p>
-          </div>
-          <form className="text-left space-y-4" onSubmit={handleFormSubmit}>
-            <input
-              type="text"
-              tabIndex={-1}
-              autoComplete="off"
-              aria-hidden="true"
-              value={formData.website}
-              onChange={(e) =>
-                setFormData({ ...formData, website: e.target.value })
-              }
-              className="hidden"
-            />
+        {/* --------------------------------------------------------- contact */}
+        <section id="contact" className="scroll-mt-10">
+          <div className="flex flex-col gap-8 bg-accent p-8 text-black sm:flex-row sm:items-end sm:justify-between sm:p-10">
             <div>
-              <label className="text-[10px] uppercase text-text-tertiary mb-1 block tracking-widest">
-                Full Name
-              </label>
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em]">Let&apos;s talk</p>
+              <h2 className="mt-5 text-[34px] font-black leading-[0.98] tracking-[-0.045em] sm:text-[46px]">
+                Have a product
+                <br />
+                that needs designing?
+              </h2>
+            </div>
+            <a
+              href={`mailto:${EMAIL}`}
+              className="inline-flex w-fit shrink-0 items-center gap-2 bg-black px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white transition-transform hover:-translate-y-0.5"
+            >
+              Email me
+            </a>
+          </div>
+
+          <div className="cells mt-1.5 grid lg:grid-cols-2">
+            <div className="flex flex-col justify-between gap-8 p-6 sm:p-8">
+              <div>
+                <p className="label">Or write here</p>
+                <p className="mt-4 max-w-sm text-[15px] leading-[1.6] text-text-secondary">
+                  Tell me what you&apos;re building and where it&apos;s stuck. I reply within a day.
+                </p>
+              </div>
+              <a href={`mailto:${EMAIL}`} className="text-[15px] font-semibold underline-offset-4 hover:underline">
+                {EMAIL}
+              </a>
+            </div>
+
+            <form onSubmit={handleFormSubmit} className="space-y-3 p-6 sm:p-8">
+              {/* honeypot: the API drops anything that fills it */}
               <input
                 type="text"
-                title="Full Name"
-                placeholder="Your full name"
-                required
-                disabled={isSubmitting}
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="font-sans w-full bg-transparent border-b border-ink/10 py-2 focus:border-accent outline-none transition-colors text-sm disabled:opacity-50"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden
+                className="hidden"
+                value={formData.website}
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
               />
-            </div>
-            <div>
-              <label className="text-[10px] uppercase text-text-tertiary mb-1 block tracking-widest">
-                Email
+              <label className="block">
+                <span className="sr-only">Name</span>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className={input}
+                  placeholder="Your name"
+                />
               </label>
-              <input
-                type="email"
-                title="Email"
-                placeholder="your@email.com"
-                required
-                disabled={isSubmitting}
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="font-sans w-full bg-transparent border-b border-ink/10 py-2 focus:border-accent outline-none transition-colors text-sm disabled:opacity-50"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] uppercase text-text-tertiary mb-1 block tracking-widest">
-                Message
+              <label className="block">
+                <span className="sr-only">Email</span>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className={input}
+                  placeholder="you@company.com"
+                />
               </label>
-              <textarea
-                rows={3}
-                title="Message"
-                placeholder="Write your message"
-                required
+              <label className="block">
+                <span className="sr-only">What are you building?</span>
+                <textarea
+                  rows={4}
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  className={`${input} resize-none`}
+                  placeholder="The product, who it's for, and what isn't working yet"
+                />
+              </label>
+              <button
+                type="submit"
                 disabled={isSubmitting}
-                value={formData.message}
-                onChange={(e) =>
-                  setFormData({ ...formData, message: e.target.value })
-                }
-                className="font-sans w-full bg-transparent border-b border-ink/10 py-2 focus:border-accent outline-none transition-colors text-sm disabled:opacity-50"
-              />
-            </div>
-            {submitMessage && (
-              <div
-                className={`text-xs py-3 px-4 rounded font-mono ${
-                  submitMessage.startsWith("✓")
-                    ? "bg-accent/20 text-accent-ink border border-accent/40"
-                    : "bg-red-500/20 text-red-300 border border-red-500/40"
-                }`}
+                className="inline-flex w-full items-center justify-center gap-2 bg-text px-6 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-bg transition-opacity disabled:opacity-60"
               >
-                {submitMessage}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-4 bg-ink text-bg font-bold text-xs uppercase tracking-widest hover:bg-accent hover:text-black transition-all duration-300 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? "Sending Message..." : "Send Message"}
-            </button>
-          </form>
+                {isSubmitting ? "Sending..." : "Send message"} <ArrowRight className="h-4 w-4" />
+              </button>
+              {submitMessage ? (
+                <p className="text-sm text-text-secondary" role="status">
+                  {submitMessage}
+                </p>
+              ) : null}
+            </form>
+          </div>
+        </section>
         </div>
-      </motion.section>
+      </main>
 
       <SiteFooter />
-    </main>
+    </LightboxProvider>
   );
 }
-
-/* ── Section divider — same chaptered visual language as the case-study
-   template's ChapterDivider, reused here for the homepage's About/Process
-   sections instead of running a second, decorative-only header style. ── */
-const DIVIDER_ACCENTS = {
-  accent: "bg-accent/40",
-  "accent-cold": "bg-accent-cold/40",
-} as const;
-
-function SectionDivider({
-  number,
-  label,
-  accent,
-}: {
-  number: string;
-  label: string;
-  accent: keyof typeof DIVIDER_ACCENTS;
-}) {
-  return (
-    <div className="flex items-center gap-4 mb-8 sm:mb-10">
-      <div className={`w-1 h-8 rounded-full ${DIVIDER_ACCENTS[accent]}`} />
-      <span className="text-[9px] font-mono text-text-tertiary tracking-widest tabular-nums">
-        {number}
-      </span>
-      <div className="h-px flex-1 bg-ink/10" />
-      <span className="text-[9px] font-mono uppercase tracking-[0.35em] text-text-tertiary">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-/* ── Faux syntax highlighting for the Lab section's code excerpt — a
-   real snippet from spatial-canvas.tsx, not a hand-drawn illustration. ── */
-const TOKEN_TONE = {
-  tag: "text-accent-cold-ink",
-  attr: "text-text-secondary",
-  str: "text-accent-ink",
-  plain: "text-text-tertiary",
-} as const;
-
-type Tok = { t: keyof typeof TOKEN_TONE; s: string };
-const tag = (s: string): Tok => ({ t: "tag", s });
-const attr = (s: string): Tok => ({ t: "attr", s });
-const str = (s: string): Tok => ({ t: "str", s });
-const plain = (s: string): Tok => ({ t: "plain", s });
-
-const CODE_SNIPPET: Tok[][] = [
-  [plain("<"), tag("svg"), plain(" "), attr("className"), plain("="), str('"w-64 h-64 animate-orbit-slow"')],
-  [plain("     "), attr("viewBox"), plain("="), str('"0 0 100 100"'), plain(">")],
-  [plain("  <"), tag("circle")],
-  [plain("    "), attr("cx"), plain("="), str('"50"'), plain(" "), attr("cy"), plain("="), str('"50"'), plain(" "), attr("r"), plain("="), str('"38"')],
-  [plain("    "), attr("fill"), plain("="), str('"none"'), plain(" "), attr("stroke"), plain("="), str('"#59B7FF"')],
-  [plain("    "), attr("strokeWidth"), plain("="), str('"0.4"'), plain(" "), attr("strokeDasharray"), plain("="), str('"2 6"'), plain(" /"), plain(">")],
-  [plain("  <"), tag("circle"), plain(" "), attr("cx"), plain("="), str('"88"'), plain(" "), attr("cy"), plain("="), str('"50"'), plain(" "), attr("r"), plain("="), str('"1.8"'), plain(" "), attr("fill"), plain("="), str('"#59B7FF"'), plain(" /"), plain(">")],
-  [plain("</"), tag("svg"), plain(">")],
-];

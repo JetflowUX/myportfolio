@@ -1,28 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400..900&family=Instrument+Serif&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* 2026-11-02 redesign: a Swiss grid on warm grey paper (after nader.io), hairline
+   cells, one accent (his aqua) used as a fill, never as text on paper. Light is the
+   only theme now; the dark channels stay under [data-theme='dark'] for old links. */
 :root {
-  /* Raw channels — theme-swapped in [data-theme="light"] below.
-     Space-separated so Tailwind's <alpha-value> opacity modifiers work
-     (bg-ink/10, border-ink/20, text-accent-ink/70, etc). */
-  --bg-rgb: 5 5 5;
-  --ink-rgb: 255 255 255;
+  --bg-rgb: 244 244 243;
+  --ink-rgb: 17 17 17;
   --accent-rgb: 0 255 194;
-  --accent-ink-rgb: 0 255 194;
+  --accent-ink-rgb: 0 122 92;
   --accent-cold-rgb: 89 183 255;
-  --accent-cold-ink-rgb: 89 183 255;
-  --text-secondary: #aeb4c2;
-  --text-tertiary: #8a90a0;
+  --accent-cold-ink-rgb: 29 95 168;
+  --text-secondary: #4d4d4d;
+  --text-tertiary: #707070;
+  --line: #dcdcdb;
 
-  /* Derived — same formula in both themes, resolved per-element so they
-     automatically track whichever theme block set the raw channels above. */
   --bg: rgb(var(--bg-rgb));
   --text: rgb(var(--ink-rgb));
-  --border: rgb(var(--ink-rgb) / 0.08);
+  --border: var(--line);
   --card-bg: rgb(var(--ink-rgb) / 0.02);
   --accent: rgb(var(--accent-rgb));
   --accent-cold: rgb(var(--accent-cold-rgb));
@@ -30,13 +30,14 @@
   --accent-cold-ink: rgb(var(--accent-cold-ink-rgb));
 }
 
-:root[data-theme='light'] {
-  --bg-rgb: 246 248 249;
-  --ink-rgb: 16 21 27;
-  --accent-ink-rgb: 4 120 92;
-  --accent-cold-ink-rgb: 29 95 168;
-  --text-secondary: #454e58;
-  --text-tertiary: #6b7480;
+:root[data-theme='dark'] {
+  --bg-rgb: 5 5 5;
+  --ink-rgb: 255 255 255;
+  --accent-ink-rgb: 0 255 194;
+  --accent-cold-ink-rgb: 89 183 255;
+  --text-secondary: #aeb4c2;
+  --text-tertiary: #8a90a0;
+  --line: rgb(255 255 255 / 0.08);
 }
 
 * {
@@ -62,16 +63,17 @@ body {
   margin: 0;
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'Space Mono', monospace;
+  font-family: 'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
   scroll-behavior: smooth;
-  overflow-x: hidden;
+  overflow-x: clip;
   min-height: 100vh;
   transition: background-color 320ms ease, color 320ms ease;
 }
 
 .font-sans,
 .font-sans :where(p, span, li) {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 a,
@@ -363,4 +365,52 @@ textarea {
     justify-content: center;
     row-gap: 12px;
   }
+}
+
+/* 2026-10-15 revamp: Geist for everything readable, Space Mono kept for
+   small metadata only. Colours are the original aqua tokens above. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  border: 1px solid rgb(var(--ink-rgb) / 0.1);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* ------------------------------------------------------------ grid (2026-11-02) */
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Hairline cells that share their borders: the parent draws top + left, each cell
+   right + bottom, so two neighbours never double a line. */
+.cells {
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.cells > * {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.giant {
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.8;
+}
+
+/* The intro covers the page from the first paint; a head script marks the
+   document when it should not run (seen this session, or reduced motion). */
+html[data-intro='skip'] .overture {
+  display: none;
+}
+html[data-intro='play'] body {
+  overflow: hidden;
 }

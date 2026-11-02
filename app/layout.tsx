@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Jethro Adebisi | Front-End Engineer & UI/UX Designer",
+  title: "Jethro Adebisi | Product Designer, Motion Designer & Front-End Engineer",
   description:
     "Portfolio for Jethro Adebisi: product-focused front-end engineering, design systems, and interactive experiences.",
   icons: {
@@ -18,16 +18,18 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-// Sets data-theme before paint so a persisted "light" choice doesn't
-// flash dark on first load. Kept inline/sync — this can't wait on a
-// hydrated component.
-const NO_FLASH_THEME_SCRIPT = `
+// Runs before paint. Light is the only theme (2026-11-02), and the opening
+// plays once per session on the home page, never under reduced motion. The
+// overture is in the first paint, so the page never flashes before it.
+const BOOT_SCRIPT = `
   try {
-    var theme = window.localStorage.getItem('theme');
-    if (theme === 'light' || theme === 'dark') {
-      document.documentElement.dataset.theme = theme;
-    }
-  } catch (e) {}
+    var d = document.documentElement;
+    var seen = window.sessionStorage.getItem('ja-intro-seen');
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    d.dataset.intro = (seen || reduce || location.pathname !== '/') ? 'skip' : 'play';
+  } catch (e) {
+    document.documentElement.dataset.intro = 'skip';
+  }
 `;
 
 export default function RootLayout({
@@ -38,15 +40,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
+        <noscript>
+          <style>{`.overture{display:none}`}</style>
+        </noscript>
       </head>
       <body>
-        {/* Noise overlay — the one texture kept site-wide; the old grid +
-            3-orb stack that ran underneath it at the same time is gone. */}
-        <div className="noise" />
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="web3-orb web3-orb-a" />
-        </div>
         {children}
       </body>
     </html>

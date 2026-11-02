@@ -1,129 +1,90 @@
-import Link from "next/link";
+"use client";
+
+import { RotateCcw } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { INTRO_KEY, REPLAY_EVENT } from "@/components/overture";
+
+/* The footer, after nader.io (2026-11-02): a hairline, a short line in tracked
+   capitals, three columns with accent-ink labels, then the small print with
+   the button that replays the opening (as edisonfangworkshop.com's does). */
+
+const COLUMNS = [
+  {
+    title: "Work",
+    links: [
+      { label: "Case studies", href: "/#work" },
+      { label: "All projects", href: "/archive" },
+      { label: "Films", href: "/#films" },
+    ],
+  },
+  {
+    title: "Connect",
+    links: [
+      { label: "Email", href: "mailto:adebisireuel@gmail.com" },
+      { label: "LinkedIn", href: "https://www.linkedin.com/in/jethro-adebisi-21872a20b" },
+      { label: "Behance", href: "https://www.behance.net/adebisijethro" },
+      { label: "GitHub", href: "https://github.com/adebisijethro" },
+    ],
+  },
+  {
+    title: "Elsewhere",
+    links: [
+      { label: "Instagram", href: "https://www.instagram.com/adebisijethro/" },
+      { label: "X", href: "https://x.com/jethroadebisi" },
+      { label: "Upwork", href: "https://www.upwork.com/freelancers/~01827558feddd7621e" },
+    ],
+  },
+];
 
 type SiteFooterProps = {
+  /** kept for the pages that still pass it; the footer is the same everywhere */
   variant?: "full" | "compact";
 };
 
-export function SiteFooter({ variant = "full" }: SiteFooterProps) {
-  const isCompact = variant === "compact";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function SiteFooter(_props: SiteFooterProps) {
+  const pathname = usePathname();
+
+  const replay = () => {
+    if (pathname === "/") {
+      window.dispatchEvent(new Event(REPLAY_EVENT));
+      return;
+    }
+    try {
+      sessionStorage.removeItem(INTRO_KEY);
+    } catch {}
+    window.location.href = "/";
+  };
 
   return (
-    <footer className="border-t border-ink/10 bg-bg/55 backdrop-blur-md">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-        <div
-          className={`grid gap-10 ${
-            isCompact
-              ? "grid-cols-1 md:grid-cols-2"
-              : "grid-cols-1 lg:grid-cols-[1.2fr_0.8fr_0.8fr]"
-          }`}
-        >
-          <div className="space-y-4">
-            <p className="text-[11px] font-bold tracking-[0.22em] uppercase text-accent-ink">
-              Jethro Adebisi
-            </p>
-            <p className="font-sans max-w-md text-sm leading-relaxed text-text-secondary">
-              UX Engineer crafting clean, high-performance digital products with
-              strong attention to user flow, clarity, and visual precision.
-            </p>
-            {!isCompact ? (
-              <Link
-                href="/#contact"
-                className="inline-flex items-center gap-2 border border-ink/20 px-4 py-2 text-[10px] font-bold tracking-[0.16em] uppercase text-text-secondary hover:border-accent-ink hover:text-accent-ink transition-colors"
-              >
-                Start a Project
-                <span aria-hidden>↗</span>
-              </Link>
-            ) : null}
+    <footer className="mx-auto max-w-[1104px] px-6 pb-12 sm:px-8 lg:px-8 xl:px-0">
+      <div className="grid gap-10 border-t border-text-tertiary/60 pt-10 sm:grid-cols-[1.2fr_1fr_1fr_1fr]">
+        <p className="text-[12px] font-bold uppercase tracking-[0.16em]">Design it. Build it. Film it.</p>
+        {COLUMNS.map((c) => (
+          <div key={c.title}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-ink">{c.title}</p>
+            <ul className="mt-4 space-y-2.5">
+              {c.links.map((l) => (
+                <li key={l.label}>
+                  <a
+                    href={l.href}
+                    target={l.href.startsWith("http") ? "_blank" : undefined}
+                    rel="noreferrer"
+                    className="text-[14px] text-text-secondary transition-colors hover:text-text"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
-
-          {!isCompact ? (
-            <div>
-              <p className="mb-4 text-[10px] font-bold tracking-[0.2em] uppercase text-text-secondary">
-                Navigation
-              </p>
-              <ul className="font-sans space-y-2.5 text-sm text-text-secondary">
-                <li>
-                  <Link
-                    href="/"
-                    className="hover:text-accent-ink transition-colors"
-                  >
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/archive"
-                    className="hover:text-accent-ink transition-colors"
-                  >
-                    Projects
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/#process"
-                    className="hover:text-accent-ink transition-colors"
-                  >
-                    Process
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/#contact"
-                    className="hover:text-accent-ink transition-colors"
-                  >
-                    Contact
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          ) : null}
-
-          <div>
-            <p className="mb-4 text-[10px] font-bold tracking-[0.2em] uppercase text-text-secondary">
-              Connect
-            </p>
-            <div className="font-sans flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-secondary">
-              <a
-                href="https://x.com/jethroadebisi"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent-ink transition-colors"
-              >
-                Twitter/X
-              </a>
-              <a
-                href="https://www.linkedin.com/in/jethro-adebisi-21872a20b/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent-ink transition-colors"
-              >
-                LinkedIn
-              </a>
-              <a
-                href="https://github.com/adebisijethro"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent-ink transition-colors"
-              >
-                GitHub
-              </a>
-            </div>
-            <a
-              href="mailto:adebisireuel@gmail.com"
-              className="font-sans mt-4 inline-block text-sm text-text-secondary hover:text-accent-ink transition-colors"
-            >
-              adebisireuel@gmail.com
-            </a>
-            <p className="mt-1 text-[11px] text-text-tertiary">
-              Response within 24 hours
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-8 border-t border-ink/10 pt-4 text-[10px] uppercase tracking-[0.12em] text-text-tertiary flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p>Built by Jethro Adebisi</p>
-          <p>All rights reserved.</p>
-        </div>
+        ))}
+      </div>
+      <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-8 text-[13px] text-text-secondary">
+        <p>© {new Date().getFullYear()} Jethro Adebisi. Product designer, motion designer and front-end engineer.</p>
+        <button type="button" onClick={replay} className="inline-flex items-center gap-2 transition-colors hover:text-text">
+          Replay intro <RotateCcw className="h-3.5 w-3.5" />
+        </button>
       </div>
     </footer>
   );
