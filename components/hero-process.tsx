@@ -390,7 +390,7 @@ export function HeroProcess({ ready, resumeUrl, onReel }: { ready: boolean; resu
       >
         <p className="col-span-2 flex items-center gap-2.5 px-4 py-3 sm:col-span-1">
           <span className="h-2 w-2 bg-accent" />
-          Open to product design roles and freelance work
+          Open to new roles and opportunities
         </p>
         <p className="px-4 py-3">Product designer, motion designer and front-end engineer</p>
         <a href={resumeUrl} target="_blank" rel="noreferrer" className="group flex items-center justify-end gap-1.5 px-4 py-3 font-semibold text-text">
