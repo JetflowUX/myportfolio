@@ -19,7 +19,7 @@ export default function NotFound() {
             Go Home
           </Link>
           <Link
-            href="/archive"
+            href="/work"
             className="px-6 py-3 border border-ink/20 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors"
           >
             Browse Archive

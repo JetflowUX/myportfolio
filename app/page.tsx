@@ -12,15 +12,14 @@ import { ScrollProgress } from "@/components/scroll-progress";
 import { SiteFooter } from "@/components/site-footer";
 import { TopNav } from "@/components/top-nav";
 import {
-  driveFilms,
   experience as defaultExperience,
-  motionWork,
   projects as defaultProjects,
   testimonials,
   type Experience,
   type MotionPiece,
 } from "@/lib/data";
 import { homeCases, type HomeCase } from "@/lib/home-work";
+import { FEATURED, allFilms, isExplainer } from "@/lib/films";
 import { getSiteContent } from "@/lib/project-store";
 
 /* ---------------------------------------------------------------------------
@@ -84,29 +83,6 @@ const PHOTOS = [
   { src: "/photos/cardano-summit-gimbalabs.webp", alt: "Jethro with the Gimbalabs team", caption: "Gimbalabs team" },
   { src: "/photos/nithub-meta-unilag.webp", alt: "Jethro at a Nithub x Meta event at UNILAG", caption: "Nithub x Meta" },
 ];
-
-const REEL: MotionPiece = {
-  slug: "reel",
-  title: "Showreel",
-  kind: "Motion graphics",
-  blurb: "",
-  meta: "0:45 · press play for sound",
-  poster: "/motion/poster/reel-poster.jpg",
-  loop: "/motion/reel.mp4",
-  watch: "/motion/reel.mp4",
-};
-
-/* His SabiBank launch film (ads/sabibank, 2026-11-03): the same app the hero designs and builds. */
-const SABI_FILM: MotionPiece = {
-  slug: "sabi-launch",
-  title: "SabiBank · Launch film",
-  kind: "Product film",
-  blurb: "",
-  meta: "0:40 · launch film",
-  poster: "/films/poster/sabi-launch.jpg",
-  loop: "/films/loop/sabi-launch.mp4",
-  watch: "/films/sabi-launch.mp4",
-};
 
 /* ------------------------------------------------------------------ pieces */
 
@@ -228,27 +204,19 @@ function Work({ cases }: { cases: HomeCase[] }) {
         ))}
       </div>
 
-      <More href="/archive">All projects</More>
+      <More href="/work">All projects</More>
     </section>
   );
 }
 
 /* ------------------------------------------------------------------ films */
 
-/* The films, curated (2026-11-03): a featured dozen first, then the rest by type. "Featured" is
-   my pick for range (his SabiBank film, the reel, product launches across fintech, AI, health and
-   retail, one long explainer); change FEATURED to change it. Explainers are the two long pieces. */
-const FEATURED = [
-  "sabi-launch", "Jethro Adebisi · Showreel 2026", "Capveon · The Integration", "Call4Me · On The Line",
-  "Alter · Own Keys", "Pragma · In The Open", "KeepMe · Antares In Action", "Vesta · In The File",
-  "BillMender · Find Yours", "Cyberette · Show Where", "Andamio · Get Started", "Black Holes · Explainer",
-];
-const isExplainer = (p: MotionPiece) => /Explainer|Andamio · Get Started/.test(p.title);
+/* The film list, the featured dozen and the explainer test live in lib/films.ts (shared with /work). */
 type FilmTab = "featured" | "launch" | "explainers" | "all";
 
 function Films() {
   const { open } = useLightbox();
-  const all = driveFilms.length ? [SABI_FILM, ...driveFilms] : [REEL, ...motionWork];
+  const all = allFilms();
   const [tab, setTab] = useState<FilmTab>("featured");
   const byTab: Record<FilmTab, MotionPiece[]> = {
     featured: FEATURED.map((k) => all.find((p) => p.slug === k || p.title === k)).filter((p): p is MotionPiece => Boolean(p)),

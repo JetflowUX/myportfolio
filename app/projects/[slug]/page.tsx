@@ -127,7 +127,7 @@ export default function ProjectCaseStudyPage() {
               Go to Admin
             </Link>
             <Link
-              href="/archive"
+              href="/work"
               className="px-6 py-3 border border-ink/20 text-[10px] font-bold uppercase tracking-widest hover:border-accent transition-colors"
             >
               Open Archive
@@ -164,7 +164,7 @@ export default function ProjectCaseStudyPage() {
         <nav aria-label="Breadcrumb" className="label !text-[10px] flex flex-wrap items-center gap-2">
           <Link href="/" className="hover:text-text">Home</Link>
           <span aria-hidden>/</span>
-          <Link href="/archive" className="hover:text-text">All projects</Link>
+          <Link href="/work" className="hover:text-text">All projects</Link>
         </nav>
 
         <motion.div variants={stagger} initial="hidden" animate="show" className="mt-8 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-end">
@@ -513,7 +513,7 @@ export default function ProjectCaseStudyPage() {
 
             {/* Back */}
             <Link
-              href="/archive"
+              href="/work"
               className="flex items-center border border-ink/[0.07] px-5 py-4 text-[9px] font-mono uppercase tracking-[0.28em] text-text-tertiary hover:text-accent-ink hover:border-accent/30 transition-colors"
             >
               ← Archive

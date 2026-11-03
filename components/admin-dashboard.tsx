@@ -356,7 +356,7 @@ export function AdminDashboard() {
       setSavedForm(next);
       setEditing(project.slug);
       notify(
-        `Saved ${project.title}. ${project.showOnHome ? "It shows on the home page, " : "It is hidden from the home page; it shows on "}the archive and /projects/${project.slug}.`,
+        `Saved ${project.title}. ${project.showOnHome ? "It shows on the home page, " : "It is hidden from the home page; it shows on "}The Shelf (/work) and /projects/${project.slug}.`,
       );
     } catch (error) {
       fail(error, "Could not save the project.");
@@ -689,7 +689,7 @@ function ProjectList({
         title="Projects"
         description={
           <>
-            Every project has its own case-study page and a card on the archive. {shown ? `${shown} of them show` : "None show"}{" "}
+            Every project has its own case-study page and a card on The Shelf (/work). {shown ? `${shown} of them show` : "None show"}{" "}
             on the home page, in the order below.
           </>
         }
@@ -908,7 +908,7 @@ function ProjectEditor({
             checked={form.showOnHome}
             onChange={(v) => set("showOnHome", v)}
             label="Show on the home page"
-            description={form.showOnHome ? "Shown in Selected work" : "Hidden: archive and its own page only"}
+            description={form.showOnHome ? "Shown in Selected work" : "Hidden: The Shelf and its own page only"}
           />
           {form.showOnHome ? (
             <>

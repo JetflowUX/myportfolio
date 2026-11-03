@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // The archive became The Shelf at /work (2026-11-03); old links keep working.
+  async redirects() {
+    return [{ source: '/archive', destination: '/work', permanent: true }];
+  },
   images: {
     // Image URLs are admin-controlled (uploaded to Vercel Blob, or pasted
     // into the dashboard's image fields). Previously only a handful of hosts

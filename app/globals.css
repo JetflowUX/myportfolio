@@ -414,3 +414,43 @@ html[data-intro='skip'] .overture {
 html[data-intro='play'] body {
   overflow: hidden;
 }
+
+/* The Playground's sliders (2026-11-03): a hairline track, a black thumb with an aqua ring on focus. */
+.playground-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+.playground-range::-webkit-slider-runnable-track {
+  height: 2px;
+  background: rgb(var(--ink-rgb) / 0.18);
+}
+.playground-range::-moz-range-track {
+  height: 2px;
+  background: rgb(var(--ink-rgb) / 0.18);
+}
+.playground-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -7px;
+  border-radius: 999px;
+  background: rgb(var(--ink-rgb));
+  border: 2px solid rgb(var(--bg-rgb));
+  box-shadow: 0 0 0 1px rgb(var(--ink-rgb));
+}
+.playground-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgb(var(--ink-rgb));
+  border: 2px solid rgb(var(--bg-rgb));
+}
+.playground-range:focus-visible {
+  outline: none;
+}
+.playground-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgb(var(--accent-rgb) / 0.6);
+}
