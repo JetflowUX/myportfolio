@@ -16,8 +16,9 @@ import {
   SERVICES,
   experience as defaultExperience,
   projects as defaultProjects,
-  testimonials,
+  testimonials as defaultTestimonials,
   type Experience,
+  type Testimonial,
   type MotionPiece,
 } from "@/lib/data";
 import { homeCases, type HomeCase } from "@/lib/home-work";
@@ -263,12 +264,14 @@ export default function HomePage() {
   const [cases, setCases] = useState<HomeCase[]>(() => homeCases(defaultProjects));
   const [caseCount, setCaseCount] = useState(defaultProjects.length);
   const [history, setHistory] = useState<Experience[]>(defaultExperience);
+  const [quotes, setQuotes] = useState<Testimonial[]>(defaultTestimonials);
   useEffect(() => {
     getSiteContent().then((c) => {
       if (c.resumeUrl) setResumeUrl(c.resumeUrl);
       setCases(homeCases(c.projects));
       setCaseCount(c.projects.length);
       setHistory(c.experience);
+      setQuotes(c.testimonials);
     });
   }, []);
 
@@ -362,16 +365,30 @@ export default function HomePage() {
         </section>
 
         {/* -------------------------------------------------- what people say */}
-        {testimonials.length ? (
+        {/* added in the admin (Testimonials); hidden until there is one */}
+        {quotes.length ? (
           <section>
             <Label>What people say</Label>
-            <div className="cells mt-10 grid md:grid-cols-2 lg:grid-cols-3">
-              {testimonials.map((t) => (
-                <figure key={t.name} className="flex flex-col justify-between gap-8 p-6">
-                  <blockquote className="text-[17px] leading-[1.5] tracking-[-0.01em] text-text">&ldquo;{t.quote}&rdquo;</blockquote>
-                  <figcaption>
-                    <p className="text-[14px] font-semibold">{t.name}</p>
-                    <p className="text-[13px] text-text-tertiary">{t.role}</p>
+            <div className={`cells mt-10 grid ${quotes.length === 1 ? "" : quotes.length === 2 ? "md:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
+              {quotes.map((q) => (
+                <figure key={q.id} className="flex flex-col justify-between gap-8 p-6 sm:p-7">
+                  <blockquote className={`leading-[1.5] tracking-[-0.01em] text-text ${quotes.length === 1 ? "max-w-[760px] text-[22px] sm:text-[26px]" : "text-[17px]"}`}>
+                    <span aria-hidden className="mb-3 block font-serif text-[44px] leading-[0.6] text-accent-ink">&ldquo;</span>
+                    {q.quote}
+                  </blockquote>
+                  <figcaption className="flex items-center gap-3">
+                    {q.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={q.photo} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-full object-cover grayscale" />
+                    ) : (
+                      <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink/[0.07] text-[14px] font-semibold">
+                        {q.name.charAt(0)}
+                      </span>
+                    )}
+                    <span>
+                      <span className="block text-[14px] font-semibold">{q.name}</span>
+                      {q.role ? <span className="block text-[13px] text-text-tertiary">{q.role}</span> : null}
+                    </span>
                   </figcaption>
                 </figure>
               ))}

@@ -15,6 +15,7 @@ import {
   LogOut,
   Pencil,
   Plus,
+  Quote,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -30,16 +31,18 @@ import {
   Toggle,
   type Notice,
 } from "@/components/admin/ui";
-import { projects, type Experience, type Project } from "@/lib/data";
+import { projects, type Experience, type Project, type Testimonial } from "@/lib/data";
 import { homeCases } from "@/lib/home-work";
 import {
   deleteAdminExperience,
   deleteAdminProject,
   deleteAdminResume,
+  deleteAdminTestimonial,
   getSiteContent,
   saveAdminExperience,
   saveAdminProject,
   saveAdminResume,
+  saveAdminTestimonial,
   slugify,
   uploadAdminFile,
 } from "@/lib/project-store";
@@ -49,7 +52,7 @@ import {
    work history, and the résumé. What it saves and how is unchanged: lib/project-store.ts talks to
    the /api/admin routes, which keep everything in Vercel Blob (lib/blob-content.ts). */
 
-type View = "projects" | "history" | "resume";
+type View = "projects" | "history" | "testimonials" | "resume";
 
 type FormState = {
   title: string;
@@ -89,6 +92,7 @@ type FormState = {
 };
 
 type ExperienceFormState = { when: string; role: string; note: string; order: string };
+type TestimonialFormState = { quote: string; name: string; role: string; photo: string; order: string };
 
 const initialForm: FormState = {
   title: "",
@@ -128,6 +132,7 @@ const initialForm: FormState = {
 };
 
 const initialExperienceForm: ExperienceFormState = { when: "", role: "", note: "", order: "" };
+const initialTestimonialForm: TestimonialFormState = { quote: "", name: "", role: "", photo: "", order: "" };
 
 const DEFAULT_RESUME_URL = "/resume.pdf";
 const BUILT_IN_SLUGS = new Set(projects.map((item) => item.slug));
@@ -231,6 +236,7 @@ export function AdminDashboard() {
   const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
   const [adminProjectSlugs, setAdminProjectSlugs] = useState<Set<string>>(new Set());
   const [availableExperience, setAvailableExperience] = useState<Experience[]>([]);
+  const [availableTestimonials, setAvailableTestimonials] = useState<Testimonial[]>([]);
   const [resumeUrl, setResumeUrl] = useState(DEFAULT_RESUME_URL);
 
   // The project editor: null = the list; "new" or a slug = the editor.
@@ -248,6 +254,7 @@ export function AdminDashboard() {
     setAvailableProjects(content.projects);
     setAdminProjectSlugs(new Set(content.adminProjectSlugs));
     setAvailableExperience(content.experience);
+    setAvailableTestimonials(content.testimonials);
     setResumeUrl(content.resumeUrl || DEFAULT_RESUME_URL);
     setLoaded(true);
   }
@@ -445,6 +452,65 @@ export function AdminDashboard() {
     }
   }
 
+  /* ---------------------------------------------------------- testimonials */
+
+  const [testimonialForm, setTestimonialForm] = useState<TestimonialFormState>(initialTestimonialForm);
+  const [editingTestimonialId, setEditingTestimonialId] = useState<string | null>(null);
+
+  function openTestimonial(entry?: Testimonial) {
+    setTestimonialForm(
+      entry
+        ? { quote: entry.quote, name: entry.name, role: entry.role, photo: entry.photo ?? "", order: entry.order?.toString() ?? "" }
+        : { ...initialTestimonialForm, order: String(availableTestimonials.length + 1) },
+    );
+    setEditingTestimonialId(entry ? entry.id : "new");
+  }
+
+  async function onSaveTestimonial(event: FormEvent) {
+    event.preventDefault();
+    if (!testimonialForm.quote.trim() || !testimonialForm.name.trim()) {
+      notify("A testimonial needs the quote and the name of who said it.", "error");
+      return;
+    }
+    const entry: Testimonial = {
+      id:
+        editingTestimonialId && editingTestimonialId !== "new"
+          ? editingTestimonialId
+          : slugify(`${testimonialForm.name} ${Date.now().toString(36)}`),
+      quote: testimonialForm.quote.trim().replace(/^["\u201c]+|["\u201d]+$/g, ""),
+      name: testimonialForm.name.trim(),
+      role: testimonialForm.role.trim(),
+      photo: testimonialForm.photo.trim() || undefined,
+      order: testimonialForm.order.trim() ? Number(testimonialForm.order) : undefined,
+    };
+    setIsBusy(true);
+    try {
+      await saveAdminTestimonial(entry);
+      await refreshAll();
+      setEditingTestimonialId(null);
+      notify(`Saved ${entry.name}'s testimonial. It shows on the home page under "What people say".`);
+    } catch (error) {
+      fail(error, "Could not save the testimonial.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function onDeleteTestimonial(entry: Testimonial) {
+    if (!window.confirm(`Remove ${entry.name}'s testimonial?`)) return;
+    setIsBusy(true);
+    try {
+      await deleteAdminTestimonial(entry.id);
+      await refreshAll();
+      setEditingTestimonialId(null);
+      notify(`Removed ${entry.name}'s testimonial.`);
+    } catch (error) {
+      fail(error, "Could not remove the testimonial.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   /* ---------------------------------------------------------------- résumé */
 
   const [resumeLink, setResumeLink] = useState("");
@@ -509,6 +575,7 @@ export function AdminDashboard() {
   const nav: { id: View; label: string; icon: ReactNode; count?: number }[] = [
     { id: "projects", label: "Projects", icon: <LayoutGrid className="h-4 w-4" />, count: availableProjects.length },
     { id: "history", label: "Work history", icon: <Briefcase className="h-4 w-4" />, count: availableExperience.length },
+    { id: "testimonials", label: "Testimonials", icon: <Quote className="h-4 w-4" />, count: availableTestimonials.length },
     { id: "resume", label: "Résumé", icon: <FileText className="h-4 w-4" /> },
   ];
 
@@ -631,6 +698,23 @@ export function AdminDashboard() {
               onCancel={() => setEditingExperienceId(null)}
               onSave={onSaveExperience}
               onDelete={onDeleteExperience}
+            />
+          ) : null}
+
+          {view === "testimonials" ? (
+            <TestimonialsView
+              entries={availableTestimonials}
+              loaded={loaded}
+              editingId={editingTestimonialId}
+              form={testimonialForm}
+              setForm={setTestimonialForm}
+              busy={isBusy}
+              upload={upload}
+              onAdd={() => openTestimonial()}
+              onEdit={openTestimonial}
+              onCancel={() => setEditingTestimonialId(null)}
+              onSave={onSaveTestimonial}
+              onDelete={onDeleteTestimonial}
             />
           ) : null}
 
@@ -1189,6 +1273,148 @@ function HistoryView({
                       <Pencil className="h-4 w-4" /> Edit
                     </Button>
                     <Button tone="danger" disabled={busy} onClick={() => onDelete(entry)} className="!px-3" aria-label={`Remove ${entry.role}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </li>
+              ),
+            )
+          )}
+        </ol>
+      </div>
+    </>
+  );
+}
+
+function TestimonialsView({
+  entries,
+  loaded,
+  editingId,
+  form,
+  setForm,
+  busy,
+  upload,
+  onAdd,
+  onEdit,
+  onCancel,
+  onSave,
+  onDelete,
+}: {
+  entries: Testimonial[];
+  loaded: boolean;
+  editingId: string | null;
+  form: TestimonialFormState;
+  setForm: (next: TestimonialFormState) => void;
+  busy: boolean;
+  upload: (file: File) => Promise<string | null>;
+  onAdd: () => void;
+  onEdit: (entry: Testimonial) => void;
+  onCancel: () => void;
+  onSave: (event: FormEvent) => void;
+  onDelete: (entry: Testimonial) => void;
+}) {
+  const editor = (
+    <form onSubmit={onSave} className="space-y-5 border border-ink bg-white p-5 sm:p-6">
+      <Field label="What they said" hint="Their words, as they wrote them. Quotation marks are added for you.">
+        <TextArea
+          value={form.quote}
+          onChange={(e) => setForm({ ...form, quote: e.target.value })}
+          rows={4}
+          placeholder="Jethro took our idea from a sketch to a tested prototype in three weeks..."
+          required
+          autoFocus
+        />
+      </Field>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Name" hint="Required">
+          <TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full name" required />
+        </Field>
+        <Field label="Role and where" hint="Optional">
+          <TextInput value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder="Founder, Company" />
+        </Field>
+      </div>
+      <ImageField
+        label="Photo"
+        hint="Optional. A square headshot works best."
+        value={form.photo}
+        onChange={(v) => setForm({ ...form, photo: v })}
+        onUpload={upload}
+        aspect="aspect-square"
+      />
+      <Field label="Position" hint="1 is first">
+        <TextInput
+          value={form.order}
+          onChange={(e) => setForm({ ...form, order: e.target.value.replace(/[^0-9]/g, "") })}
+          inputMode="numeric"
+          className="max-w-[140px]"
+        />
+      </Field>
+      <div className="flex justify-end gap-2">
+        <Button tone="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button tone="primary" type="submit" busy={busy}>
+          {editingId === "new" ? "Add testimonial" : "Save testimonial"}
+        </Button>
+      </div>
+    </form>
+  );
+
+  return (
+    <>
+      <PageHeader
+        title="Testimonials"
+        description="What people you have worked with say, in their own words and with their permission. The home page shows a What people say section as soon as there is one."
+        action={
+          <Button tone="primary" onClick={onAdd} disabled={editingId === "new"}>
+            <Plus className="h-4 w-4" /> Add testimonial
+          </Button>
+        }
+      />
+      <div className="mt-10">
+        {editingId === "new" ? <div className="mb-6">{editor}</div> : null}
+        <ol className="border-t border-border">
+          {!loaded ? (
+            <li className="h-20 animate-pulse border-b border-border bg-ink/[0.03]" />
+          ) : entries.length === 0 ? (
+            editingId === "new" ? null : (
+              <li className="border-b border-border py-12 text-center">
+                <p className="text-[15px] font-semibold">No testimonials yet</p>
+                <p className="mx-auto mt-1 max-w-[380px] text-[13px] leading-[1.6] text-text-tertiary">
+                  The section stays hidden on the home page until you add the first one.
+                </p>
+              </li>
+            )
+          ) : (
+            entries.map((entry) =>
+              editingId === entry.id ? (
+                <li key={entry.id} className="py-4">
+                  {editor}
+                </li>
+              ) : (
+                <li key={entry.id} className="grid gap-4 border-b border-border py-5 sm:grid-cols-[1fr_auto] sm:gap-6">
+                  <div className="flex min-w-0 gap-4">
+                    {entry.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={entry.photo} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-[14px] font-semibold">
+                        {entry.name.charAt(0)}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="line-clamp-2 text-[15px] leading-[1.55]">&ldquo;{entry.quote}&rdquo;</p>
+                      <p className="mt-1.5 text-[13px] text-text-tertiary">
+                        <span className="font-semibold text-text">{entry.name}</span>
+                        {entry.role ? ` · ${entry.role}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-0.5">
+                    <Button tone="ghost" onClick={() => onEdit(entry)} className="!px-3">
+                      <Pencil className="h-4 w-4" /> Edit
+                    </Button>
+                    <Button tone="danger" disabled={busy} onClick={() => onDelete(entry)} className="!px-3" aria-label={`Remove ${entry.name}'s testimonial`}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

@@ -482,9 +482,8 @@ export const motionWork: MotionPiece[] = [
   },
 ];
 
-/* What people he has worked with say (2026-11-03). Only real, attributed words, with permission:
-   the home page shows a "What people say" section as soon as this list has any. One per line:
-     { quote: "...", name: "Full Name", role: "Role, Organisation" },
-*/
-export type Testimonial = { quote: string; name: string; role: string };
+/* What people he has worked with say (2026-11-03). Only real, attributed words, with permission.
+   Added and edited in the admin (Testimonials); the home page shows a "What people say" section as
+   soon as there is one. This built-in list stays empty. */
+export type Testimonial = { id: string; quote: string; name: string; role: string; photo?: string; order?: number };
 export const testimonials: Testimonial[] = [];

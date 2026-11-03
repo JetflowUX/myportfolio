@@ -1,4 +1,4 @@
-import { companies, experience, projects, type Company, type Experience, type Project } from '@/lib/data';
+import { companies, experience, projects, testimonials, type Company, type Experience, type Project, type Testimonial } from '@/lib/data';
 
 const DEFAULT_RESUME_URL = '/resume.pdf';
 
@@ -6,6 +6,7 @@ export type SiteContent = {
   projects: Project[];
   companies: Company[];
   experience: Experience[];
+  testimonials: Testimonial[];
   resumeUrl: string;
   adminProjectSlugs: string[];
 };
@@ -14,6 +15,7 @@ const FALLBACK_CONTENT: SiteContent = {
   projects,
   companies,
   experience,
+  testimonials,
   resumeUrl: DEFAULT_RESUME_URL,
   adminProjectSlugs: [],
 };
@@ -40,6 +42,7 @@ export async function getSiteContent(options?: { fresh?: boolean }): Promise<Sit
       projects: Array.isArray(data.projects) ? data.projects : projects,
       companies: Array.isArray(data.companies) ? data.companies : companies,
       experience: Array.isArray(data.experience) ? data.experience : experience,
+      testimonials: Array.isArray(data.testimonials) ? data.testimonials : testimonials,
       resumeUrl: typeof data.resumeUrl === 'string' && data.resumeUrl ? data.resumeUrl : DEFAULT_RESUME_URL,
       adminProjectSlugs: Array.isArray(data.adminProjectSlugs) ? data.adminProjectSlugs : [],
     };
@@ -122,6 +125,26 @@ export async function deleteAdminExperience(id: string): Promise<void> {
   });
   if (!res.ok) {
     throw new Error(await parseJsonError(res, 'Unable to delete the work history entry.'));
+  }
+}
+
+export async function saveAdminTestimonial(entry: Testimonial): Promise<void> {
+  const res = await fetch('/api/admin/testimonials', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry),
+  });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to save the testimonial.'));
+  }
+}
+
+export async function deleteAdminTestimonial(id: string): Promise<void> {
+  const res = await fetch(`/api/admin/testimonials?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to delete the testimonial.'));
   }
 }
 

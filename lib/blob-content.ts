@@ -5,9 +5,11 @@ import {
   companies as staticCompanies,
   experience as staticExperience,
   projects as staticProjects,
+  testimonials as staticTestimonials,
   type Company,
   type Experience,
   type Project,
+  type Testimonial,
 } from '@/lib/data';
 
 // The admin dashboard used to write everything to the visitor's own
@@ -44,6 +46,9 @@ type Overlay = {
   // The home page's work history (2026-11-03), with the same tombstone rule as companies.
   experience: Experience[];
   deletedExperienceIds: string[];
+  // testimonials (2026-11-03), the same rule again
+  testimonials: Testimonial[];
+  deletedTestimonialIds: string[];
 };
 
 const EMPTY_OVERLAY: Overlay = {
@@ -53,12 +58,15 @@ const EMPTY_OVERLAY: Overlay = {
   deletedCompanyIds: [],
   experience: [],
   deletedExperienceIds: [],
+  testimonials: [],
+  deletedTestimonialIds: [],
 };
 
 export type SiteContentPayload = {
   projects: Project[];
   companies: Company[];
   experience: Experience[];
+  testimonials: Testimonial[];
   resumeUrl: string;
   adminProjectSlugs: string[];
 };
@@ -101,6 +109,8 @@ function toOverlay(data: Partial<Overlay>): Overlay {
     deletedCompanyIds: Array.isArray(data.deletedCompanyIds) ? data.deletedCompanyIds : [],
     experience: Array.isArray(data.experience) ? data.experience : [],
     deletedExperienceIds: Array.isArray(data.deletedExperienceIds) ? data.deletedExperienceIds : [],
+    testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
+    deletedTestimonialIds: Array.isArray(data.deletedTestimonialIds) ? data.deletedTestimonialIds : [],
   };
 }
 
@@ -202,10 +212,17 @@ export async function getSiteContentPayload(options?: { fresh?: boolean }): Prom
   )
     .filter((item) => !deletedExperience.has(item.id))
     .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  const deletedTestimonials = new Set(overlay.deletedTestimonialIds);
+  const mergedTestimonials = Array.from(
+    new Map([...staticTestimonials, ...overlay.testimonials].map((item) => [item.id, item])).values(),
+  )
+    .filter((item) => !deletedTestimonials.has(item.id))
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
   return {
     projects: sortProjectsByYearDesc(uniqueBySlug([...staticProjects, ...overlaid])),
     companies: mergedCompanies,
     experience: mergedExperience,
+    testimonials: mergedTestimonials,
     resumeUrl: overlay.resumeUrl.trim() || DEFAULT_RESUME_URL,
     adminProjectSlugs: overlay.projects.map((item) => item.slug),
   };
@@ -274,5 +291,25 @@ export async function removeExperience(id: string): Promise<void> {
     deletedExperienceIds: overlay.deletedExperienceIds.includes(id)
       ? overlay.deletedExperienceIds
       : [...overlay.deletedExperienceIds, id],
+  });
+}
+
+export async function upsertTestimonial(entry: Testimonial): Promise<void> {
+  const overlay = await readForWrite();
+  await writeOverlay({
+    ...overlay,
+    testimonials: [...overlay.testimonials.filter((item) => item.id !== entry.id), entry],
+    deletedTestimonialIds: overlay.deletedTestimonialIds.filter((id) => id !== entry.id),
+  });
+}
+
+export async function removeTestimonial(id: string): Promise<void> {
+  const overlay = await readForWrite();
+  await writeOverlay({
+    ...overlay,
+    testimonials: overlay.testimonials.filter((item) => item.id !== id),
+    deletedTestimonialIds: overlay.deletedTestimonialIds.includes(id)
+      ? overlay.deletedTestimonialIds
+      : [...overlay.deletedTestimonialIds, id],
   });
 }
