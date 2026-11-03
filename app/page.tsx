@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { LightboxProvider, useLightbox } from "@/components/image-lightbox";
 import { Overture } from "@/components/overture";
+import { CopyEmail } from "@/components/copy-email";
 import { FilmColumns } from "@/components/film-columns";
 import { HeroProcess } from "@/components/hero-process";
 import { ScrollProgress } from "@/components/scroll-progress";
@@ -474,9 +475,7 @@ export default function HomePage() {
                   Tell me what you&apos;re building and where it&apos;s stuck. I reply within a day.
                 </p>
               </div>
-              <a href={`mailto:${EMAIL}`} className="text-[15px] font-semibold underline-offset-4 hover:underline">
-                {EMAIL}
-              </a>
+              <CopyEmail email={EMAIL} />
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-3 p-6 sm:p-8">
