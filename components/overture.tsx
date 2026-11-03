@@ -1,5 +1,6 @@
 "use client";
 
+import { LOGO_H, LOGO_PATH, LOGO_W } from "@/components/logo-mark";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /* ---------------------------------------------------------------------------
@@ -24,8 +25,11 @@ const END = 5650;
 // played at 1.8x (2026-11-03: "make the opening animation cost less"): the same sequence in 3.1 s
 const SPEED = 1.8;
 const NS = "http://www.w3.org/2000/svg";
-/* His mark (app/icon.svg), drawn in a 64-unit box: x 24..42, y 18..44. */
-const MARK = "M42 18H24L33.5 31L24 44H42";
+/* His mark: the arrow J (components/logo-mark.tsx, 2026-11-03), replacing the sigma that stood here.
+   Drawn as an aqua outline, like every other line in the opening. MARK_S fits it to the height the old
+   mark had (26 units of a 64-unit box). */
+const MARK = LOGO_PATH;
+const MARK_S = 26 / LOGO_H;
 
 const clamp = (x: number) => Math.max(0, Math.min(1, x));
 const ease = (x: number) => {
@@ -167,7 +171,7 @@ export function Overture({ onFinish }: { onFinish: () => void }) {
       const out = ease((ms - 2450) / 300);
       const k = (Math.min(w * 0.2, 110) / 18) * (1 - 0.94 * out);
       set($("entry"), {
-        transform: `translate(${w / 2 - 33 * k},${h / 2 - 31 * k}) scale(${k})`,
+        transform: `translate(${w / 2 - (LOGO_W / 2) * MARK_S * k},${h / 2 - (LOGO_H / 2) * MARK_S * k}) scale(${k * MARK_S})`,
         opacity: ease((ms - 1750) / 300) * (1 - out),
       });
 
@@ -178,7 +182,9 @@ export function Overture({ onFinish }: { onFinish: () => void }) {
       set($("line1"), { x: x + m, y: y + hh * 0.68, "font-size": ww * 0.098 });
       set($("line2"), { x: x + m, y: y + hh * 0.81, "font-size": ww * 0.098 });
       set($("caption"), { x: x + m, y: y + hh * 0.935, "font-size": ww * 0.022 });
-      set($("mark"), { transform: `translate(${x + ww * 0.8},${y + hh * 0.83}) scale(${ww / 700})` });
+      // the card's mark: at least 22 px tall, so it stays a J on a phone-sized card
+      const mk = Math.max(ww / 700, 22 / 26);
+      set($("mark"), { transform: `translate(${x + ww * 0.8 + 24 * mk},${y + hh * 0.83 + 18 * mk - (mk - ww / 700) * 26}) scale(${mk * MARK_S})` });
     };
 
     layout();
@@ -281,7 +287,8 @@ export function Overture({ onFinish }: { onFinish: () => void }) {
           <text data-id="caption" style={{ fontFamily: "'Space Mono', monospace", letterSpacing: "0.1em" }}>
             JA / PORTFOLIO
           </text>
-          <path data-id="mark" d={MARK} fill="none" stroke="#00FFC2" strokeWidth={1.4} vectorEffect="non-scaling-stroke" />
+          {/* solid, not an outline: an outline this small blurs into a smudge */}
+          <path data-id="mark" d={MARK} fill="#00FFC2" />
         </g>
       </svg>
       <button
