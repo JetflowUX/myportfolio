@@ -12,7 +12,7 @@ const COLUMNS = [
   {
     title: "Work",
     links: [
-      { label: "Case studies", href: "/#work" },
+      { label: "Case studies", href: "/work#case-studies" },
       { label: "The Shelf", href: "/work" },
       { label: "Playground", href: "/playground" },
       { label: "Films", href: "/work?tab=films" },

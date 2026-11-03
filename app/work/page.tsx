@@ -95,7 +95,7 @@ function ShelfPage() {
         </div>
 
         {shownProjects.length ? (
-          <section aria-label="Projects" className="mt-10">
+          <section id="case-studies" aria-label="Case studies" className="mt-10 scroll-mt-8">
             {tab === "all" ? <h2 className="label mb-5">Case studies</h2> : null}
             <div className="cells grid md:grid-cols-2 lg:grid-cols-3">
               {shownProjects.map((project) => (
