@@ -619,7 +619,7 @@ function StatCell({ label, value }: { label: string; value: string }) {
       <p className="text-[8px] uppercase tracking-[0.35em] text-text-tertiary mb-1.5 font-mono">
         {label}
       </p>
-      <p className="text-xs sm:text-sm font-bold text-text capitalize leading-tight">
+      <p className="text-xs sm:text-sm font-bold text-text leading-tight">
         {value}
       </p>
     </div>
