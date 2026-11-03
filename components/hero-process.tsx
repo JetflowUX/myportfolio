@@ -234,9 +234,7 @@ export function HeroProcess({
         </dl>
         <ul className="col-span-2 flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-r border-border p-4 text-[13px] sm:col-span-3 lg:col-span-1 lg:flex-col lg:items-start lg:justify-center">
           <li>
-            {/* a link icon before each, so they read as links (his ask, 2026-11-03) */}
-            <a href="mailto:adebisireuel@gmail.com" className="inline-flex min-h-[32px] items-center gap-1.5 font-semibold hover:underline">
-              <LinkIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <a href="mailto:adebisireuel@gmail.com" className="inline-flex min-h-[32px] items-center font-semibold hover:underline">
               Email me
             </a>
           </li>
@@ -247,8 +245,9 @@ export function HeroProcess({
           ].map(([k, href]) => (
             <li key={k}>
               <a href={href} target="_blank" rel="noreferrer" className="inline-flex min-h-[32px] items-center gap-1.5 text-text-secondary hover:text-text">
-                <LinkIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {/* the link icon after the name, so it reads as a link (his ask, 2026-11-03) */}
                 {k}
+                <LinkIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
               </a>
             </li>
           ))}
