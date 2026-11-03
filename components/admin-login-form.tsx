@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { CursorFollower } from "@/components/cursor-follower";
+import Link from "next/link";
+import { Button, Field, TextInput } from "@/components/admin/ui";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -41,85 +42,51 @@ export function AdminLoginForm() {
   }
 
   return (
-    <main className="relative z-10 min-h-screen pt-28 sm:pt-32 px-4 sm:px-6 pb-16 sm:pb-24 flex items-start justify-center">
-      <CursorFollower />
-      <section className="w-full max-w-xl bento-card p-6 sm:p-10">
-        <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-3">
-          Admin Login
-        </h1>
-        <p className="text-sm text-gray-400 mb-8">
-          Sign in to manage projects, case studies, and portfolio entries.
+    <main className="flex min-h-screen items-center justify-center bg-bg px-5 py-16 text-text">
+      <section className="w-full max-w-[400px]">
+        <Link href="/" className="text-[13px] font-bold uppercase tracking-[0.16em]">
+          Jethro Adebisi
+        </Link>
+        <h1 className="mt-10 text-[36px] font-black leading-none tracking-[-0.035em]">Site admin</h1>
+        <p className="mt-3 text-[14px] leading-[1.6] text-text-secondary">
+          Sign in to edit your projects, work history and résumé.
         </p>
 
-        <form className="space-y-4" onSubmit={handleLogin}>
-          <label className="block">
-            <span className="mb-1 block text-[10px] uppercase tracking-[0.2em] text-gray-500">
-              Admin Email
-            </span>
-            <input
+        <form className="mt-8 space-y-5" onSubmit={handleLogin}>
+          <Field label="Email">
+            <TextInput
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="admin-input"
-              title="Admin Email"
-              placeholder="Enter your admin email"
               autoComplete="username"
               required
+              autoFocus
             />
-          </label>
-
-          <label className="block">
-            <span className="mb-1 block text-[10px] uppercase tracking-[0.2em] text-gray-500">
-              Password
-            </span>
-            <input
+          </Field>
+          <Field label="Password">
+            <TextInput
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="admin-input"
-              title="Password"
-              placeholder="Enter password"
               autoComplete="current-password"
               required
             />
-          </label>
+          </Field>
 
-          {error ? <p className="text-xs text-red-300">{error}</p> : null}
+          {error ? (
+            <p role="alert" className="border-l-2 border-red-700 bg-red-50 px-3 py-2 text-[13px] text-red-800">
+              {error}
+            </p>
+          ) : null}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-4 bg-accent text-black font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-60"
-          >
-            {isSubmitting ? "Signing In..." : "Login to Dashboard"}
-          </button>
+          <Button tone="primary" type="submit" busy={isSubmitting} className="w-full !min-h-[46px]">
+            {isSubmitting ? "Signing in" : "Sign in"}
+          </Button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap gap-4 text-[10px] uppercase tracking-[0.2em] text-gray-500">
-          <a
-            href="https://x.com/jethroadebisi"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-accent transition-colors"
-          >
-            Twitter_X
-          </a>
-          <a
-            href="https://www.linkedin.com/in/jethro-adebisi-21872a20b/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-accent transition-colors"
-          >
-            LinkedIn
-          </a>
-          <a
-            href="https://github.com/adebisijethro"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-accent transition-colors"
-          >
-            GitHub
-          </a>
-        </div>
+        <Link href="/" className="mt-8 inline-flex text-[13px] text-text-tertiary hover:text-text">
+          Back to the site
+        </Link>
       </section>
     </main>
   );

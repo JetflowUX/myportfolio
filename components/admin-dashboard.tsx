@@ -2,12 +2,35 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import type { ChangeEvent, FormEvent, ReactNode } from "react";
-import { CursorFollower } from "@/components/cursor-follower";
-import { ScrollProgress } from "@/components/scroll-progress";
-import { TopNav } from "@/components/top-nav";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  Briefcase,
+  ExternalLink,
+  FileText,
+  LayoutGrid,
+  LogOut,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import {
+  Button,
+  Field,
+  FormSection,
+  GalleryField,
+  ImageField,
+  TextArea,
+  TextInput,
+  Toast,
+  Toggle,
+  type Notice,
+} from "@/components/admin/ui";
 import { projects, type Experience, type Project } from "@/lib/data";
+import { homeCases } from "@/lib/home-work";
 import {
   deleteAdminExperience,
   deleteAdminProject,
@@ -19,6 +42,13 @@ import {
   slugify,
   uploadAdminFile,
 } from "@/lib/project-store";
+
+/* The admin (redesigned 2026-11-03, Jethro: "CHANGE THE ADMIN VIES TO SOMETHING GOOD"). Three
+   views in a side menu: projects (a list, then an editor with a live preview of the home panel),
+   work history, and the résumé. What it saves and how is unchanged: lib/project-store.ts talks to
+   the /api/admin routes, which keep everything in Vercel Blob (lib/blob-content.ts). */
+
+type View = "projects" | "history" | "resume";
 
 type FormState = {
   title: string;
@@ -44,7 +74,7 @@ type FormState = {
   tech: string;
   image: string;
   caseStudyImage: string;
-  caseStudyGallery: string;
+  caseStudyGallery: string[];
   projectLink: string;
   caseStudy: string;
   showOnHome: boolean;
@@ -57,18 +87,13 @@ type FormState = {
   coverDark: boolean;
 };
 
-type ExperienceFormState = {
-  when: string;
-  role: string;
-  note: string;
-  order: string;
-};
+type ExperienceFormState = { when: string; role: string; note: string; order: string };
 
 const initialForm: FormState = {
   title: "",
   slug: "",
   year: new Date().getFullYear().toString(),
-  category: "engineering",
+  category: "design",
   description: "",
   problem: "",
   solution: "",
@@ -88,7 +113,7 @@ const initialForm: FormState = {
   tech: "",
   image: "",
   caseStudyImage: "",
-  caseStudyGallery: "",
+  caseStudyGallery: [],
   projectLink: "",
   caseStudy: "",
   showOnHome: true,
@@ -101,1257 +126,1146 @@ const initialForm: FormState = {
   coverDark: false,
 };
 
-const initialExperienceForm: ExperienceFormState = {
-  when: "",
-  role: "",
-  note: "",
-  order: "",
-};
+const initialExperienceForm: ExperienceFormState = { when: "", role: "", note: "", order: "" };
 
 const DEFAULT_RESUME_URL = "/resume.pdf";
+const BUILT_IN_SLUGS = new Set(projects.map((item) => item.slug));
+
+function toForm(project: Project): FormState {
+  return {
+    title: project.title,
+    slug: project.slug,
+    year: project.year,
+    category: project.category,
+    description: project.description,
+    problem: project.problem,
+    solution: project.solution ?? "",
+    role: project.role,
+    context: project.context ?? "",
+    objectives: project.objectives ?? "",
+    audience: project.audience ?? "",
+    process: project.process ?? "",
+    researchInsights: project.researchInsights ?? "",
+    informationArchitecture: project.informationArchitecture ?? "",
+    wireframes: project.wireframes ?? "",
+    visualDesign: project.visualDesign ?? "",
+    prototypeTesting: project.prototypeTesting ?? "",
+    outcomes: project.outcomes ?? "",
+    learnings: project.learnings ?? "",
+    nextSteps: project.nextSteps ?? "",
+    tech: project.tech.join(", "),
+    image: project.image,
+    caseStudyImage: project.caseStudyImage ?? "",
+    caseStudyGallery: project.caseStudyGallery ?? [],
+    projectLink: project.projectLink ?? "",
+    caseStudy: project.caseStudy ?? "",
+    showOnHome: project.showOnHome !== false,
+    homeOrder: project.homeOrder?.toString() ?? "",
+    homeTitle: project.homeTitle ?? "",
+    homeMeta: project.homeMeta ?? "",
+    homeLine: project.homeLine ?? "",
+    cover: project.cover ?? "",
+    coverBg: project.coverBg ?? "",
+    coverDark: Boolean(project.coverDark),
+  };
+}
+
+function toProject(form: FormState, slug: string): Project {
+  return {
+    slug,
+    title: form.title.trim(),
+    year: form.year.trim() || new Date().getFullYear().toString(),
+    description: form.description.trim() || "No short description provided yet.",
+    problem: form.problem.trim() || "No problem statement provided yet.",
+    solution: form.solution.trim() || "No solution summary provided yet.",
+    role: form.role.trim() || "Role not specified",
+    context: form.context.trim(),
+    objectives: form.objectives.trim(),
+    audience: form.audience.trim(),
+    process: form.process.trim(),
+    researchInsights: form.researchInsights.trim(),
+    informationArchitecture: form.informationArchitecture.trim(),
+    wireframes: form.wireframes.trim(),
+    visualDesign: form.visualDesign.trim(),
+    prototypeTesting: form.prototypeTesting.trim(),
+    outcomes: form.outcomes.trim(),
+    learnings: form.learnings.trim(),
+    nextSteps: form.nextSteps.trim(),
+    tech: form.tech
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
+    category: form.category,
+    // Blank stays blank, so a cleared image really clears; the hero falls back to the thumbnail.
+    image: form.image.trim(),
+    caseStudyImage: form.caseStudyImage.trim() || form.image.trim(),
+    caseStudyGallery: form.caseStudyGallery.map((item) => item.trim()).filter(Boolean),
+    projectLink: form.projectLink.trim(),
+    caseStudy: form.caseStudy.trim(),
+    showOnHome: form.showOnHome,
+    homeOrder: form.homeOrder.trim() ? Number(form.homeOrder) : undefined,
+    homeTitle: form.homeTitle.trim(),
+    homeMeta: form.homeMeta.trim(),
+    homeLine: form.homeLine.trim(),
+    cover: form.cover.trim(),
+    coverBg: form.coverBg.trim(),
+    coverDark: form.coverDark,
+  };
+}
+
+function fileName(url: string): string {
+  if (!url || url === DEFAULT_RESUME_URL) return "resume.pdf (built in)";
+  const last = decodeURIComponent(url.split("?")[0].split("/").pop() ?? url);
+  // Blob uploads carry a random suffix before the extension: name-AbC123xyz.pdf
+  return last.replace(/-[A-Za-z0-9]{20,}(\.[a-z0-9]+)$/i, "$1");
+}
 
 export function AdminDashboard() {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>(initialForm);
-  const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
-  const [adminProjectSlugs, setAdminProjectSlugs] = useState<Set<string>>(
-    new Set(),
-  );
-  const [status, setStatus] = useState("");
-  const [editingSlug, setEditingSlug] = useState<string | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [experienceForm, setExperienceForm] =
-    useState<ExperienceFormState>(initialExperienceForm);
-  const [availableExperience, setAvailableExperience] = useState<Experience[]>([]);
-  const [editingExperienceId, setEditingExperienceId] = useState<string | null>(null);
-  const [isExperienceFormOpen, setIsExperienceFormOpen] = useState(false);
-  const [resumeUrl, setResumeUrl] = useState(DEFAULT_RESUME_URL);
+  const [view, setView] = useState<View>("projects");
+  const [notice, setNotice] = useState<Notice>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
-  const baseProjectSlugs = useMemo(
-    () => new Set(projects.map((item) => item.slug)),
-    [],
-  );
+  const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
+  const [adminProjectSlugs, setAdminProjectSlugs] = useState<Set<string>>(new Set());
+  const [availableExperience, setAvailableExperience] = useState<Experience[]>([]);
+  const [resumeUrl, setResumeUrl] = useState(DEFAULT_RESUME_URL);
+
+  // The project editor: null = the list; "new" or a slug = the editor.
+  const [editing, setEditing] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>(initialForm);
+  const [savedForm, setSavedForm] = useState<FormState>(initialForm);
+
+  const notify = useCallback((text: string, tone: "ok" | "error" | "info" = "ok") => setNotice({ text, tone }), []);
+  const closeNotice = useCallback(() => setNotice(null), []);
+  const fail = (error: unknown, fallback: string) => notify(error instanceof Error ? error.message : fallback, "error");
 
   async function refreshAll() {
-    // Always fresh — this only runs a handful of times per admin session
-    // (on mount, and right after each save/delete), so bypassing the
-    // public cache here costs nothing and guarantees the dashboard shows
-    // its own edits immediately instead of possibly-stale cached data.
+    // Always fresh: it runs on load and after each save, and must show the save just made.
     const content = await getSiteContent({ fresh: true });
     setAvailableProjects(content.projects);
     setAdminProjectSlugs(new Set(content.adminProjectSlugs));
     setAvailableExperience(content.experience);
     setResumeUrl(content.resumeUrl || DEFAULT_RESUME_URL);
+    setLoaded(true);
   }
 
   useEffect(() => {
     refreshAll();
   }, []);
 
-  const liveSlug = useMemo(() => {
-    if (form.slug.trim()) {
-      return slugify(form.slug);
+  const isDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(savedForm), [form, savedForm]);
+
+  // Leaving the page with unsaved changes asks first.
+  useEffect(() => {
+    if (!editing || !isDirty) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [editing, isDirty]);
+
+  function confirmLeave() {
+    return !editing || !isDirty || window.confirm("You have unsaved changes. Leave without saving?");
+  }
+
+  function go(next: View) {
+    if (!confirmLeave()) return;
+    setEditing(null);
+    setView(next);
+    window.scrollTo({ top: 0 });
+  }
+
+  async function upload(file: File): Promise<string | null> {
+    if (!file.type.startsWith("image/") && !file.name.endsWith(".svg")) {
+      notify("That file is not an image.", "error");
+      return null;
     }
-    return slugify(form.title);
-  }, [form.slug, form.title]);
+    try {
+      return await uploadAdminFile(file);
+    } catch (error) {
+      fail(error, "Could not upload the image.");
+      return null;
+    }
+  }
 
-  // When editing an existing project, keep its ORIGINAL slug no matter what
-  // the title/slug fields say. Otherwise a title that doesn't slugify back to
-  // the same slug (every default project except backup-line / speed-math-
-  // battle) saves a brand-new overlay entry at a different slug instead of
-  // overriding the project being edited — so the edit never shows up.
-  const effectiveSlug = editingSlug ?? liveSlug;
+  async function uploadMany(files: File[]): Promise<string[]> {
+    const urls = await Promise.all(files.map((file) => upload(file)));
+    return urls.filter((url): url is string => Boolean(url));
+  }
 
-  // A new entry's id comes from its role and dates; an edited one keeps its own.
-  const experienceId =
-    editingExperienceId ?? slugify(`${experienceForm.role} ${experienceForm.when}`);
+  /* ------------------------------------------------------------ projects */
 
-  function onChange<K extends keyof FormState>(key: K, value: FormState[K]) {
+  const homeOrder = useMemo(() => {
+    const order = new Map<string, number>();
+    homeCases(availableProjects).forEach((c, i) => order.set(c.slug, i + 1));
+    return order;
+  }, [availableProjects]);
+
+  const listed = useMemo(
+    () =>
+      [...availableProjects].sort(
+        (a, b) => (homeOrder.get(a.slug) ?? 999) - (homeOrder.get(b.slug) ?? 999),
+      ),
+    [availableProjects, homeOrder],
+  );
+
+  const effectiveSlug = editing && editing !== "new" ? editing : slugify(form.slug.trim() || form.title);
+
+  function openEditor(project?: Project) {
+    if (!confirmLeave()) return;
+    const next = project ? toForm(project) : initialForm;
+    setForm(next);
+    setSavedForm(next);
+    setEditing(project ? project.slug : "new");
+    window.scrollTo({ top: 0 });
+  }
+
+  function closeEditor() {
+    if (!confirmLeave()) return;
+    setEditing(null);
+    window.scrollTo({ top: 0 });
+  }
+
+  function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function onExperienceChange<K extends keyof ExperienceFormState>(
-    key: K,
-    value: ExperienceFormState[K],
-  ) {
-    setExperienceForm((prev) => ({ ...prev, [key]: value }));
-  }
-
-  async function onProjectImageUpload(
-    event: ChangeEvent<HTMLInputElement>,
-    field: "image" | "caseStudyImage" | "cover",
-  ) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!file) {
+  async function onSaveProject(event?: FormEvent) {
+    event?.preventDefault();
+    if (!form.title.trim()) {
+      notify("Give the project a title first.", "error");
+      return;
+    }
+    if (!effectiveSlug) {
+      notify("Could not make a web address from that title.", "error");
+      return;
+    }
+    if (editing === "new" && availableProjects.some((p) => p.slug === effectiveSlug)) {
+      notify(`A project already uses /projects/${effectiveSlug}. Change the title or the address.`, "error");
       return;
     }
 
-    if (!file.type.startsWith("image/")) {
-      setStatus("Please upload an image file.");
-      return;
-    }
-
+    const project = toProject(form, effectiveSlug);
     setIsBusy(true);
-    setStatus("Uploading image…");
     try {
-      const url = await uploadAdminFile(file);
-      setForm((prev) => ({ ...prev, [field]: url }));
-      setStatus(
-        field === "image"
-          ? "Uploaded project thumbnail image."
-          : field === "cover"
-            ? "Uploaded home page cover image."
-            : "Uploaded case study hero image.",
+      await saveAdminProject(project);
+      await refreshAll();
+      const next = toForm(project);
+      setForm(next);
+      setSavedForm(next);
+      setEditing(project.slug);
+      notify(
+        `Saved ${project.title}. ${project.showOnHome ? "It shows on the home page, " : "It is hidden from the home page; it shows on "}the archive and /projects/${project.slug}.`,
       );
     } catch (error) {
-      setStatus(
-        error instanceof Error ? error.message : "Could not upload the selected image.",
-      );
+      fail(error, "Could not save the project.");
     } finally {
       setIsBusy(false);
     }
   }
 
-  async function onProjectGalleryUpload(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
-    event.target.value = "";
-
-    if (!files.length) {
-      return;
-    }
-
-    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
-    if (!imageFiles.length) {
-      setStatus("Please select image files for the project gallery.");
-      return;
-    }
+  async function onDeleteProject(project: Project) {
+    const builtIn = BUILT_IN_SLUGS.has(project.slug);
+    const question = builtIn
+      ? `Undo your edits to "${project.title}" and go back to the built-in version?`
+      : `Delete "${project.title}"? Its case-study page goes too. This cannot be undone.`;
+    if (!window.confirm(question)) return;
 
     setIsBusy(true);
-    setStatus(`Uploading ${imageFiles.length} image(s)…`);
     try {
-      const images = await Promise.all(imageFiles.map((file) => uploadAdminFile(file)));
-      setForm((prev) => {
-        const existing = prev.caseStudyGallery
-          .split(/\n|,/)
-          .map((item) => item.trim())
-          .filter(Boolean);
-        const merged = [...existing, ...images];
-        return { ...prev, caseStudyGallery: merged.join("\n") };
-      });
-      setStatus(`Added ${images.length} image(s) to project gallery.`);
+      await deleteAdminProject(project.slug);
+      await refreshAll();
+      if (editing === project.slug) setEditing(null);
+      notify(builtIn ? `${project.title} is back to its built-in version.` : `Deleted ${project.title}.`);
     } catch (error) {
-      setStatus(
-        error instanceof Error ? error.message : "Could not upload one or more gallery images.",
-      );
+      fail(error, "Could not delete the project.");
     } finally {
       setIsBusy(false);
     }
   }
 
-  async function onResumeUpload(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
+  /* ---------------------------------------------------------- work history */
 
-    if (!file) {
+  const [experienceForm, setExperienceForm] = useState<ExperienceFormState>(initialExperienceForm);
+  const [editingExperienceId, setEditingExperienceId] = useState<string | null>(null);
+
+  function openExperience(entry?: Experience) {
+    setExperienceForm(
+      entry
+        ? { when: entry.when, role: entry.role, note: entry.note, order: entry.order?.toString() ?? "" }
+        : { ...initialExperienceForm, order: String(availableExperience.length + 1) },
+    );
+    setEditingExperienceId(entry ? entry.id : "new");
+  }
+
+  async function onSaveExperience(event: FormEvent) {
+    event.preventDefault();
+    if (!experienceForm.role.trim() || !experienceForm.when.trim()) {
+      notify("An entry needs a role and its dates.", "error");
       return;
     }
-
-    const isPdf = file.type === "application/pdf" || file.name.endsWith(".pdf");
-    if (!isPdf) {
-      setStatus("Please upload a PDF file for the resume.");
-      return;
-    }
-
+    const entry: Experience = {
+      id:
+        editingExperienceId && editingExperienceId !== "new"
+          ? editingExperienceId
+          : slugify(`${experienceForm.role} ${experienceForm.when}`),
+      when: experienceForm.when.trim(),
+      role: experienceForm.role.trim(),
+      note: experienceForm.note.trim(),
+      order: experienceForm.order.trim() ? Number(experienceForm.order) : undefined,
+    };
     setIsBusy(true);
-    setStatus("Uploading resume…");
+    try {
+      await saveAdminExperience(entry);
+      await refreshAll();
+      setEditingExperienceId(null);
+      notify(`Saved "${entry.role}" to your work history.`);
+    } catch (error) {
+      fail(error, "Could not save the entry.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function onDeleteExperience(entry: Experience) {
+    if (!window.confirm(`Remove "${entry.role}" from your work history?`)) return;
+    setIsBusy(true);
+    try {
+      await deleteAdminExperience(entry.id);
+      await refreshAll();
+      setEditingExperienceId(null);
+      notify(`Removed "${entry.role}".`);
+    } catch (error) {
+      fail(error, "Could not remove the entry.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  /* ---------------------------------------------------------------- résumé */
+
+  const [resumeLink, setResumeLink] = useState("");
+
+  async function onResumeUpload(file?: File) {
+    if (!file) return;
+    if (!(file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))) {
+      notify("The résumé has to be a PDF.", "error");
+      return;
+    }
+    setIsBusy(true);
     try {
       const url = await uploadAdminFile(file);
       await saveAdminResume(url);
       setResumeUrl(url);
-      setStatus(
-        "Uploaded resume PDF. The homepage button now opens this file.",
-      );
+      notify("Résumé replaced. Every résumé button on the site now opens it.");
     } catch (error) {
-      setStatus(
-        error instanceof Error ? error.message : "Could not upload the selected resume PDF.",
-      );
+      fail(error, "Could not upload the résumé.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function onResumeLink() {
+    const value = resumeLink.trim();
+    if (!value) return;
+    setIsBusy(true);
+    try {
+      await saveAdminResume(value);
+      setResumeUrl(value);
+      setResumeLink("");
+      notify("Résumé link saved.");
+    } catch (error) {
+      fail(error, "Could not save the link.");
     } finally {
       setIsBusy(false);
     }
   }
 
   async function onResetResume() {
+    if (!window.confirm("Go back to the built-in résumé (resume.pdf)?")) return;
     setIsBusy(true);
     try {
       await deleteAdminResume();
       setResumeUrl(DEFAULT_RESUME_URL);
-      setStatus("Resume reset to the default PDF.");
+      notify("Back to the built-in résumé.");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not reset the resume link.");
-    } finally {
-      setIsBusy(false);
-    }
-  }
-
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!form.title.trim()) {
-      setStatus("Title is required.");
-      return;
-    }
-
-    if (!effectiveSlug) {
-      setStatus("Slug could not be generated.");
-      return;
-    }
-
-    const project: Project = {
-      slug: effectiveSlug,
-      title: form.title.trim(),
-      year: form.year.trim() || new Date().getFullYear().toString(),
-      description:
-        form.description.trim() || "No short description provided yet.",
-      problem: form.problem.trim() || "No problem statement provided yet.",
-      solution: form.solution.trim() || "No solution summary provided yet.",
-      role: form.role.trim() || "Role not specified",
-      context: form.context.trim(),
-      objectives: form.objectives.trim(),
-      audience: form.audience.trim(),
-      process: form.process.trim(),
-      researchInsights: form.researchInsights.trim(),
-      informationArchitecture: form.informationArchitecture.trim(),
-      wireframes: form.wireframes.trim(),
-      visualDesign: form.visualDesign.trim(),
-      prototypeTesting: form.prototypeTesting.trim(),
-      outcomes: form.outcomes.trim(),
-      learnings: form.learnings.trim(),
-      nextSteps: form.nextSteps.trim(),
-      tech: form.tech
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-      category: form.category,
-      // Blank stays blank — no hardcoded stock-photo fallback, so a cleared
-      // image genuinely clears. caseStudyImage still defaults to the
-      // thumbnail when only the thumbnail is provided.
-      image: form.image.trim(),
-      caseStudyImage: form.caseStudyImage.trim() || form.image.trim(),
-      caseStudyGallery: form.caseStudyGallery
-        .split(/\n|,/)
-        .map((item) => item.trim())
-        .filter(Boolean),
-      projectLink: form.projectLink.trim(),
-      caseStudy: form.caseStudy.trim(),
-      showOnHome: form.showOnHome,
-      homeOrder: form.homeOrder.trim() ? Number(form.homeOrder) : undefined,
-      homeTitle: form.homeTitle.trim(),
-      homeMeta: form.homeMeta.trim(),
-      homeLine: form.homeLine.trim(),
-      cover: form.cover.trim(),
-      coverBg: form.coverBg.trim(),
-      coverDark: form.coverDark,
-    };
-
-    setIsBusy(true);
-    try {
-      await saveAdminProject(project);
-      await refreshAll();
-      const action = editingSlug ? "Updated" : "Saved";
-      setEditingSlug(null);
-      setForm(initialForm);
-      setIsFormOpen(false);
-      setStatus(
-        `${action} ${project.title}. ${
-          project.showOnHome ? "Shown on the home page, the archive" : "Shown on the archive"
-        } and its case-study page: /projects/${project.slug}`,
-      );
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not save project.");
-    } finally {
-      setIsBusy(false);
-    }
-  }
-
-  function onEdit(project: Project) {
-    setForm({
-      title: project.title,
-      slug: project.slug,
-      year: project.year,
-      category: project.category,
-      description: project.description,
-      problem: project.problem,
-      solution: project.solution ?? "",
-      role: project.role,
-      context: project.context ?? "",
-      objectives: project.objectives ?? "",
-      audience: project.audience ?? "",
-      process: project.process ?? "",
-      researchInsights: project.researchInsights ?? "",
-      informationArchitecture: project.informationArchitecture ?? "",
-      wireframes: project.wireframes ?? "",
-      visualDesign: project.visualDesign ?? "",
-      prototypeTesting: project.prototypeTesting ?? "",
-      outcomes: project.outcomes ?? "",
-      learnings: project.learnings ?? "",
-      nextSteps: project.nextSteps ?? "",
-      tech: project.tech.join(", "),
-      image: project.image,
-      caseStudyImage: project.caseStudyImage ?? "",
-      caseStudyGallery: (project.caseStudyGallery ?? []).join("\n"),
-      projectLink: project.projectLink ?? "",
-      caseStudy: project.caseStudy ?? "",
-      showOnHome: project.showOnHome !== false,
-      homeOrder: project.homeOrder?.toString() ?? "",
-      homeTitle: project.homeTitle ?? "",
-      homeMeta: project.homeMeta ?? "",
-      homeLine: project.homeLine ?? "",
-      cover: project.cover ?? "",
-      coverBg: project.coverBg ?? "",
-      coverDark: Boolean(project.coverDark),
-    });
-    setEditingSlug(project.slug);
-    setIsFormOpen(true);
-    setStatus(`Editing ${project.title}`);
-  }
-
-  function onCreateNew() {
-    setForm(initialForm);
-    setEditingSlug(null);
-    setIsFormOpen(true);
-    setStatus("Creating a new project entry.");
-  }
-
-  function onResetForm() {
-    setForm(initialForm);
-    setEditingSlug(null);
-    setIsFormOpen(false);
-    setStatus("Form cleared.");
-  }
-
-  async function onDelete(slug: string) {
-    if (!adminProjectSlugs.has(slug)) {
-      setStatus("Default portfolio entries cannot be deleted here.");
-      return;
-    }
-
-    setIsBusy(true);
-    try {
-      await deleteAdminProject(slug);
-      await refreshAll();
-      setStatus(`Deleted ${slug}`);
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not delete project.");
+      fail(error, "Could not reset the résumé.");
     } finally {
       setIsBusy(false);
     }
   }
 
   async function onLogout() {
+    if (!confirmLeave()) return;
     await fetch("/api/admin/logout", { method: "POST" });
     router.refresh();
   }
 
-  function onCreateExperienceNew() {
-    setExperienceForm(initialExperienceForm);
-    setEditingExperienceId(null);
-    setIsExperienceFormOpen(true);
-    setStatus("Adding a work history entry.");
-  }
+  /* ----------------------------------------------------------------- shell */
 
-  function onEditExperience(entry: Experience) {
-    setExperienceForm({
-      when: entry.when,
-      role: entry.role,
-      note: entry.note,
-      order: entry.order?.toString() ?? "",
-    });
-    setEditingExperienceId(entry.id);
-    setIsExperienceFormOpen(true);
-    setStatus(`Editing ${entry.role}`);
-  }
-
-  function onResetExperienceForm() {
-    setExperienceForm(initialExperienceForm);
-    setEditingExperienceId(null);
-    setIsExperienceFormOpen(false);
-    setStatus("Work history form cleared.");
-  }
-
-  async function onSubmitExperience(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!experienceForm.role.trim() || !experienceForm.when.trim()) {
-      setStatus("A work history entry needs a role and its dates.");
-      return;
-    }
-
-    const entry: Experience = {
-      id: experienceId,
-      when: experienceForm.when.trim(),
-      role: experienceForm.role.trim(),
-      note: experienceForm.note.trim(),
-      order: experienceForm.order.trim() ? Number(experienceForm.order) : undefined,
-    };
-
-    setIsBusy(true);
-    try {
-      await saveAdminExperience(entry);
-      await refreshAll();
-      const action = editingExperienceId ? "Updated" : "Added";
-      setEditingExperienceId(null);
-      setExperienceForm(initialExperienceForm);
-      setIsExperienceFormOpen(false);
-      setStatus(`${action} ${entry.role} in the work history.`);
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not save the work history entry.");
-    } finally {
-      setIsBusy(false);
-    }
-  }
-
-  async function onDeleteExperience(id: string) {
-    setIsBusy(true);
-    try {
-      await deleteAdminExperience(id);
-      await refreshAll();
-      setStatus(`Removed ${id} from the work history.`);
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not delete the work history entry.");
-    } finally {
-      setIsBusy(false);
-    }
-  }
+  const nav: { id: View; label: string; icon: ReactNode; count?: number }[] = [
+    { id: "projects", label: "Projects", icon: <LayoutGrid className="h-4 w-4" />, count: availableProjects.length },
+    { id: "history", label: "Work history", icon: <Briefcase className="h-4 w-4" />, count: availableExperience.length },
+    { id: "resume", label: "Résumé", icon: <FileText className="h-4 w-4" /> },
+  ];
 
   return (
-    <main className="relative z-10 pt-28 sm:pt-32 px-4 sm:px-6 pb-16 sm:pb-24">
-      <ScrollProgress />
-      <CursorFollower />
-      <TopNav />
-
-      <section className="mx-auto max-w-7xl mb-8 sm:mb-10">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight mb-4">
-              Admin Dashboard
-            </h1>
-            <p className="text-gray-400 max-w-2xl">
-              Add or edit projects, the home page&apos;s Selected work, your work
-              history and your résumé. Every saved project gets a page at
-              <span className="text-accent-ink"> /projects/your-slug</span>, a card
-              on the archive and, unless you hide it, a place on the home page.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+    <div className="min-h-screen bg-bg text-text lg:grid lg:grid-cols-[240px_1fr]">
+      {/* side menu (wide screens) */}
+      <aside className="sticky top-0 hidden h-screen flex-col border-r border-border px-5 py-7 lg:flex">
+        <Link href="/" className="px-2 text-[13px] font-bold uppercase tracking-[0.16em]">
+          Jethro Adebisi
+        </Link>
+        <p className="mt-1 px-2 text-[12px] text-text-tertiary">Site admin</p>
+        <nav className="mt-10 space-y-0.5" aria-label="Admin">
+          {nav.map((item) => (
             <button
+              key={item.id}
               type="button"
-              onClick={onCreateNew}
-              className="px-4 py-3 bg-accent text-black text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all"
+              onClick={() => go(item.id)}
+              aria-current={view === item.id ? "page" : undefined}
+              className={`relative flex w-full items-center gap-3 px-3 py-2.5 text-left text-[14px] transition-colors ${
+                view === item.id ? "bg-ink/[0.06] font-semibold" : "text-text-secondary hover:bg-ink/[0.04] hover:text-text"
+              }`}
             >
-              Add New Project
+              {view === item.id ? <span className="absolute inset-y-0 left-0 w-[3px] bg-accent" /> : null}
+              {item.icon}
+              <span className="flex-1">{item.label}</span>
+              {item.count !== undefined && loaded ? (
+                <span className="text-[12px] tabular-nums text-text-tertiary">{item.count}</span>
+              ) : null}
             </button>
-            <Link
-              href="/archive"
-              className="px-4 py-3 border border-white/20 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors"
-            >
-              Open Archive
-            </Link>
-            <button
-              type="button"
-              onClick={onLogout}
-              className="px-4 py-3 border border-white/20 text-xs font-bold uppercase tracking-widest hover:border-accent hover:text-accent transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl mb-8 sm:mb-10">
-        <div className="bento-card p-5 sm:p-8">
-          <h2 className="text-2xl font-bold mb-2">Resume PDF</h2>
-          <p className="text-xs text-gray-500 mb-6">
-            Upload a PDF here and the homepage resume button will open this file
-            in a new tab.
-          </p>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            <Field label="Current Resume URL / Data URL">
-              <textarea
-                value={resumeUrl}
-                onChange={(e) => setResumeUrl(e.target.value)}
-                onBlur={async (e) => {
-                  const value = e.target.value.trim();
-                  if (!value || value === DEFAULT_RESUME_URL) {
-                    return;
-                  }
-                  setIsBusy(true);
-                  try {
-                    await saveAdminResume(value);
-                    setStatus("Updated resume link.");
-                  } catch (error) {
-                    setStatus(
-                      error instanceof Error ? error.message : "Could not save resume link.",
-                    );
-                  } finally {
-                    setIsBusy(false);
-                  }
-                }}
-                className="admin-input min-h-24 font-mono text-[11px]"
-                placeholder="Upload a PDF or paste a PDF/data URL"
-              />
-            </Field>
-            <Field label="Upload Resume PDF">
-              <div className="space-y-3">
-                <input
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  onChange={onResumeUpload}
-                  className="admin-input file:mr-4 file:border-0 file:bg-accent file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-black"
-                  title="Upload resume PDF"
-                />
-                <div className="flex flex-wrap gap-3">
-                  <a
-                    href={resumeUrl || DEFAULT_RESUME_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="tag hover:border-accent hover:text-accent"
-                  >
-                    Preview Resume
-                  </a>
-                  <button
-                    type="button"
-                    onClick={onResetResume}
-                    className="tag hover:border-red-400 hover:text-red-300"
-                  >
-                    Reset to Default
-                  </button>
-                </div>
-              </div>
-            </Field>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <aside className="bento-card p-5 sm:p-8 lg:col-span-5">
-          <h2 className="text-2xl font-bold mb-2">Available Projects</h2>
-          <p className="text-xs text-gray-500 mb-6">
-            Edit any existing project, or create a new one with the Add New
-            Project button.
-          </p>
-          <div className="space-y-3 max-h-[680px] overflow-auto pr-2">
-            {availableProjects.length === 0 ? (
-              <p className="text-sm text-gray-500">
-                No projects available yet.
-              </p>
-            ) : (
-              availableProjects.map((item) => {
-                const isDefaultProject = baseProjectSlugs.has(item.slug);
-                const isCustomOverride = adminProjectSlugs.has(item.slug);
-
-                return (
-                  <div key={item.slug} className="border border-white/10 p-4">
-                    <p className="font-bold uppercase tracking-tight">
-                      {item.title}
-                    </p>
-                    <p className="text-[10px] text-gray-500 mt-1">
-                      /{item.slug}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <Link href={`/projects/${item.slug}`} className="tag">
-                        Case Study
-                      </Link>
-                      <button
-                        onClick={() => onEdit(item)}
-                        className="tag hover:border-accent hover:text-accent"
-                      >
-                        Edit
-                      </button>
-                      {isCustomOverride ? (
-                        <button
-                          onClick={() => onDelete(item.slug)}
-                          className="tag hover:border-red-400 hover:text-red-300"
-                        >
-                          Delete
-                        </button>
-                      ) : (
-                        <span className="tag text-gray-500 border-white/10">
-                          {isDefaultProject ? "Default" : "Read Only"}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </aside>
-
-        <article className="bento-card p-5 sm:p-8 lg:col-span-7">
-          <h2 className="text-2xl font-bold mb-6">
-            {isFormOpen
-              ? editingSlug
-                ? "Edit Project"
-                : "Create Project"
-              : "Project Form"}
-          </h2>
-          {!isFormOpen ? (
-            <div className="border border-white/10 p-8 text-center">
-              <p className="text-sm text-gray-400 mb-5">
-                Select a project from the list to edit, or add a new one.
-              </p>
-              <button
-                type="button"
-                onClick={onCreateNew}
-                className="px-6 py-3 bg-accent text-black text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all"
-              >
-                Add New Project
-              </button>
-            </div>
-          ) : (
-            <form className="space-y-6" onSubmit={onSubmit}>
-              {/* ── 00 · BASICS ─────────────────────────────── */}
-              <FormSection number="00" label="Project Basics">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Project Title *">
-                    <input
-                      value={form.title}
-                      onChange={(e) => onChange("title", e.target.value)}
-                      className="admin-input"
-                      title="Project Title"
-                      placeholder="AI-Powered Travel Planner (WanderSmart)"
-                      required
-                    />
-                  </Field>
-                  <Field label="Year">
-                    <input
-                      value={form.year}
-                      onChange={(e) => onChange("year", e.target.value)}
-                      className="admin-input"
-                      placeholder="2026"
-                    />
-                  </Field>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field
-                    label={
-                      editingSlug
-                        ? "Slug (locked while editing)"
-                        : "Slug (auto-generated if empty)"
-                    }
-                  >
-                    <input
-                      value={form.slug}
-                      onChange={(e) => onChange("slug", e.target.value)}
-                      disabled={editingSlug !== null}
-                      className="admin-input disabled:opacity-60 disabled:cursor-not-allowed"
-                      placeholder="auto-generated-from-title"
-                    />
-                  </Field>
-                  <Field label="Category">
-                    <select
-                      value={form.category}
-                      onChange={(e) =>
-                        onChange(
-                          "category",
-                          e.target.value as FormState["category"],
-                        )
-                      }
-                      className="admin-input"
-                      title="Category"
-                    >
-                      <option value="engineering">Engineering</option>
-                      <option value="design">Design</option>
-                    </select>
-                  </Field>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Role">
-                    <input
-                      value={form.role}
-                      onChange={(e) => onChange("role", e.target.value)}
-                      className="admin-input"
-                      placeholder="UX Design / Front-End"
-                    />
-                  </Field>
-                  <Field label="Tech Stack (comma separated)">
-                    <input
-                      value={form.tech}
-                      onChange={(e) => onChange("tech", e.target.value)}
-                      className="admin-input"
-                      placeholder="Next.js, TypeScript, Tailwind"
-                    />
-                  </Field>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Project Link (live site URL)">
-                    <input
-                      value={form.projectLink}
-                      onChange={(e) => onChange("projectLink", e.target.value)}
-                      className="admin-input"
-                      placeholder="https://..."
-                    />
-                  </Field>
-                </div>
-              </FormSection>
-
-              {/* ── 00 · OVERVIEW ───────────────────────────── */}
-              <FormSection
-                number="00"
-                label="Overview — shown at top of case study"
-              >
-                <Field label="Project Description (overview paragraph)">
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => onChange("description", e.target.value)}
-                    className="admin-input min-h-24"
-                    placeholder="Short project overview shown in the header and overview section"
-                  />
-                </Field>
-              </FormSection>
-
-              {/* ── 01 · PROBLEM & SOLUTION ─────────────────── */}
-              <FormSection number="01" label="Problem & Solution">
-                <Field label="Problem Statement — left panel (red dot)">
-                  <textarea
-                    value={form.problem}
-                    onChange={(e) => onChange("problem", e.target.value)}
-                    className="admin-input min-h-24"
-                    placeholder="Core problem this project solves"
-                  />
-                </Field>
-                <Field label="Solution — right panel (teal dot) + hero overlay">
-                  <textarea
-                    value={form.solution}
-                    onChange={(e) => onChange("solution", e.target.value)}
-                    className="admin-input min-h-24"
-                    placeholder="How the final solution addresses the core problem"
-                  />
-                </Field>
-              </FormSection>
-
-              {/* ── 02 · CONTEXT & OBJECTIVES ───────────────── */}
-              <FormSection number="02" label="Context & Objectives">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Context — section 02.1">
-                    <textarea
-                      value={form.context}
-                      onChange={(e) => onChange("context", e.target.value)}
-                      className="admin-input min-h-24"
-                      placeholder="Project background, constraints, and timeline"
-                    />
-                  </Field>
-                  <Field label="Objectives — section 02.2">
-                    <textarea
-                      value={form.objectives}
-                      onChange={(e) => onChange("objectives", e.target.value)}
-                      className="admin-input min-h-24"
-                      placeholder="Business and user goals"
-                    />
-                  </Field>
-                </div>
-                <Field label="Audience & Users — section 02.3">
-                  <textarea
-                    value={form.audience}
-                    onChange={(e) => onChange("audience", e.target.value)}
-                    className="admin-input min-h-24"
-                    placeholder="Who this was designed for"
-                  />
-                </Field>
-              </FormSection>
-
-              {/* ── 03 · DESIGN PROCESS ─────────────────────── */}
-              <FormSection number="03" label="Design Process">
-                <Field label="Process — section 03">
-                  <textarea
-                    value={form.process}
-                    onChange={(e) => onChange("process", e.target.value)}
-                    className="admin-input min-h-28"
-                    placeholder="Your UX process from discovery to delivery"
-                  />
-                </Field>
-              </FormSection>
-
-              {/* ── 04 · RESEARCH & INSIGHTS ────────────────── */}
-              <FormSection number="04" label="Research & Insights">
-                <Field label="Research Insights — section 04 (shown as pull-quote if filled)">
-                  <textarea
-                    value={form.researchInsights}
-                    onChange={(e) =>
-                      onChange("researchInsights", e.target.value)
-                    }
-                    className="admin-input min-h-24"
-                    placeholder="Findings, user pain points, and key insights"
-                  />
-                </Field>
-                <Field label="Information Architecture — section 04.1">
-                  <textarea
-                    value={form.informationArchitecture}
-                    onChange={(e) =>
-                      onChange("informationArchitecture", e.target.value)
-                    }
-                    className="admin-input min-h-24"
-                    placeholder="Flows, content structure, and navigation choices"
-                  />
-                </Field>
-              </FormSection>
-
-              {/* ── 05 · DESIGN EXECUTION ───────────────────── */}
-              <FormSection number="05" label="Design Execution">
-                <Field label="Wireframes & Iterations — section 05.1">
-                  <textarea
-                    value={form.wireframes}
-                    onChange={(e) => onChange("wireframes", e.target.value)}
-                    className="admin-input min-h-24"
-                    placeholder="Low-fidelity concepts and iterations"
-                  />
-                </Field>
-                <Field label="Visual Design System — section 05.2">
-                  <textarea
-                    value={form.visualDesign}
-                    onChange={(e) => onChange("visualDesign", e.target.value)}
-                    className="admin-input min-h-24"
-                    placeholder="Typography, color, components, and interaction patterns"
-                  />
-                </Field>
-                <Field label="Prototyping & Testing — section 05.3">
-                  <textarea
-                    value={form.prototypeTesting}
-                    onChange={(e) =>
-                      onChange("prototypeTesting", e.target.value)
-                    }
-                    className="admin-input min-h-24"
-                    placeholder="Prototype validation, test outcomes, and refinements"
-                  />
-                </Field>
-              </FormSection>
-
-              {/* ── 06 · VISUAL ARTIFACTS ───────────────────── */}
-              <FormSection
-                number="06"
-                label="Visual Artifacts — gallery images on case study"
-              >
-                <Field label="Case Study Hero Image URL (shown at top)">
-                  <input
-                    value={form.caseStudyImage}
-                    onChange={(e) => onChange("caseStudyImage", e.target.value)}
-                    className="admin-input"
-                    placeholder="https://... (falls back to Thumbnail if empty)"
-                  />
-                </Field>
-                <Field label="Upload Case Study Hero Image">
-                  <input
-                    type="file"
-                    accept="image/*,.svg"
-                    onChange={(e) => onProjectImageUpload(e, "caseStudyImage")}
-                    className="admin-input file:mr-4 file:border-0 file:bg-accent file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-black"
-                    title="Upload case study hero image"
-                  />
-                </Field>
-                <Field label="Gallery Images — URLs (one per line) — slots: Discovery · IA · Wireframes · Final UI">
-                  <textarea
-                    value={form.caseStudyGallery}
-                    onChange={(e) =>
-                      onChange("caseStudyGallery", e.target.value)
-                    }
-                    className="admin-input min-h-24"
-                    placeholder={
-                      "https://...\nhttps://...\nhttps://...\nhttps://..."
-                    }
-                  />
-                </Field>
-                <Field label="Upload Gallery Images (up to 4 — Discovery, IA, Wireframes, Final UI)">
-                  <div className="space-y-2">
-                    <input
-                      type="file"
-                      accept="image/*,.svg"
-                      multiple
-                      onChange={onProjectGalleryUpload}
-                      className="admin-input file:mr-4 file:border-0 file:bg-accent file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-black"
-                      title="Upload gallery images"
-                    />
-                    <p className="text-[10px] text-gray-500">
-                      Uploaded images are appended to the gallery list above.
-                      Order = Discovery → IA → Wireframes → Final UI.
-                    </p>
-                  </div>
-                </Field>
-              </FormSection>
-
-              {/* ── 07 · OUTCOMES ───────────────────────────── */}
-              <FormSection number="07" label="Impact & Outcomes">
-                <Field label="Outcomes — section 07">
-                  <textarea
-                    value={form.outcomes}
-                    onChange={(e) => onChange("outcomes", e.target.value)}
-                    className="admin-input min-h-24"
-                    placeholder="Metrics, qualitative impact, and business outcomes"
-                  />
-                </Field>
-              </FormSection>
-
-              {/* ── 08 · LEARNINGS ──────────────────────────── */}
-              <FormSection number="08" label="Learnings & Next Steps">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Key Learnings — section 08.1 (shown as pull-quote if filled)">
-                    <textarea
-                      value={form.learnings}
-                      onChange={(e) => onChange("learnings", e.target.value)}
-                      className="admin-input min-h-24"
-                      placeholder="What you learned and what changed"
-                    />
-                  </Field>
-                  <Field label="Next Steps — section 08.2">
-                    <textarea
-                      value={form.nextSteps}
-                      onChange={(e) => onChange("nextSteps", e.target.value)}
-                      className="admin-input min-h-24"
-                      placeholder="Future iterations and roadmap ideas"
-                    />
-                  </Field>
-                </div>
-              </FormSection>
-
-              {/* ── 09 · FULL NARRATIVE (optional) ─────────── */}
-              <FormSection
-                number="09"
-                label="Full Narrative (optional — only shown if filled)"
-              >
-                <Field label="Extended Write-Up">
-                  <textarea
-                    value={form.caseStudy}
-                    onChange={(e) => onChange("caseStudy", e.target.value)}
-                    className="admin-input min-h-40"
-                    placeholder="Free-form extended case study narrative..."
-                  />
-                </Field>
-              </FormSection>
-
-              {/* ── HOME PAGE ───────────────────────────────── */}
-              <FormSection
-                number="⌂"
-                label="Home page — how it shows in Selected work"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Show on the home page">
-                    <label className="admin-input flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={form.showOnHome}
-                        onChange={(e) => onChange("showOnHome", e.target.checked)}
-                      />
-                      <span className="text-sm">
-                        {form.showOnHome ? "Shown in Selected work" : "Hidden (archive only)"}
-                      </span>
-                    </label>
-                  </Field>
-                  <Field label="Position (1 is first and opens by default)">
-                    <input
-                      value={form.homeOrder}
-                      onChange={(e) => onChange("homeOrder", e.target.value.replace(/[^0-9]/g, ""))}
-                      inputMode="numeric"
-                      className="admin-input"
-                      placeholder="Blank = after the numbered ones, newest first"
-                    />
-                  </Field>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Short title (on the spine)">
-                    <input
-                      value={form.homeTitle}
-                      onChange={(e) => onChange("homeTitle", e.target.value)}
-                      className="admin-input"
-                      placeholder="Blank = the project title"
-                    />
-                  </Field>
-                  <Field label="Small line above the title">
-                    <input
-                      value={form.homeMeta}
-                      onChange={(e) => onChange("homeMeta", e.target.value)}
-                      className="admin-input"
-                      placeholder="Fintech · 2024 (blank = category · year)"
-                    />
-                  </Field>
-                </div>
-                <Field label="One or two sentences on what it is">
-                  <textarea
-                    value={form.homeLine}
-                    onChange={(e) => onChange("homeLine", e.target.value)}
-                    className="admin-input min-h-20"
-                    placeholder="Blank = the first sentence of the description"
-                  />
-                </Field>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Cover image URL (16:10 works best)">
-                    <input
-                      value={form.cover}
-                      onChange={(e) => onChange("cover", e.target.value)}
-                      className="admin-input"
-                      placeholder="Blank = the thumbnail"
-                    />
-                  </Field>
-                  <Field label="Upload cover image">
-                    <input
-                      type="file"
-                      accept="image/*,.svg"
-                      onChange={(e) => onProjectImageUpload(e, "cover")}
-                      className="admin-input file:mr-4 file:border-0 file:bg-accent file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-black"
-                      title="Upload home page cover image"
-                    />
-                  </Field>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Panel colour">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={/^#[0-9a-f]{6}$/i.test(form.coverBg) ? form.coverBg : "#e7e5e0"}
-                        onChange={(e) => onChange("coverBg", e.target.value)}
-                        className="h-11 w-14 shrink-0 cursor-pointer border border-border bg-transparent"
-                        title="Panel colour"
-                      />
-                      <input
-                        value={form.coverBg}
-                        onChange={(e) => onChange("coverBg", e.target.value)}
-                        className="admin-input"
-                        placeholder="#DDE7FB (blank = paper grey)"
-                      />
-                    </div>
-                  </Field>
-                  <Field label="Text on the panel">
-                    <label className="admin-input flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={form.coverDark}
-                        onChange={(e) => onChange("coverDark", e.target.checked)}
-                      />
-                      <span className="text-sm">
-                        {form.coverDark ? "White text (for a dark colour)" : "Black text (for a light colour)"}
-                      </span>
-                    </label>
-                  </Field>
-                </div>
-              </FormSection>
-
-              {/* ── THUMBNAIL ───────────────────────────────── */}
-              <FormSection
-                number="↑"
-                label="Project Thumbnail (archive card image)"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Thumbnail Image URL">
-                    <input
-                      value={form.image}
-                      onChange={(e) => onChange("image", e.target.value)}
-                      className="admin-input"
-                      placeholder="https://..."
-                    />
-                  </Field>
-                </div>
-                <Field label="Upload Thumbnail Image">
-                  <input
-                    type="file"
-                    accept="image/*,.svg"
-                    onChange={(e) => onProjectImageUpload(e, "image")}
-                    className="admin-input file:mr-4 file:border-0 file:bg-accent file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-black"
-                    title="Upload project thumbnail image"
-                  />
-                </Field>
-              </FormSection>
-
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <button
-                  type="submit"
-                  disabled={isBusy}
-                  className="px-8 py-4 bg-accent text-black font-bold uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isBusy ? "Saving…" : editingSlug ? "Update Project" : "Save to Archive"}
-                </button>
-                <button
-                  type="button"
-                  onClick={onResetForm}
-                  disabled={isBusy}
-                  className="px-6 py-4 border border-white/20 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-                <span className="text-xs text-gray-500">
-                  {editingSlug ? "Slug: " : "Generated slug: "}
-                  <span className="text-accent">{effectiveSlug || "-"}</span>
-                </span>
-                {effectiveSlug ? (
-                  <Link href={`/projects/${effectiveSlug}`} className="tag">
-                    Open Case Study
-                  </Link>
-                ) : null}
-              </div>
-            </form>
-          )}
-          {status ? <p className="mt-4 text-xs text-accent">{status}</p> : null}
-        </article>
-      </section>
-
-      <section className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
-        <aside className="bento-card p-5 sm:p-8 lg:col-span-5">
-          <h2 className="text-2xl font-bold mb-2">Work history</h2>
-          <p className="text-xs text-gray-500 mb-6">
-            The dated list under About on the home page, top to bottom. The first entry is
-            highlighted.
-          </p>
+          ))}
+        </nav>
+        <div className="mt-auto space-y-0.5 border-t border-border pt-4">
+          <a
+            href="/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-3 px-3 py-2.5 text-[14px] text-text-secondary transition-colors hover:bg-ink/[0.04] hover:text-text"
+          >
+            <ArrowUpRight className="h-4 w-4" /> View site
+          </a>
           <button
             type="button"
-            onClick={onCreateExperienceNew}
-            className="mb-4 px-4 py-3 bg-accent text-black text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all"
+            onClick={onLogout}
+            className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-[14px] text-text-secondary transition-colors hover:bg-ink/[0.04] hover:text-text"
           >
-            Add Work History Entry
+            <LogOut className="h-4 w-4" /> Log out
           </button>
-          <div className="space-y-3 max-h-[580px] overflow-auto pr-2">
-            {availableExperience.length === 0 ? (
-              <p className="text-sm text-gray-500">No work history entries yet.</p>
-            ) : (
-              availableExperience.map((item) => (
-                <div key={item.id} className="border border-white/10 p-4">
-                  <p className="font-bold tracking-tight break-words">{item.role}</p>
-                  <p className="text-[10px] text-gray-500 mt-1">{item.when}</p>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <button
-                      onClick={() => onEditExperience(item)}
-                      className="tag hover:border-accent hover:text-accent"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => onDeleteExperience(item.id)}
-                      className="tag hover:border-red-400 hover:text-red-300"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </aside>
+        </div>
+      </aside>
 
-        <article className="bento-card p-5 sm:p-8 lg:col-span-7">
-          <h2 className="text-2xl font-bold mb-6">
-            {isExperienceFormOpen
-              ? editingExperienceId
-                ? "Edit Work History Entry"
-                : "Add Work History Entry"
-              : "Work History Form"}
-          </h2>
-          {!isExperienceFormOpen ? (
-            <div className="border border-white/10 p-8 text-center">
-              <p className="text-sm text-gray-400 mb-5">
-                Select an entry to edit, or add a new one.
-              </p>
-              <button
-                type="button"
-                onClick={onCreateExperienceNew}
-                className="px-6 py-3 bg-accent text-black text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all"
-              >
-                Add Work History Entry
-              </button>
-            </div>
-          ) : (
-            <form className="space-y-4" onSubmit={onSubmitExperience}>
-              <Field label="Role and where *">
-                <input
-                  value={experienceForm.role}
-                  onChange={(e) => onExperienceChange("role", e.target.value)}
-                  className="admin-input"
-                  placeholder="Designer, GDG UNILAG, Lagos"
-                  required
-                />
-              </Field>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="When *">
-                  <input
-                    value={experienceForm.when}
-                    onChange={(e) => onExperienceChange("when", e.target.value)}
-                    className="admin-input"
-                    placeholder="2023 to now"
-                    required
-                  />
-                </Field>
-                <Field label="Position (1 is the top)">
-                  <input
-                    value={experienceForm.order}
-                    onChange={(e) =>
-                      onExperienceChange("order", e.target.value.replace(/[^0-9]/g, ""))
-                    }
-                    inputMode="numeric"
-                    className="admin-input"
-                    placeholder="Blank = at the bottom"
-                  />
-                </Field>
-              </div>
-              <Field label="One line on what you did">
-                <textarea
-                  value={experienceForm.note}
-                  onChange={(e) => onExperienceChange("note", e.target.value)}
-                  className="admin-input min-h-20"
-                  placeholder="Design for the Google Developer Group at the University of Lagos."
-                />
-              </Field>
+      {/* top bar (phones and tablets) */}
+      <header className="sticky top-0 z-30 border-b border-border bg-bg/95 backdrop-blur lg:hidden">
+        <div className="flex items-center justify-between px-5 pt-4">
+          <Link href="/" className="text-[12px] font-bold uppercase tracking-[0.16em]">
+            Jethro Adebisi <span className="font-medium normal-case tracking-normal text-text-tertiary">· admin</span>
+          </Link>
+          <button type="button" onClick={onLogout} aria-label="Log out" className="flex h-10 w-10 items-center justify-center">
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
+        <nav className="flex gap-1 overflow-x-auto px-3 pb-2 pt-2" aria-label="Admin">
+          {nav.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => go(item.id)}
+              className={`flex shrink-0 items-center gap-2 px-3 py-2 text-[13px] ${
+                view === item.id ? "bg-ink text-bg" : "text-text-secondary"
+              }`}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </header>
 
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <button
-                  type="submit"
-                  disabled={isBusy}
-                  className="px-8 py-4 bg-accent text-black font-bold uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isBusy ? "Saving…" : editingExperienceId ? "Update Entry" : "Save Entry"}
-                </button>
-                <button
-                  type="button"
-                  onClick={onResetExperienceForm}
-                  disabled={isBusy}
-                  className="px-6 py-4 border border-white/20 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
-        </article>
-      </section>
-    </main>
-  );
-}
+      <main className="min-w-0 px-5 pb-28 pt-8 sm:px-8 lg:px-14 lg:pt-12">
+        <div className="mx-auto max-w-[1040px]">
+          {view === "projects" && !editing ? (
+            <ProjectList
+              loaded={loaded}
+              projects={listed}
+              homeOrder={homeOrder}
+              adminSlugs={adminProjectSlugs}
+              busy={isBusy}
+              onNew={() => openEditor()}
+              onEdit={openEditor}
+              onDelete={onDeleteProject}
+            />
+          ) : null}
 
-function FormSection(props: {
-  number: string;
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 sm:gap-3 pt-4 pb-2 border-b border-white/[0.07]">
-        <span className="text-[9px] font-mono tabular-nums text-gray-600">
-          {props.number}
-        </span>
-        <div className="h-px flex-1 bg-white/[0.05]" />
-        <span className="text-[9px] font-mono uppercase tracking-[0.18em] sm:tracking-[0.35em] text-gray-500 break-words text-right">
-          {props.label}
-        </span>
-      </div>
-      {props.children}
+          {view === "projects" && editing ? (
+            <ProjectEditor
+              form={form}
+              set={set}
+              isNew={editing === "new"}
+              slug={effectiveSlug}
+              dirty={isDirty}
+              busy={isBusy}
+              onBack={closeEditor}
+              onSave={onSaveProject}
+              upload={upload}
+              uploadMany={uploadMany}
+            />
+          ) : null}
+
+          {view === "history" ? (
+            <HistoryView
+              entries={availableExperience}
+              loaded={loaded}
+              editingId={editingExperienceId}
+              form={experienceForm}
+              setForm={setExperienceForm}
+              busy={isBusy}
+              onAdd={() => openExperience()}
+              onEdit={openExperience}
+              onCancel={() => setEditingExperienceId(null)}
+              onSave={onSaveExperience}
+              onDelete={onDeleteExperience}
+            />
+          ) : null}
+
+          {view === "resume" ? (
+            <ResumeView
+              url={resumeUrl}
+              link={resumeLink}
+              setLink={setResumeLink}
+              busy={isBusy}
+              onUpload={onResumeUpload}
+              onSaveLink={onResumeLink}
+              onReset={onResetResume}
+            />
+          ) : null}
+        </div>
+      </main>
+
+      <Toast notice={notice} onClose={closeNotice} />
     </div>
   );
 }
 
-function Field(props: { label: string; children: ReactNode }) {
+/* ----------------------------------------------------------------- views */
+
+function PageHeader({ title, description, action }: { title: string; description: ReactNode; action?: ReactNode }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-[10px] uppercase tracking-[0.2em] text-gray-500">
-        {props.label}
-      </span>
-      {props.children}
-    </label>
+    <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 className="text-[32px] font-black leading-none tracking-[-0.035em] sm:text-[40px]">{title}</h1>
+        <p className="mt-3 max-w-[560px] text-[14px] leading-[1.6] text-text-secondary">{description}</p>
+      </div>
+      {action}
+    </header>
+  );
+}
+
+function ProjectList({
+  loaded,
+  projects: items,
+  homeOrder,
+  adminSlugs,
+  busy,
+  onNew,
+  onEdit,
+  onDelete,
+}: {
+  loaded: boolean;
+  projects: Project[];
+  homeOrder: Map<string, number>;
+  adminSlugs: Set<string>;
+  busy: boolean;
+  onNew: () => void;
+  onEdit: (project: Project) => void;
+  onDelete: (project: Project) => void;
+}) {
+  const shown = items.filter((p) => homeOrder.has(p.slug)).length;
+  return (
+    <>
+      <PageHeader
+        title="Projects"
+        description={
+          <>
+            Every project has its own case-study page and a card on the archive. {shown ? `${shown} of them show` : "None show"}{" "}
+            on the home page, in the order below.
+          </>
+        }
+        action={
+          <Button tone="primary" onClick={onNew}>
+            <Plus className="h-4 w-4" /> New project
+          </Button>
+        }
+      />
+
+      <div className="mt-10 border-t border-border">
+        {!loaded
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-5 border-b border-border py-4">
+                <div className="h-[60px] w-[96px] animate-pulse bg-ink/[0.05]" />
+                <div className="h-4 w-48 animate-pulse bg-ink/[0.05]" />
+              </div>
+            ))
+          : items.map((project) => {
+              const position = homeOrder.get(project.slug);
+              const edited = adminSlugs.has(project.slug);
+              const builtIn = BUILT_IN_SLUGS.has(project.slug);
+              const thumb = project.cover || project.image;
+              return (
+                <div
+                  key={project.slug}
+                  className="group grid grid-cols-[72px_1fr_auto] items-center gap-4 border-b border-border py-4 sm:grid-cols-[96px_1fr_auto] sm:gap-5"
+                >
+                  <button
+                    type="button"
+                    onClick={() => onEdit(project)}
+                    className="aspect-[16/10] overflow-hidden border border-border"
+                    style={{ background: project.coverBg || undefined }}
+                    aria-label={`Edit ${project.title}`}
+                  >
+                    {thumb ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
+                    ) : null}
+                  </button>
+
+                  <button type="button" onClick={() => onEdit(project)} className="min-w-0 text-left">
+                    <span className="block truncate text-[15px] font-semibold tracking-[-0.01em] group-hover:underline">
+                      {project.title}
+                    </span>
+                    <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-text-tertiary">
+                      <span>
+                        {project.category === "design" ? "Design" : "Engineering"} · {project.year}
+                      </span>
+                      {position ? (
+                        <span className="inline-flex items-center gap-1.5 font-medium text-text">
+                          <span className="h-1.5 w-1.5 rounded-full bg-accent-ink" /> Home #{position}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-ink/25" /> Hidden from home
+                        </span>
+                      )}
+                      {edited && builtIn ? <span>Edited</span> : null}
+                    </span>
+                  </button>
+
+                  <div className="flex items-center gap-0.5">
+                    <Button tone="ghost" onClick={() => onEdit(project)} className="!px-3" aria-label={`Edit ${project.title}`}>
+                      <Pencil className="h-4 w-4" />
+                      <span className="hidden md:inline">Edit</span>
+                    </Button>
+                    <a
+                      href={`/projects/${project.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Open ${project.title}`}
+                      className="inline-flex min-h-[40px] items-center gap-2 px-3 text-[13px] font-semibold text-text-secondary transition-colors hover:bg-ink/[0.05] hover:text-text"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span className="hidden md:inline">View</span>
+                    </a>
+                    {edited ? (
+                      <Button
+                        tone="danger"
+                        disabled={busy}
+                        onClick={() => onDelete(project)}
+                        className="!px-3"
+                        aria-label={builtIn ? `Undo edits to ${project.title}` : `Delete ${project.title}`}
+                        title={builtIn ? "Undo your edits" : "Delete"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <span className="w-[40px]" aria-hidden />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+      </div>
+      <p className="mt-4 text-[12px] leading-[1.6] text-text-tertiary">
+        Built-in projects can be edited and hidden but not deleted; deleting your edits to one puts it back as it was.
+      </p>
+    </>
+  );
+}
+
+function ProjectEditor({
+  form,
+  set,
+  isNew,
+  slug,
+  dirty,
+  busy,
+  onBack,
+  onSave,
+  upload,
+  uploadMany,
+}: {
+  form: FormState;
+  set: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
+  isNew: boolean;
+  slug: string;
+  dirty: boolean;
+  busy: boolean;
+  onBack: () => void;
+  onSave: (event?: FormEvent) => void;
+  upload: (file: File) => Promise<string | null>;
+  uploadMany: (files: File[]) => Promise<string[]>;
+}) {
+  const text = (key: keyof FormState) => ({
+    value: form[key] as string,
+    onChange: (e: { target: { value: string } }) => set(key, e.target.value as never),
+  });
+
+  // The home panel exactly as the home page would draw it, blanks filled the same way.
+  const preview = homeCases([{ ...toProject(form, slug || "preview"), showOnHome: true }])[0];
+
+  return (
+    <form onSubmit={onSave}>
+      {/* the bar that stays on screen */}
+      <div className="sticky top-[97px] z-20 -mx-5 flex items-center justify-between gap-3 border-b border-border bg-bg/95 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8 lg:top-0 lg:mx-0 lg:px-0">
+        <button type="button" onClick={onBack} className="inline-flex min-h-[40px] items-center gap-2 text-[13px] font-semibold text-text-secondary hover:text-text">
+          <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">All projects</span>
+          <span className="sm:hidden">Back</span>
+        </button>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="hidden text-[12px] text-text-tertiary sm:inline">
+            {dirty ? "Unsaved changes" : isNew ? "Not saved yet" : "All changes saved"}
+          </span>
+          {!isNew ? (
+            <a
+              href={`/projects/${slug}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="View the case-study page"
+              className="inline-flex min-h-[40px] items-center gap-2 border border-border bg-white px-3 text-[13px] font-semibold transition-colors hover:border-ink sm:px-4"
+            >
+              <span className="hidden sm:inline">View page</span> <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          ) : null}
+          <Button tone="primary" type="submit" busy={busy} disabled={!dirty && !isNew}>
+            {isNew ? "Create project" : "Save changes"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="pt-10">
+        <p className="label">{isNew ? "New project" : "Editing"}</p>
+        <h1 className="mt-3 text-[32px] font-black leading-[1.05] tracking-[-0.035em] sm:text-[40px]">
+          {form.title.trim() || "Untitled project"}
+        </h1>
+        <p className="mt-2 text-[13px] text-text-tertiary">
+          jethrotheuxpert.vercel.app/projects/<span className="font-medium text-text">{slug || "…"}</span>
+        </p>
+      </div>
+
+      <div className="mt-8">
+        <FormSection title="Basics" description="The title, address and short facts used on every card and page.">
+          <Field label="Title">
+            <TextInput {...text("title")} placeholder="SabiBank - Personal Finance Management App" required />
+          </Field>
+          <div className="grid gap-5 sm:grid-cols-3">
+            <Field label="Year">
+              <TextInput {...text("year")} placeholder="2026" />
+            </Field>
+            <Field label="Type">
+              <select
+                value={form.category}
+                onChange={(e) => set("category", e.target.value as FormState["category"])}
+                className="w-full border border-border bg-white px-3.5 py-2.5 text-[14px] outline-none focus:border-ink"
+              >
+                <option value="design">Design</option>
+                <option value="engineering">Engineering</option>
+              </select>
+            </Field>
+            <Field label="Address" hint={isNew ? undefined : "Fixed once saved"}>
+              <TextInput {...text("slug")} placeholder={slug || "made-from-the-title"} disabled={!isNew} />
+            </Field>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Your role">
+              <TextInput {...text("role")} placeholder="UX designer, researcher" />
+            </Field>
+            <Field label="Tools" hint="Separate with commas">
+              <TextInput {...text("tech")} placeholder="Figma, React, Next.js" />
+            </Field>
+          </div>
+          <Field label="Live link" hint="Optional: the live site or prototype">
+            <TextInput {...text("projectLink")} placeholder="https://" />
+          </Field>
+        </FormSection>
+
+        <FormSection
+          id="home"
+          title="Home page"
+          description="How it shows in Selected work. Leave a field blank and the project's own title, year, description or thumbnail is used."
+        >
+          <Toggle
+            checked={form.showOnHome}
+            onChange={(v) => set("showOnHome", v)}
+            label="Show on the home page"
+            description={form.showOnHome ? "Shown in Selected work" : "Hidden: archive and its own page only"}
+          />
+          {form.showOnHome ? (
+            <>
+              <div className="border border-border p-3" style={{ background: "rgb(var(--ink-rgb) / 0.02)" }}>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-text-tertiary">Preview</p>
+                <div className="flex gap-4 p-4" style={{ background: preview.bg }}>
+                  <div className="aspect-[16/10] w-[44%] shrink-0 overflow-hidden border border-black/10 bg-black/[0.05]">
+                    {preview.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={preview.image} alt="" className="h-full w-full object-cover" />
+                    ) : null}
+                  </div>
+                  <div className={`min-w-0 self-center ${preview.dark ? "text-white" : "text-black"}`}>
+                    <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${preview.dark ? "text-white/70" : "text-black/70"}`}>
+                      {preview.meta}
+                    </p>
+                    <p className="mt-2 text-[18px] font-bold leading-tight tracking-[-0.02em] [overflow-wrap:anywhere]">
+                      {preview.title || "Untitled"}
+                    </p>
+                    <p className={`mt-2 line-clamp-3 text-[12px] leading-[1.55] ${preview.dark ? "text-white/75" : "text-black/70"}`}>
+                      {preview.line}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-[1fr_160px]">
+                <Field label="Short title" hint="On the spine">
+                  <TextInput {...text("homeTitle")} placeholder={form.title || "SabiBank"} />
+                </Field>
+                <Field label="Position" hint="1 is first and opens first">
+                  <TextInput
+                    value={form.homeOrder}
+                    onChange={(e) => set("homeOrder", e.target.value.replace(/[^0-9]/g, ""))}
+                    inputMode="numeric"
+                    placeholder="Last"
+                  />
+                </Field>
+              </div>
+              <Field label="Small line above the title">
+                <TextInput {...text("homeMeta")} placeholder="Fintech · 2024" />
+              </Field>
+              <Field label="What it is, in a sentence or two">
+                <TextArea {...text("homeLine")} rows={3} placeholder="Blank uses the first sentence of the description" />
+              </Field>
+              <ImageField
+                label="Cover image"
+                hint="16:10 works best. Blank uses the thumbnail."
+                value={form.cover}
+                onChange={(v) => set("cover", v)}
+                onUpload={upload}
+              />
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Panel colour">
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={/^#[0-9a-f]{6}$/i.test(form.coverBg) ? form.coverBg : "#e7e5e0"}
+                      onChange={(e) => set("coverBg", e.target.value)}
+                      className="h-[42px] w-12 shrink-0 cursor-pointer border border-border bg-white p-1"
+                      aria-label="Pick the panel colour"
+                    />
+                    <TextInput {...text("coverBg")} placeholder="#DDE7FB" />
+                  </div>
+                </Field>
+                <Field label="Text colour on the panel">
+                  <div className="grid grid-cols-2 border border-border bg-white p-1">
+                    {[
+                      { dark: false, label: "Black" },
+                      { dark: true, label: "White" },
+                    ].map((o) => (
+                      <button
+                        key={o.label}
+                        type="button"
+                        onClick={() => set("coverDark", o.dark)}
+                        aria-pressed={form.coverDark === o.dark}
+                        className={`min-h-[34px] text-[13px] font-semibold ${form.coverDark === o.dark ? "bg-ink text-bg" : "text-text-secondary"}`}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+              </div>
+            </>
+          ) : null}
+        </FormSection>
+
+        <FormSection title="Images" description="The thumbnail is used on cards; the hero sits at the top of the case study.">
+          <ImageField label="Thumbnail" value={form.image} onChange={(v) => set("image", v)} onUpload={upload} />
+          <ImageField
+            label="Case-study hero"
+            hint="Blank uses the thumbnail"
+            value={form.caseStudyImage}
+            onChange={(v) => set("caseStudyImage", v)}
+            onUpload={upload}
+          />
+          <GalleryField value={form.caseStudyGallery} onChange={(v) => set("caseStudyGallery", v)} onUploadMany={uploadMany} />
+        </FormSection>
+
+        <FormSection title="Overview" description="The top of the case study: what it is, the problem, and what you did about it.">
+          <Field label="Description" hint="Its first sentence is also the home-page line when that is blank">
+            <TextArea {...text("description")} rows={4} />
+          </Field>
+          <Field label="The problem">
+            <TextArea {...text("problem")} rows={4} />
+          </Field>
+          <Field label="The solution">
+            <TextArea {...text("solution")} rows={4} />
+          </Field>
+        </FormSection>
+
+        <FormSection title="Context" description="Background, goals and who it was for.">
+          <Field label="Context">
+            <TextArea {...text("context")} />
+          </Field>
+          <Field label="Goals">
+            <TextArea {...text("objectives")} />
+          </Field>
+          <Field label="Audience">
+            <TextArea {...text("audience")} />
+          </Field>
+        </FormSection>
+
+        <FormSection title="Process and research" description="How you worked and what you found.">
+          <Field label="Process">
+            <TextArea {...text("process")} rows={5} />
+          </Field>
+          <Field label="Research findings" hint="Shown as a pull quote">
+            <TextArea {...text("researchInsights")} />
+          </Field>
+          <Field label="Structure and flows">
+            <TextArea {...text("informationArchitecture")} />
+          </Field>
+        </FormSection>
+
+        <FormSection title="Design" description="From wireframes to the tested design.">
+          <Field label="Wireframes and iterations">
+            <TextArea {...text("wireframes")} />
+          </Field>
+          <Field label="Visual design">
+            <TextArea {...text("visualDesign")} />
+          </Field>
+          <Field label="Prototype and testing">
+            <TextArea {...text("prototypeTesting")} />
+          </Field>
+        </FormSection>
+
+        <FormSection title="Results" description="What changed, what you learned, what comes next.">
+          <Field label="Outcome" hint="The first sentence also fills 'The outcome' in the case study's summary">
+            <TextArea {...text("outcomes")} />
+          </Field>
+          <Field label="What you learned" hint="Shown as a pull quote">
+            <TextArea {...text("learnings")} />
+          </Field>
+          <Field label="Next steps">
+            <TextArea {...text("nextSteps")} />
+          </Field>
+        </FormSection>
+
+        <FormSection title="Long write-up" description="Optional. Shown at the end of the case study only when filled.">
+          <Field label="Full story">
+            <TextArea {...text("caseStudy")} rows={8} />
+          </Field>
+        </FormSection>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-6">
+        <Button tone="ghost" onClick={onBack}>
+          Cancel
+        </Button>
+        <Button tone="primary" type="submit" busy={busy} disabled={!dirty && !isNew}>
+          {isNew ? "Create project" : "Save changes"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function HistoryView({
+  entries,
+  loaded,
+  editingId,
+  form,
+  setForm,
+  busy,
+  onAdd,
+  onEdit,
+  onCancel,
+  onSave,
+  onDelete,
+}: {
+  entries: Experience[];
+  loaded: boolean;
+  editingId: string | null;
+  form: ExperienceFormState;
+  setForm: (next: ExperienceFormState) => void;
+  busy: boolean;
+  onAdd: () => void;
+  onEdit: (entry: Experience) => void;
+  onCancel: () => void;
+  onSave: (event: FormEvent) => void;
+  onDelete: (entry: Experience) => void;
+}) {
+  const editor = (
+    <form onSubmit={onSave} className="space-y-5 border border-ink bg-white p-5 sm:p-6">
+      <Field label="Role, and where">
+        <TextInput
+          value={form.role}
+          onChange={(e) => setForm({ ...form, role: e.target.value })}
+          placeholder="Designer, GDG UNILAG, Lagos"
+          required
+          autoFocus
+        />
+      </Field>
+      <div className="grid gap-5 sm:grid-cols-[1fr_140px]">
+        <Field label="When">
+          <TextInput value={form.when} onChange={(e) => setForm({ ...form, when: e.target.value })} placeholder="2023 to now" required />
+        </Field>
+        <Field label="Position" hint="1 is the top">
+          <TextInput
+            value={form.order}
+            onChange={(e) => setForm({ ...form, order: e.target.value.replace(/[^0-9]/g, "") })}
+            inputMode="numeric"
+          />
+        </Field>
+      </div>
+      <Field label="One line on what you did">
+        <TextArea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} rows={2} />
+      </Field>
+      <div className="flex justify-end gap-2">
+        <Button tone="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button tone="primary" type="submit" busy={busy}>
+          {editingId === "new" ? "Add entry" : "Save entry"}
+        </Button>
+      </div>
+    </form>
+  );
+
+  return (
+    <>
+      <PageHeader
+        title="Work history"
+        description="The dated list under About on the home page, top to bottom. The first entry is highlighted."
+        action={
+          <Button tone="primary" onClick={onAdd} disabled={editingId === "new"}>
+            <Plus className="h-4 w-4" /> Add entry
+          </Button>
+        }
+      />
+      <div className="mt-10">
+        {editingId === "new" ? <div className="mb-6">{editor}</div> : null}
+        <ol className="border-t border-border">
+          {!loaded ? (
+            <li className="h-20 animate-pulse border-b border-border bg-ink/[0.03]" />
+          ) : entries.length === 0 ? (
+            <li className="border-b border-border py-10 text-center text-[14px] text-text-tertiary">No entries yet.</li>
+          ) : (
+            entries.map((entry, i) =>
+              editingId === entry.id ? (
+                <li key={entry.id} className="py-4">
+                  {editor}
+                </li>
+              ) : (
+                <li key={entry.id} className="group grid gap-2 border-b border-border py-5 sm:grid-cols-[130px_1fr_auto] sm:gap-6">
+                  <p className="text-[13px] font-medium text-text-tertiary sm:pt-0.5">{entry.when}</p>
+                  <div className="min-w-0">
+                    <p className={`text-[16px] font-semibold tracking-[-0.01em] ${i === 0 ? "text-accent-ink" : ""}`}>{entry.role}</p>
+                    {entry.note ? <p className="mt-1 text-[14px] leading-[1.6] text-text-secondary">{entry.note}</p> : null}
+                  </div>
+                  <div className="flex items-start gap-0.5">
+                    <Button tone="ghost" onClick={() => onEdit(entry)} className="!px-3">
+                      <Pencil className="h-4 w-4" /> Edit
+                    </Button>
+                    <Button tone="danger" disabled={busy} onClick={() => onDelete(entry)} className="!px-3" aria-label={`Remove ${entry.role}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </li>
+              ),
+            )
+          )}
+        </ol>
+      </div>
+    </>
+  );
+}
+
+function ResumeView({
+  url,
+  link,
+  setLink,
+  busy,
+  onUpload,
+  onSaveLink,
+  onReset,
+}: {
+  url: string;
+  link: string;
+  setLink: (value: string) => void;
+  busy: boolean;
+  onUpload: (file?: File) => void;
+  onSaveLink: () => void;
+  onReset: () => void;
+}) {
+  const builtIn = !url || url === DEFAULT_RESUME_URL;
+  return (
+    <>
+      <PageHeader title="Résumé" description="The PDF every résumé button on the site opens, in a new tab." />
+      <div className="mt-10 border border-border bg-white">
+        <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
+          <div className="flex h-16 w-14 shrink-0 items-center justify-center border border-border bg-bg text-[11px] font-bold tracking-[0.08em]">
+            PDF
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[15px] font-semibold">{fileName(url)}</p>
+            <p className="mt-1 text-[13px] text-text-tertiary">{builtIn ? "The file that ships with the site" : "Uploaded through the admin"}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={url || DEFAULT_RESUME_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-[40px] items-center gap-2 border border-border px-4 text-[13px] font-semibold transition-colors hover:border-ink"
+            >
+              Open <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+            <label className={`inline-flex min-h-[40px] cursor-pointer items-center gap-2 bg-ink px-4 text-[13px] font-semibold text-bg transition-colors hover:bg-ink/85 ${busy ? "pointer-events-none opacity-50" : ""}`}>
+              <Upload className="h-4 w-4" /> Replace PDF
+              <input
+                type="file"
+                accept="application/pdf,.pdf"
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  onUpload(file);
+                }}
+              />
+            </label>
+          </div>
+        </div>
+        <div className="grid gap-5 border-t border-border p-6 sm:grid-cols-[1fr_auto] sm:items-end">
+          <Field label="Or use a link" hint="A PDF hosted somewhere else, such as Google Drive">
+            <TextInput value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://" />
+          </Field>
+          <Button onClick={onSaveLink} disabled={!link.trim()} busy={busy}>
+            Save link
+          </Button>
+        </div>
+      </div>
+      {!builtIn ? (
+        <Button tone="ghost" onClick={onReset} disabled={busy} className="mt-4">
+          Go back to the built-in résumé
+        </Button>
+      ) : null}
+    </>
   );
 }
