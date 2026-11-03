@@ -217,7 +217,7 @@ export function HeroProcess({
             Product designer who builds in React and makes the launch film.
           </p>
           <p className="mt-2 text-[14px] leading-[1.55] text-text-secondary">
-            I&apos;m Jethro. I take products from user interviews to tested prototypes, then build them and film them.
+            I&apos;m Jethro Adebisi. I take products from user interviews to tested prototypes, then build them and film them.
           </p>
         </div>
         <dl className="col-span-2 grid grid-cols-3 border-b border-r border-border sm:col-span-1 sm:grid-cols-1 sm:content-center sm:gap-2 sm:p-4">

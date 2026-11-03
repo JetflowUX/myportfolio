@@ -26,9 +26,10 @@ export function TopNav() {
         Skip to content
       </a>
       <div className="mx-auto flex max-w-[1104px] flex-col gap-4 px-6 pt-8 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:pt-12 lg:px-8 xl:px-0">
-        <Link href="/" className="inline-flex items-center gap-2.5 text-[12px] font-bold uppercase tracking-[0.16em] text-text">
+        {/* his handle beside the mark, in its own capitals (2026-11-03); the full name is in the hero */}
+        <Link href="/" aria-label="JethrotheUXpert, home" className="inline-flex items-center gap-2.5 text-[15px] font-bold tracking-[-0.01em] text-text">
           <LogoMark className="h-[18px] w-[18px]" />
-          Jethro Adebisi
+          JethrotheUXpert
         </Link>
         <div className="-mx-2 flex flex-wrap">
           {LINKS.map((l) => (
