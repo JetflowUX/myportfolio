@@ -1,12 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Maximize2 } from "lucide-react";
-import { ImagePlaceholder } from "@/components/image-placeholder";
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { LightboxProvider, useLightbox } from "@/components/image-lightbox";
 import { SiteFooter } from "@/components/site-footer";
 import { ScrollProgress } from "@/components/scroll-progress";
@@ -14,47 +12,48 @@ import { TopNav } from "@/components/top-nav";
 import { projects, type Project } from "@/lib/data";
 import { getAllProjects } from "@/lib/project-store";
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-const stagger = { show: { transition: { staggerChildren: 0.09 } } };
+/* A case study (redesigned 2026-11-03). Jethro: "the case study page looks a little off". The old page
+   said everything three or four times (the description, problem, role and outcome each appeared in a
+   summary card, a stats bar, the article and a "Full narrative" at the end), laid a dark gradient and a
+   caption over the hero image, ran a narrow column beside a sidebar that stopped halfway, and used
+   rounded tinted cards and five section colours unlike the rest of the site.
 
-/** The first n sentences of a field, for the summary cells (the full text stays in the article). */
-/* The project link is not always a live site: a design-only project links to its Figma file
-   (2026-11-03, Block Gov), so the button says where it goes. */
-function linkLabel(url: string | undefined) {
-  return url && /(^|\.)figma\.com\//.test(url.replace(/^https?:\/\//, "")) ? "View in Figma" : "Live site";
+   Now each fact appears once, in the home page's grid: a header with the one-line summary and the link,
+   a facts row, the hero image as it is, Problem / Solution / Outcome in three cells, then the story in a
+   reading column with a contents list that follows the reader. Every gallery image is shown (the old
+   gallery capped at four and captioned them with invented stage names). */
+
+const SECTIONS = [
+  { id: "overview", label: "Overview" },
+  { id: "context", label: "Context" },
+  { id: "process", label: "Process" },
+  { id: "research", label: "Research" },
+  { id: "design", label: "Design" },
+  { id: "screens", label: "Screens" },
+  { id: "testing", label: "Testing" },
+  { id: "learnings", label: "Learnings" },
+] as const;
+type SectionId = (typeof SECTIONS)[number]["id"];
+
+/* The project link is not always a live site: a design-only project links to its Figma file. */
+function isFigma(url: string) {
+  return /(^|\.)figma\.com\//.test(url.replace(/^https?:\/\//, ""));
 }
 
-function firstSentences(text: string | undefined, n: number) {
-  if (!text) return "";
-  // a sentence ends at . ! or ? followed by a capital or the end: "3.2x" and "e.g." stay whole
-  const parts = text.replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+(?=[A-Z("'])/);
-  const out = parts.slice(0, n).join(" ").trim();
-  return out.length > 260 ? out.slice(0, 257).replace(/\s+\S*$/, "") + "..." : out;
-}
+const has = (s?: string) => Boolean(s && s.trim());
 
 export default function ProjectCaseStudyPage() {
   const params = useParams<{ slug: string }>();
   const slug = useMemo(() => {
     const raw = params?.slug;
-    if (Array.isArray(raw)) return raw[0] ?? "";
-    return raw ?? "";
+    return Array.isArray(raw) ? (raw[0] ?? "") : (raw ?? "");
   }, [params]);
 
   const [allProjects, setAllProjects] = useState<Project[]>(projects);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Wait for the fetch to resolve before flipping `mounted` — otherwise
-    // an admin-added project (only in the fetched overlay, not the static
-    // list) would flash "Project Not Found" for the instant before the
-    // network response lands.
+    // wait for the admin content, so an admin-only project never flashes "not found"
     getAllProjects().then((data) => {
       setAllProjects(data);
       setMounted(true);
@@ -63,42 +62,13 @@ export default function ProjectCaseStudyPage() {
 
   const project = allProjects.find((item) => item.slug === slug);
 
-  const caseStudyImage = project?.caseStudyImage || project?.image || "";
-  const galleryImages = project?.caseStudyGallery ?? [];
-  const hasProblemSolution = Boolean(
-    project?.problem?.trim() || project?.solution?.trim(),
-  );
-  const hasContextSection = Boolean(
-    project?.context?.trim() ||
-    project?.objectives?.trim() ||
-    project?.audience?.trim(),
-  );
-  const hasProcessSection = Boolean(project?.process?.trim());
-  const hasResearchSection = Boolean(
-    project?.researchInsights?.trim() ||
-    project?.informationArchitecture?.trim(),
-  );
-  const hasDesignSection = Boolean(
-    project?.wireframes?.trim() ||
-    project?.visualDesign?.trim() ||
-    project?.prototypeTesting?.trim(),
-  );
-  const hasArtifactsSection = galleryImages.some(Boolean);
-  const hasOutcomesSection = Boolean(project?.outcomes?.trim());
-  const hasLearningsSection = Boolean(
-    project?.learnings?.trim() || project?.nextSteps?.trim(),
-  );
-  const hasNarrativeSection = Boolean(project?.caseStudy?.trim());
-
   if (!mounted) {
     return (
-      <main className="relative z-10 pt-28">
+      <main className="relative z-10 min-h-screen bg-bg pt-36">
         <TopNav />
-        <div className="mx-auto max-w-4xl mt-20 px-6 text-center">
-          <p className="text-[10px] tracking-[0.35em] uppercase text-text-tertiary mb-6 font-mono">
-            Loading Case Study
-          </p>
-          <div className="h-1 w-24 mx-auto bg-accent/30 animate-pulse" />
+        <div className="mx-auto max-w-[1104px] px-6 sm:px-8 lg:px-8 xl:px-0">
+          <div className="h-3 w-40 animate-pulse bg-ink/[0.06]" />
+          <div className="mt-6 h-14 w-2/3 animate-pulse bg-ink/[0.06]" />
         </div>
       </main>
     );
@@ -106,563 +76,359 @@ export default function ProjectCaseStudyPage() {
 
   if (!project) {
     return (
-      <main className="relative z-10 pt-28">
+      <main className="relative z-10 min-h-screen bg-bg pt-36">
         <TopNav />
-        <div className="max-w-4xl bento-card p-10 text-center mt-20 mx-6 sm:mx-auto">
-          <p className="text-[10px] tracking-[0.35em] uppercase text-text-tertiary mb-4 font-mono">
-            404 — Not Found
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-black mb-4 uppercase tracking-tight">
-            Project Not Found
+        <div className="mx-auto max-w-[1104px] px-6 sm:px-8 lg:px-8 xl:px-0">
+          <p className="label">Not found</p>
+          <h1 className="mt-5 text-[40px] font-black leading-[0.98] tracking-[-0.045em] sm:text-[60px]">
+            No case study here.
           </h1>
-          <p className="font-sans text-text-secondary mb-10 text-sm">
-            No case study exists for this slug yet. Create one from the admin
-            dashboard.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/admin"
-              className="px-6 py-3 bg-accent text-black text-[10px] font-black uppercase tracking-widest"
-            >
-              Go to Admin
-            </Link>
-            <Link
-              href="/work"
-              className="px-6 py-3 border border-ink/20 text-[10px] font-bold uppercase tracking-widest hover:border-accent transition-colors"
-            >
-              Open Archive
-            </Link>
-          </div>
+          <Link href="/work" className="mt-8 inline-flex items-center gap-2 text-[15px] font-semibold hover:underline">
+            <ArrowLeft className="h-4 w-4" /> Back to The Shelf
+          </Link>
         </div>
       </main>
     );
   }
 
-  // Only list sections that actually render — otherwise the sidebar shows
-  // links whose anchors don't exist in the DOM (a project missing, say,
-  // "Context" would still get a Context link that scrolls nowhere).
-  const toc = [
-    { id: "overview", label: "Overview", show: true },
-    { id: "problem", label: "Problem", show: hasProblemSolution },
-    { id: "context", label: "Context", show: hasContextSection },
-    { id: "process", label: "Process", show: hasProcessSection },
-    { id: "research", label: "Research", show: hasResearchSection },
-    { id: "design", label: "Design", show: hasDesignSection },
-    { id: "artifacts", label: "Artifacts", show: hasArtifactsSection },
-    { id: "outcomes", label: "Outcomes", show: hasOutcomesSection },
-    { id: "learnings", label: "Learnings", show: hasLearningsSection },
-  ].filter((item) => item.show);
-
   return (
     <LightboxProvider>
+      <CaseStudy project={project} allProjects={allProjects} />
+    </LightboxProvider>
+  );
+}
+
+function CaseStudy({ project, allProjects }: { project: Project; allProjects: Project[] }) {
+  const { open } = useLightbox();
+  const hero = project.caseStudyImage || project.image || project.cover || "";
+  const gallery = (project.caseStudyGallery ?? []).filter(Boolean).filter((src) => src !== hero);
+  const lead = (project.homeLine || project.description || "").trim();
+  // a short write-up is the overview; a long one only repeats the sections below, so it is left out
+  const overview = has(project.caseStudy) && project.caseStudy!.trim().length <= 1000 ? project.caseStudy!.trim() : "";
+  const palette = extractPalette(project.visualDesign);
+
+  const shown: Record<SectionId, boolean> = {
+    overview: has(overview),
+    context: has(project.context) || has(project.audience) || has(project.objectives),
+    process: has(project.process),
+    research: has(project.researchInsights) || has(project.informationArchitecture),
+    design: has(project.wireframes) || has(project.visualDesign),
+    screens: gallery.length > 0,
+    testing: has(project.prototypeTesting),
+    learnings: has(project.learnings) || has(project.nextSteps),
+  };
+  const toc = SECTIONS.filter((s) => shown[s.id]);
+  const active = useActiveSection(toc.map((s) => s.id));
+
+  const glance = [
+    { k: "The problem", v: project.problem },
+    { k: "The solution", v: project.solution },
+    { k: "The outcome", v: project.outcomes, accent: true },
+  ].filter((c) => has(c.v));
+
+  const facts = [
+    { k: "Role", v: project.role },
+    { k: "Year", v: project.year },
+    { k: "Type", v: project.category === "design" ? "Product design" : "Design and engineering" },
+    { k: "Tools", v: (project.tech ?? []).join(", ") },
+  ].filter((f) => has(f.v));
+
+  const index = allProjects.findIndex((p) => p.slug === project.slug);
+  const next = allProjects.length > 1 ? allProjects[(index + 1) % allProjects.length] : null;
+  let n = 0;
+  const num = () => String(++n).padStart(2, "0");
+
+  return (
     <main className="relative z-10 min-h-screen bg-bg">
       <ScrollProgress />
       <TopNav />
 
-      {/* ─── HEADER (2026-11-03: the home page's grid, and the outcome up front) ─── */}
       <div className="mx-auto max-w-[1104px] px-6 pt-36 sm:px-8 sm:pt-40 lg:px-8 xl:px-0">
         <nav aria-label="Breadcrumb" className="label !text-[10px] flex flex-wrap items-center gap-2">
           <Link href="/" className="hover:text-text">Home</Link>
           <span aria-hidden>/</span>
-          <Link href="/work" className="hover:text-text">All projects</Link>
+          <Link href="/work#case-studies" className="hover:text-text">The Shelf</Link>
         </nav>
 
-        <motion.div variants={stagger} initial="hidden" animate="show" className="mt-8 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-end">
+        {/* ── header: what it is, in one line, and where to see it ── */}
+        <motion.header
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-8 grid gap-8 lg:grid-cols-[1.25fr_1fr] lg:items-end"
+        >
           <div>
-            <motion.p variants={fadeUp} className="label">
-              Case study · {project.year}
-            </motion.p>
-            <motion.h1 variants={fadeUp} className="mt-5 text-[40px] font-black leading-[0.98] tracking-[-0.045em] sm:text-[60px]">
+            <p className="label">Case study · {project.year}</p>
+            <h1
+              className={`mt-5 font-black leading-[0.98] tracking-[-0.045em] ${
+                project.title.length > 24 ? "text-[34px] sm:text-[48px]" : "text-[40px] sm:text-[64px]"
+              }`}
+            >
               {project.title}
-            </motion.h1>
+            </h1>
           </div>
-          <motion.p variants={fadeUp} className="max-w-[460px] text-[15px] leading-[1.6] text-text-secondary">
-            {firstSentences(project.description, 2)}
-          </motion.p>
-        </motion.div>
-
-        {/* the four things a reviewer looks for, before the long read */}
-        <div className="cells mt-12 grid sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["The problem", firstSentences(project.problem, 2)],
-            ["My role", project.role],
-            ["The outcome", firstSentences(project.outcomes, 2)],
-            ["What's next", firstSentences(project.nextSteps, 1)],
-          ]
-            .filter(([, v]) => v && v.trim())
-            .map(([k, v], i) => (
-              <div key={k} className={`p-5 ${i === 2 ? "bg-accent/15" : ""}`}>
-                <p className="label !text-[10px]">{k}</p>
-                <p className="mt-3 text-[14px] leading-[1.55] text-text">{v}</p>
-              </div>
-            ))}
-        </div>
-      </div>
-
-      {/* ─── HERO IMAGE ─────────────────────────────────────── */}
-      <div className="mx-auto mt-10 max-w-[1104px] px-6 sm:px-8 lg:px-8 xl:px-0">
-        <HeroMedia project={project} caseStudyImage={caseStudyImage} />
-        {project.projectLink && (
-          <a
-            href={project.projectLink}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-flex w-full items-center justify-center gap-2 bg-text px-4 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-bg sm:hidden"
-          >
-            {linkLabel(project.projectLink) === "Live site" ? "Open the live site" : "View in Figma"} <span aria-hidden>↗</span>
-          </a>
-        )}
-      </div>
-
-      {/* ─── STATS BAR ──────────────────────────────────────── */}
-      <div className="mx-auto max-w-[1104px] px-6 sm:px-8 lg:px-8 xl:px-0">
-        <div className="grid grid-cols-2 border-b border-l border-r border-border sm:grid-cols-4">
-          <StatCell label="Year" value={project.year} />
-          <StatCell label="Role" value={project.role} />
-          <StatCell label="Category" value={project.category} />
-          <StatCell label="Stack" value={(project.tech ?? []).slice(0, 2).join(" · ")} />
-        </div>
-      </div>
-
-      {/* ─── MAIN CONTENT + SIDEBAR ─────────────────────────── */}
-      <div className="mx-auto mt-20 max-w-[1104px] px-6 sm:mt-24 sm:px-8 lg:px-8 xl:px-0">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-14 lg:gap-16 items-start">
-          {/* ── ARTICLE ─────────────────────────────── */}
-          <article className="min-w-0">
-            {/* Compact section nav for tablet/phone — the sticky sidebar TOC
-                is desktop-only, so this keeps jump-to-section on smaller
-                screens. */}
-            {toc.length > 1 && (
-              <nav className="lg:hidden mb-10" aria-label="Sections">
-                <p className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary mb-3 font-mono">
-                  Jump to
-                </p>
-                <ul className="flex flex-wrap gap-2">
-                  {toc.map((item) => (
-                    <li key={item.id}>
-                      <a
-                        href={`#${item.id}`}
-                        className="inline-flex items-center border border-ink/[0.08] bg-ink/[0.02] px-3 py-2 text-[10px] font-mono uppercase tracking-[0.18em] text-text-tertiary hover:text-accent-ink hover:border-accent/30 transition-colors"
-                      >
-                        {item.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            )}
-            {/* 00 Overview */}
-            <div id="overview">
-              <ChapterDivider number="00" label="Overview" />
-              <div className="pt-1">
-                <Prose text={project.description} />
-                {project.role && (
-                  <div className="mt-7 inline-flex items-center gap-3 border border-ink/10 px-5 py-3">
-                    <span className="text-[9px] uppercase tracking-[0.32em] text-text-tertiary font-mono">
-                      Role
-                    </span>
-                    <span className="text-xs font-bold text-text">
-                      {project.role}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 01 Problem / Solution */}
-            {hasProblemSolution && (
-              <div id="problem">
-                <ChapterDivider number="01" label="Problem & Solution" />
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {project.problem?.trim() && (
-                    <div className="rounded-xl border border-ink/[0.07] bg-ink/[0.02] p-6 sm:p-8">
-                      <div className="mb-5 flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-red-400/70" />
-                        <span className="text-[10px] uppercase tracking-[0.28em] text-text-tertiary font-mono font-bold">
-                          The Problem
-                        </span>
-                      </div>
-                      <Prose text={project.problem} />
-                    </div>
-                  )}
-                  {project.solution?.trim() && (
-                    <div className="rounded-xl border border-accent/[0.18] bg-accent/[0.04] p-6 sm:p-8">
-                      <div className="mb-5 flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-accent" />
-                        <span className="text-[10px] uppercase tracking-[0.28em] text-accent-ink/70 font-mono font-bold">
-                          The Solution
-                        </span>
-                      </div>
-                      <Prose text={project.solution} />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* 02 Context */}
-            {hasContextSection && (
-              <div id="context">
-                <ChapterDivider number="02" label="Context & Objectives" />
-                <NumberedSection
-                  number="02.1"
-                  label="Context"
-                  body={project.context}
-                  fallback="Include project timeline, constraints, and operational context. What sparked this project?"
-                />
-                <NumberedSection
-                  number="02.2"
-                  label="Objectives"
-                  body={project.objectives}
-                  fallback="List the measurable UX and business goals. What does success look like?"
-                />
-                <NumberedSection
-                  number="02.3"
-                  label="Audience & Users"
-                  body={project.audience}
-                  fallback="Who are the target users? Describe user groups, behaviors, and key demographics."
-                />
-              </div>
-            )}
-
-            {/* 03 Process */}
-            {hasProcessSection && (
-              <div id="process">
-                <ChapterDivider number="03" label="Design Process" />
-                <NumberedSection
-                  number="03"
-                  label="How We Got There"
-                  body={project.process}
-                  fallback="Walk through the full design process — from discovery to delivery. What methodology did you apply?"
-                />
-              </div>
-            )}
-
-            {/* 04 Research */}
-            {hasResearchSection && (
-              <div id="research">
-                <ChapterDivider number="04" label="Research & Insights" />
-                {project.researchInsights?.trim() ? (
-                  <PullQuoteSection
-                    number="04"
-                    label="Key Insights"
-                    body={project.researchInsights}
-                  />
-                ) : null}
-                {project.informationArchitecture?.trim() ? (
-                  <NumberedSection
-                    number="04.1"
-                    label="Information Architecture"
-                    body={project.informationArchitecture}
-                    fallback="Document key navigation decisions, content hierarchy, and user flow structures."
-                  />
-                ) : null}
-              </div>
-            )}
-
-            {/* 05 Design */}
-            {hasDesignSection && (
-              <div id="design">
-                <ChapterDivider number="05" label="Design Execution" />
-                {project.wireframes?.trim() ? (
-                  <NumberedSection
-                    number="05.1"
-                    label="Wireframes & Iterations"
-                    body={project.wireframes}
-                    fallback="Describe the lo-fi exploration phase — what layouts were explored, what was discarded, and why."
-                  />
-                ) : null}
-                {project.visualDesign?.trim() ? (
-                  <>
-                    <NumberedSection
-                      number="05.2"
-                      label="Visual Design System"
-                      body={project.visualDesign}
-                      fallback="Summarize typography, color palette, spacing rules, and component decisions."
-                    />
-                    <ColorPaletteBox
-                      description={project.visualDesign}
-                      category={project.category}
-                    />
-                  </>
-                ) : null}
-                {project.prototypeTesting?.trim() ? (
-                  <NumberedSection
-                    number="05.3"
-                    label="Prototyping & Testing"
-                    body={project.prototypeTesting}
-                    fallback="How was the prototype validated? Describe usability sessions, findings, and what changed as a result."
-                  />
-                ) : null}
-              </div>
-            )}
-
-            {/* 06 Visual Artifacts */}
-            {hasArtifactsSection && (
-              <div id="artifacts">
-                <ChapterDivider number="06" label="Visual Artifacts" />
-                <VisualGallerySection images={galleryImages} />
-              </div>
-            )}
-
-            {/* 07 Outcomes */}
-            {hasOutcomesSection && (
-              <div id="outcomes">
-                <ChapterDivider number="07" label="Impact & Outcomes" />
-                <NumberedSection
-                  number="07"
-                  label="Results"
-                  body={project.outcomes}
-                  fallback="What measurable impact did the project deliver? Include metrics, user feedback, and business outcomes."
-                />
-              </div>
-            )}
-
-            {/* 08 Learnings */}
-            {hasLearningsSection && (
-              <div id="learnings">
-                <ChapterDivider number="08" label="Learnings & Next Steps" />
-                {project.learnings?.trim() ? (
-                  <PullQuoteSection
-                    number="08.1"
-                    label="Key Learnings"
-                    body={project.learnings}
-                  />
-                ) : null}
-                {project.nextSteps?.trim() ? (
-                  <NumberedSection
-                    number="08.2"
-                    label="Next Steps"
-                    body={project.nextSteps}
-                    fallback="Outline the roadmap ahead — follow-up experiments, features to explore, or improvements to pursue."
-                  />
-                ) : null}
-              </div>
-            )}
-
-            {/* 09 Full narrative (optional) */}
-            {hasNarrativeSection && (
-              <div>
-                <ChapterDivider number="09" label="Full Narrative" />
-                <NumberedSection
-                  number="09"
-                  label="Extended Write-Up"
-                  body={project.caseStudy}
-                  fallback=""
-                />
-              </div>
-            )}
-          </article>
-
-          {/* ── STICKY SIDEBAR ──────────────────────── */}
-          <aside className="lg:sticky lg:top-28 space-y-4 hidden lg:block">
-            {/* TOC */}
-            <nav className="border border-ink/[0.07] bg-ink/[0.02] p-5">
-              <p className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary mb-4 font-mono">
-                Contents
-              </p>
-              <ul className="space-y-0.5">
-                {toc.map((item) => (
-                  <li key={item.id}>
-                    <a
-                      href={`#${item.id}`}
-                      className="flex items-center gap-3 py-1.5 px-2 text-[10px] text-text-tertiary hover:text-accent-ink transition-colors tracking-widest uppercase font-mono group"
-                    >
-                      <span className="w-3 h-px bg-ink/10 group-hover:bg-accent/50 transition-colors" />
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-
-            {/* Live CTA */}
+          <div className="max-w-[460px] lg:justify-self-end">
+            {lead ? <p className="text-[16px] leading-[1.6] text-text-secondary">{lead}</p> : null}
             {project.projectLink ? (
               <a
                 href={project.projectLink}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-between bg-accent text-black px-5 py-4 text-[9px] font-black uppercase tracking-[0.28em] hover:brightness-110 transition-all group"
+                className="mt-6 inline-flex min-h-[44px] items-center gap-2 bg-text px-5 text-[13px] font-semibold text-bg transition-opacity hover:opacity-85"
               >
-                {linkLabel(project.projectLink) === "Live site" ? "Open Live Site" : "View in Figma"}
-                <span className="text-sm group-hover:translate-x-1 transition-transform">
-                  ↗
-                </span>
+                {isFigma(project.projectLink) ? "View in Figma" : "Open the live site"}
+                <ArrowUpRight className="h-4 w-4" aria-hidden />
               </a>
-            ) : (
-              <div className="border border-ink/[0.07] px-5 py-4 text-center">
-                <p className="text-[9px] text-text-tertiary uppercase tracking-[0.28em] font-mono">
-                  Live site not linked
-                </p>
-              </div>
-            )}
+            ) : null}
+          </div>
+        </motion.header>
 
-            {/* Tech stack */}
-            <div className="border border-ink/[0.07] bg-ink/[0.02] p-5">
-              <p className="text-[9px] uppercase tracking-[0.35em] text-text-tertiary mb-3 font-mono">
-                Tech Stack
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {(project.tech ?? []).map((item) => (
-                  <span key={item} className="tag">
-                    {item}
-                  </span>
-                ))}
-              </div>
+        {/* ── facts: said once ── */}
+        <dl className={`cells mt-12 grid grid-cols-2 ${facts.length >= 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
+          {facts.map((f) => (
+            <div key={f.k} className="p-5">
+              <dt className="label !text-[10px]">{f.k}</dt>
+              <dd className="mt-2 text-[14px] font-semibold leading-[1.45] text-text">{f.v}</dd>
             </div>
+          ))}
+        </dl>
 
-            {/* Back */}
-            <Link
-              href="/work"
-              className="flex items-center border border-ink/[0.07] px-5 py-4 text-[9px] font-mono uppercase tracking-[0.28em] text-text-tertiary hover:text-accent-ink hover:border-accent/30 transition-colors"
-            >
-              ← Archive
-            </Link>
+        {/* ── the hero image, as it is: no overlay, nothing written on it ── */}
+        {hero ? (
+          <button
+            type="button"
+            onClick={() => open({ src: hero, alt: project.title })}
+            aria-label={`Enlarge the ${project.title} image`}
+            className="group mt-8 block w-full cursor-zoom-in overflow-hidden border border-border"
+            style={{ background: project.coverBg || "rgb(var(--ink-rgb) / 0.03)" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={hero}
+              alt={project.title}
+              className="mx-auto block h-auto max-h-[78vh] w-full object-contain transition-transform duration-700 ease-out group-hover:scale-[1.01]"
+            />
+          </button>
+        ) : null}
+
+        {/* ── at a glance: the whole argument before the long read ── */}
+        {glance.length ? (
+          <div className={`cells mt-8 grid ${glance.length === 3 ? "md:grid-cols-3" : glance.length === 2 ? "md:grid-cols-2" : ""}`}>
+            {glance.map((c) => (
+              <div key={c.k} className={`p-6 sm:p-7 ${c.accent ? "bg-accent/15" : ""}`}>
+                <p className="label !text-[10px]">{c.k}</p>
+                <Prose text={c.v!} className="mt-3 !text-[15px] !leading-[1.65] !text-text" />
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {/* ── the story ── */}
+        <div className="mt-20 grid gap-12 sm:mt-24 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-16">
+          <aside className="hidden lg:block">
+            <nav aria-label="On this page" className="sticky top-28">
+              <p className="label !text-[10px]">On this page</p>
+              <ul className="mt-4 space-y-1 border-l border-border">
+                {toc.map((s) => (
+                  <li key={s.id}>
+                    <a
+                      href={`#${s.id}`}
+                      className={`-ml-px block border-l-2 py-1.5 pl-4 text-[14px] transition-colors ${
+                        active === s.id
+                          ? "border-accent-ink font-semibold text-text"
+                          : "border-transparent text-text-tertiary hover:text-text"
+                      }`}
+                    >
+                      {s.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/work#case-studies" className="mt-8 inline-flex items-center gap-2 text-[13px] text-text-tertiary hover:text-text">
+                <ArrowLeft className="h-3.5 w-3.5" /> The Shelf
+              </Link>
+            </nav>
           </aside>
+
+          <article className="min-w-0 max-w-[700px]">
+            {shown.overview ? (
+              <Section id="overview" n={num()} title="Overview">
+                <Prose text={overview} />
+              </Section>
+            ) : null}
+
+            {shown.context ? (
+              <Section id="context" n={num()} title="Context">
+                <Prose text={project.context ?? ""} />
+                <Sub title="Who it's for" text={project.audience} />
+                <Sub title="Goals" text={project.objectives} />
+              </Section>
+            ) : null}
+
+            {shown.process ? (
+              <Section id="process" n={num()} title="Process">
+                <Prose text={project.process ?? ""} />
+              </Section>
+            ) : null}
+
+            {shown.research ? (
+              <Section id="research" n={num()} title="Research">
+                {has(project.researchInsights) ? <Insight label="Key insight" text={project.researchInsights!} /> : null}
+                <Sub title="Information architecture" text={project.informationArchitecture} />
+              </Section>
+            ) : null}
+
+            {shown.design ? (
+              <Section id="design" n={num()} title="Design">
+                <Sub title="Key screens" text={project.wireframes} first />
+                <Sub title="Visual design" text={project.visualDesign} first={!has(project.wireframes)} />
+                {palette.length ? (
+                  <ul className="mt-6 flex flex-wrap gap-3" aria-label="Colour palette">
+                    {palette.map((hex) => (
+                      <li key={hex} className="w-[88px]">
+                        <span className="block h-14 border border-border" style={{ background: hex }} />
+                        <span className="mt-1.5 block text-[12px] tabular-nums text-text-tertiary">{hex}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </Section>
+            ) : null}
+
+            {shown.screens ? (
+              <Section id="screens" n={num()} title="Screens">
+                {/* one column, each image at its own shape: mixed shapes in a grid left uneven gaps */}
+                <div className="grid gap-4">
+                  {gallery.map((src, i) => (
+                    <button
+                      key={src}
+                      type="button"
+                      onClick={() => open({ src, alt: `${project.title}, image ${i + 1}` })}
+                      aria-label={`Enlarge ${project.title} image ${i + 1}`}
+                      className="group block cursor-zoom-in overflow-hidden border border-border bg-ink/[0.03]"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={src}
+                        alt={`${project.title}, image ${i + 1}`}
+                        loading="lazy"
+                        className="mx-auto block h-auto max-h-[80vh] w-auto max-w-full transition-transform duration-700 ease-out group-hover:scale-[1.01]"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </Section>
+            ) : null}
+
+            {shown.testing ? (
+              <Section id="testing" n={num()} title="Testing">
+                <Prose text={project.prototypeTesting ?? ""} />
+              </Section>
+            ) : null}
+
+            {shown.learnings ? (
+              <Section id="learnings" n={num()} title="Learnings">
+                {has(project.learnings) ? <Insight label="What I learned" text={project.learnings!} /> : null}
+                <Sub title="What's next" text={project.nextSteps} />
+              </Section>
+            ) : null}
+          </article>
         </div>
+
+        {/* ── next ── */}
+        {next ? (
+          <Link
+            href={`/projects/${next.slug}`}
+            className="group mt-24 flex items-end justify-between gap-6 border-t border-border py-10"
+          >
+            <span>
+              <span className="label !text-[10px]">Next case study</span>
+              <span className="mt-3 block text-[28px] font-black leading-[1.05] tracking-[-0.03em] sm:text-[40px]">
+                {next.homeTitle || next.title}
+              </span>
+            </span>
+            <ArrowRight className="mb-2 h-7 w-7 shrink-0 transition-transform group-hover:translate-x-1" aria-hidden />
+          </Link>
+        ) : null}
       </div>
 
       <SiteFooter variant="compact" />
     </main>
-    </LightboxProvider>
   );
 }
 
-/* ── HELPER COMPONENTS ──────────────────────────────────────── */
+/* ── pieces ─────────────────────────────────────────────────────────── */
 
-function HeroMedia({
-  project,
-  caseStudyImage,
-}: {
-  project: Project;
-  caseStudyImage: string;
-}) {
-  const { open } = useLightbox();
-  const hasImage = Boolean(caseStudyImage);
-  const interactive = hasImage
-    ? {
-        onClick: () => open({ src: caseStudyImage, alt: project.title }),
-        role: "button" as const,
-        tabIndex: 0,
-        "aria-label": `View ${project.title} hero image`,
-        onKeyDown: (e: React.KeyboardEvent) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            open({ src: caseStudyImage, alt: project.title });
-          }
-        },
-      }
-    : {};
+function Section({ id, n, title, children }: { id: string; n: string; title: string; children: React.ReactNode }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-      className={`group relative overflow-hidden ${hasImage ? "cursor-zoom-in" : ""}`}
-      style={{ aspectRatio: "21/9" }}
-      {...interactive}
-    >
-      {hasImage ? (
-        <Image
-          src={caseStudyImage}
-          alt={project.title}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-        />
-      ) : (
-        <ImagePlaceholder label="No hero image" />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/40 via-transparent to-transparent" />
-
-      {/* zoom affordance */}
-      {hasImage && (
-        <span className="absolute top-7 left-7 flex items-center gap-1.5 border border-white/20 bg-black/30 px-3 py-1.5 text-[8px] font-mono uppercase tracking-[0.25em] text-white/80 opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
-          <Maximize2 className="h-3 w-3" strokeWidth={2.5} /> Click to expand
-        </span>
-      )}
-
-      {/* bottom-left caption */}
-      <div className="absolute bottom-5 left-5 sm:bottom-8 sm:left-8">
-        <p className="text-[9px] font-mono uppercase tracking-[0.35em] text-white/40 mb-1">
-          {project.category} · {project.year}
-        </p>
-        <p className="text-white/60 text-xs sm:text-sm max-w-sm leading-relaxed">
-          {project.solution
-            ? project.solution.split(" ").slice(0, 14).join(" ") +
-              (project.solution.split(" ").length > 14 ? "…" : "")
-            : ""}
-        </p>
-      </div>
-
-      {/* Live CTA */}
-      {project.projectLink && (
-        <a
-          href={project.projectLink}
-          target="_blank"
-          rel="noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="hidden sm:flex absolute top-7 right-7 bg-accent text-black px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.25em] hover:brightness-110 transition-all z-10 items-center gap-2"
-        >
-          {linkLabel(project.projectLink)} <span className="text-[11px]">↗</span>
-        </a>
-      )}
-    </motion.div>
+    <section id={id} className="scroll-mt-28 border-t border-border pb-14 pt-8 first:border-t-0 first:pt-0">
+      <p className="label !text-[10px] tabular-nums text-accent-ink">{n}</p>
+      <h2 className="mt-2 text-[26px] font-bold leading-tight tracking-[-0.02em] sm:text-[30px]">{title}</h2>
+      <div className="mt-6">{children}</div>
+    </section>
   );
 }
 
-function StatCell({ label, value }: { label: string; value: string }) {
+function Sub({ title, text, first }: { title: string; text?: string; first?: boolean }) {
+  if (!has(text)) return null;
   return (
-    <div className="p-5 sm:p-7 border-r border-b border-ink/[0.07] last:border-r-0">
-      <p className="text-[8px] uppercase tracking-[0.35em] text-text-tertiary mb-1.5 font-mono">
-        {label}
-      </p>
-      <p className="text-xs sm:text-sm font-bold text-text leading-tight">
-        {value}
-      </p>
+    <div className={first ? "" : "mt-9"}>
+      <h3 className="text-[17px] font-semibold tracking-[-0.01em] text-text">{title}</h3>
+      <Prose text={text!} className="mt-3" />
     </div>
   );
 }
 
-// Color code sections for a subtle visual hierarchy between chapters.
-function sectionAccent(label: string) {
-  if (label.includes("Research") || label.includes("Insights"))
-    return "bg-blue-500/50";
-  if (label.includes("Design") || label.includes("Visual"))
-    return "bg-emerald-500/50";
-  if (label.includes("Problem") || label.includes("Solution"))
-    return "bg-purple-500/50";
-  if (label.includes("Impact") || label.includes("Outcome"))
-    return "bg-amber-500/50";
-  if (label.includes("Learnings") || label.includes("Next"))
-    return "bg-pink-500/50";
-  return "bg-accent/50";
+function Insight({ label, text }: { label: string; text: string }) {
+  return (
+    <figure className="border-l-2 border-accent-ink pl-5 sm:pl-6">
+      <figcaption className="label !text-[10px]">{label}</figcaption>
+      <Prose text={text} className="mt-3 !text-[17px] !leading-[1.65] !text-text sm:!text-[19px]" />
+    </figure>
+  );
 }
+
+/* Which section the reader is in, for the contents list. */
+function useActiveSection(ids: string[]) {
+  const [active, setActive] = useState(ids[0] ?? "");
+  const key = ids.join(",");
+  useEffect(() => {
+    const els = ids.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+    if (!els.length) return;
+    const onScroll = () => {
+      const line = window.innerHeight * 0.3;
+      let current = els[0].id;
+      for (const el of els) if (el.getBoundingClientRect().top <= line) current = el.id;
+      setActive(current);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return active;
+}
+
+/* The colours a project's visual-design note names, in order. Only real ones: no invented fallback. */
+function extractPalette(text?: string): string[] {
+  if (!text) return [];
+  const seen = new Set<string>();
+  for (const m of text.matchAll(/#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g)) seen.add(m[0].toUpperCase());
+  return [...seen].slice(0, 8);
+}
+
+/* ── prose: real line breaks are kept, "(1) … (2) …" becomes a list, a wall of text is split ── */
 
 type ProseBlock = { type: "p"; text: string } | { type: "ol"; items: string[] };
 
-// Turn the long single-string case-study fields into something readable:
-// respect any real line breaks, promote inline "(1) … (2) …" enumerations to
-// a numbered list, and otherwise chunk a wall of text into ~3-sentence
-// paragraphs.
 function splitProse(raw: string): ProseBlock[] {
   const clean = raw.replace(/\r/g, "").trim();
   if (!clean) return [];
-
-  let blocks = clean
-    .split(/\n{2,}/)
-    .map((b) => b.trim())
-    .filter(Boolean);
+  let blocks = clean.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
   if (blocks.length === 1) {
-    const lines = clean
-      .split(/\n+/)
-      .map((b) => b.trim())
-      .filter(Boolean);
+    const lines = clean.split(/\n+/).map((b) => b.trim()).filter(Boolean);
     if (lines.length > 1) blocks = lines;
   }
-
   const out: ProseBlock[] = [];
   for (const block of blocks) {
     const markers = block.match(/\(\d+\)/g);
@@ -678,22 +444,11 @@ function splitProse(raw: string): ProseBlock[] {
       out.push({ type: "ol", items });
       continue;
     }
-
     if (block.length > 300) {
-      // Split on sentence boundaries using a lookahead only (widely
-      // supported) — a sentinel avoids consuming the space and never
-      // breaks decimals like "4.2/5".
-      const sentences = block
-        .replace(/([.!?])\s+(?=[A-Z(])/g, "$1|__SENT__|")
-        .split("|__SENT__|")
-        .filter(Boolean);
+      // a sentinel keeps the space and never breaks decimals like "4.2/5"
+      const sentences = block.replace(/([.!?])\s+(?=[A-Z(])/g, "$1|__SENT__|").split("|__SENT__|").filter(Boolean);
       if (sentences.length > 1) {
-        for (let i = 0; i < sentences.length; i += 3) {
-          out.push({
-            type: "p",
-            text: sentences.slice(i, i + 3).join(" ").trim(),
-          });
-        }
+        for (let i = 0; i < sentences.length; i += 3) out.push({ type: "p", text: sentences.slice(i, i + 3).join(" ").trim() });
         continue;
       }
     }
@@ -706,18 +461,14 @@ function Prose({ text, className = "" }: { text: string; className?: string }) {
   const blocks = splitProse(text);
   if (!blocks.length) return null;
   return (
-    <div
-      className={`max-w-[68ch] space-y-4 font-sans text-[15px] sm:text-[17px] leading-[1.75] text-text-secondary ${className}`}
-    >
+    <div className={`space-y-4 text-[16px] leading-[1.75] text-text-secondary sm:text-[17px] ${className}`}>
       {blocks.map((block, i) =>
         block.type === "ol" ? (
-          <ol key={i} className="space-y-2.5">
+          <ol key={i} className="space-y-3">
             {block.items.map((item, j) => (
-              <li key={j} className="flex gap-3">
-                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 font-mono text-[10px] font-bold tabular-nums text-accent-ink">
-                  {j + 1}
-                </span>
-                <span className="flex-1">{item}</span>
+              <li key={j} className="grid grid-cols-[28px_1fr]">
+                <span className="pt-[3px] text-[13px] font-semibold tabular-nums text-accent-ink">{String(j + 1).padStart(2, "0")}</span>
+                <span>{item}</span>
               </li>
             ))}
           </ol>
@@ -725,334 +476,6 @@ function Prose({ text, className = "" }: { text: string; className?: string }) {
           <p key={i}>{block.text}</p>
         ),
       )}
-    </div>
-  );
-}
-
-function ChapterDivider({ number, label }: { number: string; label: string }) {
-  return (
-    <motion.header
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.45, ease: "easeOut" }}
-      className="pt-20 sm:pt-24 mb-6 sm:mb-7"
-    >
-      <div className="mb-3 flex items-center gap-3">
-        <span className={`h-5 w-1.5 rounded-full ${sectionAccent(label)}`} />
-        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-text-tertiary tabular-nums">
-          {number}
-        </span>
-      </div>
-      <h2 className="text-[1.55rem] sm:text-[2rem] font-bold leading-tight tracking-tight text-text">
-        {label}
-      </h2>
-    </motion.header>
-  );
-}
-
-function NumberedSection({
-  label,
-  body,
-}: {
-  number: string;
-  label: string;
-  body?: string;
-  fallback: string;
-}) {
-  const text = body?.trim();
-  if (!text) {
-    return null;
-  }
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="border-b border-ink/[0.05] py-6 sm:py-7 last:border-b-0"
-    >
-      <h3 className="mb-4 text-lg sm:text-xl font-bold tracking-tight text-text">
-        {label}
-      </h3>
-      <Prose text={text} />
-    </motion.section>
-  );
-}
-
-function PullQuoteSection({
-  label,
-  body,
-}: {
-  number: string;
-  label: string;
-  body: string;
-}) {
-  if (!body.trim()) {
-    return null;
-  }
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="border-b border-ink/[0.05] py-6 sm:py-7"
-    >
-      <h3 className="mb-4 text-lg sm:text-xl font-bold tracking-tight text-text">
-        {label}
-      </h3>
-      <div className="rounded-xl border border-accent/15 bg-accent/[0.04] p-5 sm:p-7">
-        <Prose text={body} />
-      </div>
-    </motion.section>
-  );
-}
-
-type PaletteSwatch = {
-  hex: string;
-  label: string;
-};
-
-function extractPaletteSwatches(description?: string): PaletteSwatch[] {
-  if (!description?.trim()) {
-    return [];
-  }
-
-  const normalized = description.replace(/\s+/g, " ");
-  const matches = [
-    ...normalized.matchAll(/#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/g),
-  ];
-  const seenHex = new Set<string>();
-  const swatches: PaletteSwatch[] = [];
-
-  for (const match of matches) {
-    const rawHex = match[0];
-    const hex = rawHex.toUpperCase();
-    if (seenHex.has(hex)) {
-      continue;
-    }
-    seenHex.add(hex);
-
-    const index = match.index ?? 0;
-    const contextStart = Math.max(0, index - 28);
-    const context = normalized.slice(contextStart, index).toLowerCase();
-    const labelMatch = context.match(
-      /(primary|secondary|accent|support(?:\s+tones?)?|background|surface|neutral)\s*:?\s*$/,
-    );
-
-    swatches.push({
-      hex,
-      label: labelMatch
-        ? labelMatch[1]
-            .replace(/\s+/g, " ")
-            .replace(/^./, (c) => c.toUpperCase())
-        : `Tone ${swatches.length + 1}`,
-    });
-  }
-
-  return swatches;
-}
-
-const CATEGORY_FALLBACK_SWATCHES: Record<Project["category"], PaletteSwatch[]> =
-  {
-    engineering: [
-      { label: "Primary", hex: "#0B132B" },
-      { label: "Secondary", hex: "#1C2541" },
-      { label: "Accent", hex: "#5BC0BE" },
-      { label: "Support", hex: "#FFD166" },
-      { label: "Background", hex: "#F4F8FB" },
-    ],
-    design: [
-      { label: "Primary", hex: "#1D3557" },
-      { label: "Secondary", hex: "#457B9D" },
-      { label: "Accent", hex: "#A8DADC" },
-      { label: "Support", hex: "#E63946" },
-      { label: "Background", hex: "#F1FAEE" },
-    ],
-  };
-
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  let h = hex.replace("#", "");
-  if (h.length === 3) {
-    h = h
-      .split("")
-      .map((c) => c + c)
-      .join("");
-  }
-  const int = Number.parseInt(h, 16);
-  return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
-}
-
-// White label on dark swatches, near-black on light ones — keeps the name
-// legible regardless of the colour (perceived-luminance threshold).
-function readableTextColor(hex: string): string {
-  const { r, g, b } = hexToRgb(hex);
-  const luminance = (r * 299 + g * 587 + b * 114) / 1000;
-  return luminance > 150 ? "#1A1A1A" : "#FFFFFF";
-}
-
-function ColorPaletteBox({
-  description,
-  category,
-}: {
-  description?: string;
-  category: Project["category"];
-}) {
-  const extractedSwatches = extractPaletteSwatches(description);
-  const swatches = extractedSwatches.length
-    ? extractedSwatches
-    : CATEGORY_FALLBACK_SWATCHES[category];
-
-  if (!swatches.length) {
-    return null;
-  }
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="py-8 sm:py-10 border-b border-ink/[0.05]"
-    >
-      <h3 className="mb-5 text-lg sm:text-xl font-bold tracking-tight text-text">
-        Colour Palette
-      </h3>
-      <div className="flex flex-wrap gap-4 sm:gap-6">
-        {swatches.map((swatch) => {
-          const { r, g, b } = hexToRgb(swatch.hex);
-          const textColor = readableTextColor(swatch.hex);
-          return (
-            <figure key={swatch.hex} className="w-[calc(50%-0.5rem)] sm:w-40">
-              <div
-                className="relative h-44 sm:h-52 rounded-2xl p-4 flex items-start"
-                style={{ backgroundColor: swatch.hex }}
-              >
-                <figcaption
-                  className="text-base sm:text-lg font-medium leading-tight"
-                  style={{ color: textColor }}
-                >
-                  {swatch.label}
-                </figcaption>
-              </div>
-              <div className="mt-3 space-y-0.5">
-                <p className="text-[11px] sm:text-xs text-text-secondary font-mono tabular-nums">
-                  R{r} G{g} B{b}
-                </p>
-                <p className="text-[11px] sm:text-xs text-text-secondary font-mono">
-                  {swatch.hex}
-                </p>
-              </div>
-            </figure>
-          );
-        })}
-      </div>
-    </motion.section>
-  );
-}
-
-const SLOT_LABELS = [
-  "Discovery & Research",
-  "Information Architecture",
-  "Wireframes & Iterations",
-  "Final UI & Prototype",
-];
-
-function VisualGallerySection({ images }: { images: string[] }) {
-  // Only render boxes for images that were actually uploaded — never show
-  // empty placeholder slots. Cap at the number of labelled stages.
-  const visibleImages = images.filter(Boolean).slice(0, SLOT_LABELS.length);
-  if (!visibleImages.length) {
-    return null;
-  }
-
-  // A single image → one showcase box.
-  if (visibleImages.length === 1) {
-    return (
-      <div className="py-8 sm:py-10">
-        <VisualSlot image={visibleImages[0]} label={SLOT_LABELS[0]} tall />
-      </div>
-    );
-  }
-
-  // Two images → a balanced side-by-side pair.
-  if (visibleImages.length === 2) {
-    return (
-      <div className="py-8 sm:py-10 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-        <VisualSlot image={visibleImages[0]} label={SLOT_LABELS[0]} tall />
-        <VisualSlot image={visibleImages[1]} label={SLOT_LABELS[1]} tall />
-      </div>
-    );
-  }
-
-  // Three or four → a full-width hero followed by the rest in a row.
-  const [firstImage, ...restImages] = visibleImages;
-  const restCols = restImages.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3";
-  return (
-    <div className="py-8 sm:py-10">
-      <VisualSlot image={firstImage} label={SLOT_LABELS[0]} tall />
-      <div className={`grid grid-cols-1 ${restCols} gap-2 sm:gap-3 mt-2 sm:mt-3`}>
-        {restImages.map((image, i) => (
-          <VisualSlot key={i} image={image} label={SLOT_LABELS[i + 1]} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function VisualSlot({
-  image,
-  label,
-  tall,
-}: {
-  image?: string;
-  label: string;
-  tall?: boolean;
-}) {
-  const { open } = useLightbox();
-  const h = tall ? "h-56 sm:h-72 lg:h-80" : "h-36 sm:h-44";
-  if (image) {
-    return (
-      <motion.figure
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="overflow-hidden border border-ink/[0.07] group"
-      >
-        <button
-          type="button"
-          onClick={() => open({ src: image, alt: label })}
-          aria-label={`View ${label} image`}
-          className={`${h} w-full block overflow-hidden relative cursor-zoom-in`}
-        >
-          <Image
-            src={image}
-            alt={label}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-          />
-          <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/30 group-hover:opacity-100">
-            <span className="flex items-center gap-1.5 border border-white/25 bg-black/40 px-3 py-1.5 text-[8px] font-mono uppercase tracking-[0.25em] text-white backdrop-blur-md">
-              <Maximize2 className="h-3 w-3" strokeWidth={2.5} /> Expand
-            </span>
-          </span>
-        </button>
-      </motion.figure>
-    );
-  }
-  return (
-    <div
-      className={`${h} border border-dashed border-ink/[0.1] bg-ink/[0.01] flex flex-col items-center justify-center gap-2`}
-    >
-      <div className="w-6 h-6 border border-dashed border-accent-ink/25 flex items-center justify-center">
-        <span className="text-accent-ink/30 text-sm leading-none">+</span>
-      </div>
-      <p className="text-[8px] text-text-tertiary uppercase tracking-[0.22em] font-mono text-center px-4">
-        {label}
-      </p>
     </div>
   );
 }
