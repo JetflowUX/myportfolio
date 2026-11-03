@@ -11,7 +11,16 @@ import { HeroProcess } from "@/components/hero-process";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { SiteFooter } from "@/components/site-footer";
 import { TopNav } from "@/components/top-nav";
-import { driveFilms, motionWork, testimonials, type MotionPiece } from "@/lib/data";
+import {
+  driveFilms,
+  experience as defaultExperience,
+  motionWork,
+  projects as defaultProjects,
+  testimonials,
+  type Experience,
+  type MotionPiece,
+} from "@/lib/data";
+import { homeCases, type HomeCase } from "@/lib/home-work";
 import { getSiteContent } from "@/lib/project-store";
 
 /* ---------------------------------------------------------------------------
@@ -40,60 +49,8 @@ import { getSiteContent } from "@/lib/project-store";
 
 const EMAIL = "adebisireuel@gmail.com";
 
-type Case = {
-  slug: string;
-  title: string;
-  meta: string;
-  line: string;
-  image: string;
-  bg: string;
-  dark?: boolean;
-};
-
-const CASES: Case[] = [
-  {
-    slug: "sabi-bank-app",
-    title: "SabiBank",
-    meta: "Fintech · 2024",
-    line: "A personal-finance app for students who find banking apps confusing, slow and built for someone else. Plain language, ready-made student budgets, automatic categories.",
-    image: "/work/sabibank-cover.webp",
-    bg: "#DDE7FB",
-  },
-  {
-    slug: "gigsgig-app",
-    title: "GigsGig",
-    meta: "Marketplace · 2025",
-    line: "A gig marketplace for UNILAG students. Research showed people feared each other more than the app, so the design is built around visible commitment. +40% trust score in testing.",
-    image: "/work/gigsgig-cover.webp",
-    bg: "#9DCBA4",
-  },
-  {
-    slug: "ai-travel-planner",
-    title: "WanderSmart",
-    meta: "Travel · AI product · 2024",
-    line: "A travel planner that writes a full day-by-day trip from four answers, then lets the traveller change any part of it.",
-    image: "/work/wandersmart-cover.webp",
-    bg: "#16151A",
-    dark: true,
-  },
-  {
-    slug: "speed-math-battle",
-    title: "Speed Math",
-    meta: "Front-end · Live · 2025",
-    line: "Designed and built end to end: 60 fps on mid-range phones, 44 px touch targets, keyboard play and WCAG AA contrast.",
-    image: "/work/speedmath-cover.webp",
-    bg: "#0B1C2E",
-    dark: true,
-  },
-  {
-    slug: "backup-line-cloud-storage",
-    title: "Backup Line",
-    meta: "B2B · Cloud storage · 2024",
-    line: "Cloud storage for business teams, reorganised around projects so files are found in seconds and never lost by accident.",
-    image: "/work/backupline-cover.webp",
-    bg: "#E6EDCF",
-  },
-];
+/* The five cases and the work history live in lib/data.ts and are edited from the admin
+   (2026-11-03); the page draws whatever the admin content says. */
 
 const DOING = [
   {
@@ -117,17 +74,6 @@ const PROCESS = [
   { tag: "Build", title: "React and Next.js", body: "Built in code, or handed off with specs an engineer can build from." },
   { tag: "Film", title: "The launch film", body: "A film that shows the product working, made by the person who designed it." },
   { tag: "Result", title: "GigsGig, +40% trust", body: "Trust score in usability testing after the redesign, and 3.2× faster task completion." },
-];
-
-const EXPERIENCE = [
-  {
-    when: "2023 to now",
-    role: "Freelance product designer & front-end engineer",
-    note: "Fintech, Web3 and consumer apps, from research to production React. Cardano ecosystem work with Gimbalabs and Andamio.",
-  },
-  { when: "2024", role: "Designer, GDG UNILAG, Lagos", note: "Design for the Google Developer Group at the University of Lagos." },
-  { when: "2022", role: "Digital designer, Filtar.Africa", note: "Web, social and marketing design. Google UX Design certificate." },
-  { when: "2019 to 2022", role: "Instructor, Kavit Digital", note: "Taught Photoshop, Illustrator, InDesign, Premiere Pro and After Effects." },
 ];
 
 const PHOTOS = [
@@ -191,7 +137,7 @@ function Hero({ ready, resumeUrl }: { ready: boolean; resumeUrl: string }) {
 
 /* --------------------------------------------------------------- the work */
 
-function Work() {
+function Work({ cases }: { cases: HomeCase[] }) {
   const [active, setActive] = useState(0);
 
   return (
@@ -200,7 +146,7 @@ function Work() {
 
       {/* wide screens: an accordion of spines, one case open at a time */}
       <div className="mt-10 hidden h-[340px] gap-1.5 md:flex">
-        {CASES.map((c, i) => {
+        {cases.map((c, i) => {
           const isOpen = i === active;
           const ink = c.dark ? "text-white" : "text-black";
           return (
@@ -231,18 +177,24 @@ function Work() {
                 <Link
                   href={`/projects/${c.slug}`}
                   tabIndex={isOpen ? 0 : -1}
-                  className="block h-full w-[52%] shrink-0 overflow-hidden border border-black/10"
+                  className="block h-full w-[48%] shrink-0 overflow-hidden border border-black/10"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={c.image} alt={`${c.title} case study`} className="h-full w-full object-cover" loading="lazy" />
+                  {/* a project saved without any image gets a plain panel, not a broken one */}
+                  {c.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={c.image} alt={`${c.title} case study`} className="h-full w-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="h-full w-full bg-black/[0.05]" />
+                  )}
                 </Link>
-                <div className={`min-w-[220px] ${ink}`}>
+                {/* min-w-0 lets a long title wrap when the admin has put more than five cases here */}
+                <div className={`min-w-0 flex-1 ${ink}`}>
                   <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${c.dark ? "text-white/70" : "text-black/70"}`}>
                     {i === 0 ? "Featured · " : ""}
                     {c.meta}
                   </p>
-                  <h3 className="mt-3 text-[22px] font-bold tracking-[-0.02em]">{c.title}</h3>
-                  <p className={`mt-3 text-[14px] leading-[1.6] ${c.dark ? "text-white/75" : "text-black/70"}`}>{c.line}</p>
+                  <h3 className="mt-3 text-[22px] font-bold leading-tight tracking-[-0.02em] [overflow-wrap:anywhere]">{c.title}</h3>
+                  <p className={`mt-3 line-clamp-5 text-[14px] leading-[1.6] ${c.dark ? "text-white/75" : "text-black/70"}`}>{c.line}</p>
                   <Link
                     href={`/projects/${c.slug}`}
                     tabIndex={isOpen ? 0 : -1}
@@ -259,10 +211,14 @@ function Work() {
 
       {/* phones: the same cases, stacked */}
       <div className="mt-8 grid gap-1.5 md:hidden">
-        {CASES.map((c) => (
+        {cases.map((c) => (
           <Link key={c.slug} href={`/projects/${c.slug}`} className="block border border-black/10" style={{ background: c.bg }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={c.image} alt={`${c.title} case study`} className="aspect-[16/10] w-full object-cover" loading="lazy" />
+            {c.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={c.image} alt={`${c.title} case study`} className="aspect-[16/10] w-full object-cover" loading="lazy" />
+            ) : (
+              <div className="aspect-[16/10] w-full bg-black/[0.05]" />
+            )}
             <div className={`p-5 ${c.dark ? "text-white" : "text-black"}`}>
               <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${c.dark ? "text-white/70" : "text-black/70"}`}>{c.meta}</p>
               <h3 className="mt-2 text-[20px] font-bold tracking-[-0.02em]">{c.title}</h3>
@@ -344,11 +300,16 @@ function Films() {
 export default function HomePage() {
   const [ready, setReady] = useState(false);
 
-  // The résumé link is admin-managed (Vercel Blob); fall back to /resume.pdf.
+  // The résumé, the selected work and the work history are admin-managed (Vercel Blob). The
+  // built-in defaults draw first, so the page looks the same before the content arrives.
   const [resumeUrl, setResumeUrl] = useState("/resume.pdf");
+  const [cases, setCases] = useState<HomeCase[]>(() => homeCases(defaultProjects));
+  const [history, setHistory] = useState<Experience[]>(defaultExperience);
   useEffect(() => {
     getSiteContent().then((c) => {
       if (c.resumeUrl) setResumeUrl(c.resumeUrl);
+      setCases(homeCases(c.projects));
+      setHistory(c.experience);
     });
   }, []);
 
@@ -411,7 +372,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <Work />
+        <Work cases={cases} />
         <Films />
 
         {/* --------------------------------------------------------- process */}
@@ -465,8 +426,8 @@ export default function HomePage() {
           </div>
 
           <ol className="mt-16 border-t border-border">
-            {EXPERIENCE.map((e, i) => (
-              <li key={e.role} className="grid gap-2 border-b border-border py-6 sm:grid-cols-[1fr_auto] sm:gap-10">
+            {history.map((e, i) => (
+              <li key={e.id} className="grid gap-2 border-b border-border py-6 sm:grid-cols-[1fr_auto] sm:gap-10">
                 <div>
                   <h3 className={`text-[20px] font-semibold tracking-[-0.02em] ${i === 0 ? "text-accent-ink" : ""}`}>{e.role}</h3>
                   <p className="mt-2 max-w-[560px] text-[14px] leading-[1.6] text-text-secondary">{e.note}</p>

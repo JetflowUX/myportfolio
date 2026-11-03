@@ -1,7 +1,14 @@
 import 'server-only';
 
-import { get, put } from '@vercel/blob';
-import { companies as staticCompanies, projects as staticProjects, type Company, type Project } from '@/lib/data';
+import { del, get, list, put } from '@vercel/blob';
+import {
+  companies as staticCompanies,
+  experience as staticExperience,
+  projects as staticProjects,
+  type Company,
+  type Experience,
+  type Project,
+} from '@/lib/data';
 
 // The admin dashboard used to write everything to the visitor's own
 // localStorage, so nothing ever reached the deployed site or other
@@ -12,7 +19,15 @@ import { companies as staticCompanies, projects as staticProjects, type Company,
 // slug/id, deleting an overlay entry falls back to the static default if
 // one exists), just persisted server-side instead of per-browser.
 
-const CONTENT_PATHNAME = 'data/site-content.json';
+// SITE_CONTENT_PATHNAME points a local test run at a scratch file, so checking that saves work
+// never touches the live content.
+const CONTENT_PATHNAME = process.env.SITE_CONTENT_PATHNAME || 'data/site-content.json';
+// Every save also writes its own numbered copy here, and the admin reads the newest one. Measured
+// 2026-11-03: after overwriting CONTENT_PATHNAME, a read of it (useCache: false included) returned
+// the old content for 12-41 s, so the dashboard showed a save as lost and a second save inside
+// that window wrote over the first. A new file has no old copy to serve, and list() names it at once.
+const VERSIONS_PREFIX = CONTENT_PATHNAME.replace(/\.json$/, '') + '-versions/';
+const VERSIONS_KEPT = 10;
 const DEFAULT_RESUME_URL = '/resume.pdf';
 
 type Overlay = {
@@ -26,13 +41,24 @@ type Overlay = {
   // time instead. Re-adding/editing a company with that id clears the
   // tombstone (see upsertCompany).
   deletedCompanyIds: string[];
+  // The home page's work history (2026-11-03), with the same tombstone rule as companies.
+  experience: Experience[];
+  deletedExperienceIds: string[];
 };
 
-const EMPTY_OVERLAY: Overlay = { projects: [], companies: [], resumeUrl: '', deletedCompanyIds: [] };
+const EMPTY_OVERLAY: Overlay = {
+  projects: [],
+  companies: [],
+  resumeUrl: '',
+  deletedCompanyIds: [],
+  experience: [],
+  deletedExperienceIds: [],
+};
 
 export type SiteContentPayload = {
   projects: Project[];
   companies: Company[];
+  experience: Experience[];
   resumeUrl: string;
   adminProjectSlugs: string[];
 };
@@ -67,38 +93,68 @@ function sortProjectsByYearDesc(items: Project[]): Project[] {
   });
 }
 
+function toOverlay(data: Partial<Overlay>): Overlay {
+  return {
+    projects: Array.isArray(data.projects) ? data.projects : [],
+    companies: Array.isArray(data.companies) ? data.companies : [],
+    resumeUrl: typeof data.resumeUrl === 'string' ? data.resumeUrl : '',
+    deletedCompanyIds: Array.isArray(data.deletedCompanyIds) ? data.deletedCompanyIds : [],
+    experience: Array.isArray(data.experience) ? data.experience : [],
+    deletedExperienceIds: Array.isArray(data.deletedExperienceIds) ? data.deletedExperienceIds : [],
+  };
+}
+
+// Version files are named by save time with a fixed number of digits, so the last one in name
+// order is the newest.
+async function listVersions() {
+  const { blobs } = await list({ prefix: VERSIONS_PREFIX, limit: 1000 });
+  return [...blobs].sort((a, b) => a.pathname.localeCompare(b.pathname));
+}
+
+// get() returns null when a file does not exist and throws when it cannot be read.
+async function readFile(pathname: string): Promise<Overlay | null> {
+  const result = await get(pathname, { access: 'public', useCache: false });
+  if (!result || result.statusCode !== 200 || !result.stream) return null;
+  return toOverlay(JSON.parse(await new Response(result.stream).text()) as Partial<Overlay>);
+}
+
+async function readNewestVersion(): Promise<Overlay | null> {
+  const versions = await listVersions();
+  const newest = versions[versions.length - 1];
+  if (!newest) return null;
+  const overlay = await readFile(newest.pathname);
+  if (!overlay) throw new Error('Could not read the newest saved content.');
+  return overlay;
+}
+
+// The visitors' read never fails a page: anything unreadable falls back to the built-in content.
+// The shared file skips Blob's CDN cache (useCache: false), as the content route always did, and
+// that route's s-maxage keeps it to one read per ~10 s per region. It can lag a save by up to
+// ~40 s, which is fine for visitors; the admin's refresh (fresh) reads the newest version instead.
 async function readOverlay(options?: { fresh?: boolean }): Promise<Overlay> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     // No Blob store linked yet (e.g. local dev before running
     // `vercel env pull`, or a fresh deploy before storage is set up).
-    // Fail open to "no admin data" rather than breaking every page.
     return EMPTY_OVERLAY;
   }
-
   try {
-    // useCache: false bypasses Vercel Blob's own CDN edge cache and reads
-    // straight from origin — required right after a write (e.g. the admin
-    // dashboard's own refresh, or merging before another write) so it never
-    // reads stale data. But it's also meaningfully slower, so the public
-    // read path (every visitor, every page load — see getSiteContentPayload)
-    // must NOT default to this, or every page view pays for a live Blob
-    // fetch. Only pass `fresh: true` where correctness genuinely needs it.
-    const result = await get(CONTENT_PATHNAME, { access: 'public', useCache: !options?.fresh });
-    if (!result || result.statusCode !== 200 || !result.stream) {
-      return EMPTY_OVERLAY;
-    }
-    const text = await new Response(result.stream).text();
-    const data = JSON.parse(text) as Partial<Overlay>;
-    return {
-      projects: Array.isArray(data.projects) ? data.projects : [],
-      companies: Array.isArray(data.companies) ? data.companies : [],
-      resumeUrl: typeof data.resumeUrl === 'string' ? data.resumeUrl : '',
-      deletedCompanyIds: Array.isArray(data.deletedCompanyIds) ? data.deletedCompanyIds : [],
-    };
+    return (options?.fresh ? await readNewestVersion() : null) ?? (await readFile(CONTENT_PATHNAME)) ?? EMPTY_OVERLAY;
   } catch {
-    // Most commonly on the very first run, before any admin save has
-    // ever happened, or a transient network/auth error.
     return EMPTY_OVERLAY;
+  }
+}
+
+// Every save reads, changes one thing and writes the whole content back, so it must start from
+// what is really saved. Until 2026-11-03 a failed read here counted as "nothing saved yet", and
+// the save then wrote that near-empty copy over everything. Now a failed read stops the save.
+async function readForWrite(): Promise<Overlay> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error('Storage is not configured yet. Add a Blob store to this Vercel project.');
+  }
+  try {
+    return (await readNewestVersion()) ?? (await readFile(CONTENT_PATHNAME)) ?? EMPTY_OVERLAY;
+  } catch {
+    throw new Error('Could not read the saved content, so nothing was changed. Try again in a moment.');
   }
 }
 
@@ -107,7 +163,15 @@ async function writeOverlay(overlay: Overlay): Promise<void> {
     throw new Error('Storage is not configured yet. Add a Blob store to this Vercel project.');
   }
 
-  await put(CONTENT_PATHNAME, JSON.stringify(overlay), {
+  const body = JSON.stringify(overlay);
+  await put(`${VERSIONS_PREFIX}${Date.now().toString().padStart(15, '0')}.json`, body, {
+    access: 'public',
+    addRandomSuffix: false,
+    contentType: 'application/json',
+  });
+
+  // The shared file is what visitors read (cached for up to a minute), so it is kept in step too.
+  await put(CONTENT_PATHNAME, body, {
     access: 'public',
     addRandomSuffix: false,
     allowOverwrite: true,
@@ -116,6 +180,10 @@ async function writeOverlay(overlay: Overlay): Promise<void> {
     cacheControlMaxAge: 60,
     contentType: 'application/json',
   });
+
+  const versions = await listVersions();
+  const stale = versions.slice(0, Math.max(0, versions.length - VERSIONS_KEPT));
+  if (stale.length) await del(stale.map((item) => item.url));
 }
 
 export async function getSiteContentPayload(options?: { fresh?: boolean }): Promise<SiteContentPayload> {
@@ -124,27 +192,38 @@ export async function getSiteContentPayload(options?: { fresh?: boolean }): Prom
   const mergedCompanies = uniqueByCompanyId([...staticCompanies, ...overlay.companies]).filter(
     (item) => !deleted.has(item.id),
   );
+  // A saved project is laid over its static default field by field, so the home-page fields the
+  // defaults carry (cover, colour, summary) survive an edit made before those fields existed.
+  const staticBySlug = new Map(staticProjects.map((item) => [item.slug, item]));
+  const overlaid = overlay.projects.map((item) => ({ ...staticBySlug.get(item.slug), ...item }));
+  const deletedExperience = new Set(overlay.deletedExperienceIds);
+  const mergedExperience = Array.from(
+    new Map([...staticExperience, ...overlay.experience].map((item) => [item.id, item])).values(),
+  )
+    .filter((item) => !deletedExperience.has(item.id))
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
   return {
-    projects: sortProjectsByYearDesc(uniqueBySlug([...staticProjects, ...overlay.projects])),
+    projects: sortProjectsByYearDesc(uniqueBySlug([...staticProjects, ...overlaid])),
     companies: mergedCompanies,
+    experience: mergedExperience,
     resumeUrl: overlay.resumeUrl.trim() || DEFAULT_RESUME_URL,
     adminProjectSlugs: overlay.projects.map((item) => item.slug),
   };
 }
 
 export async function upsertProject(project: Project): Promise<void> {
-  const overlay = await readOverlay({ fresh: true });
+  const overlay = await readForWrite();
   const next = [...overlay.projects.filter((item) => item.slug !== project.slug), project];
   await writeOverlay({ ...overlay, projects: uniqueBySlug(next) });
 }
 
 export async function removeProject(slug: string): Promise<void> {
-  const overlay = await readOverlay({ fresh: true });
+  const overlay = await readForWrite();
   await writeOverlay({ ...overlay, projects: overlay.projects.filter((item) => item.slug !== slug) });
 }
 
 export async function upsertCompany(company: Company): Promise<void> {
-  const overlay = await readOverlay({ fresh: true });
+  const overlay = await readForWrite();
   const next = [...overlay.companies.filter((item) => item.id !== company.id), company];
   await writeOverlay({
     ...overlay,
@@ -155,7 +234,7 @@ export async function upsertCompany(company: Company): Promise<void> {
 }
 
 export async function removeCompany(id: string): Promise<void> {
-  const overlay = await readOverlay({ fresh: true });
+  const overlay = await readForWrite();
   await writeOverlay({
     ...overlay,
     companies: overlay.companies.filter((item) => item.id !== id),
@@ -169,11 +248,31 @@ export async function removeCompany(id: string): Promise<void> {
 }
 
 export async function setResumeUrl(resumeUrl: string): Promise<void> {
-  const overlay = await readOverlay({ fresh: true });
+  const overlay = await readForWrite();
   await writeOverlay({ ...overlay, resumeUrl: resumeUrl.trim() });
 }
 
 export async function clearResumeUrl(): Promise<void> {
-  const overlay = await readOverlay({ fresh: true });
+  const overlay = await readForWrite();
   await writeOverlay({ ...overlay, resumeUrl: '' });
+}
+
+export async function upsertExperience(entry: Experience): Promise<void> {
+  const overlay = await readForWrite();
+  await writeOverlay({
+    ...overlay,
+    experience: [...overlay.experience.filter((item) => item.id !== entry.id), entry],
+    deletedExperienceIds: overlay.deletedExperienceIds.filter((id) => id !== entry.id),
+  });
+}
+
+export async function removeExperience(id: string): Promise<void> {
+  const overlay = await readForWrite();
+  await writeOverlay({
+    ...overlay,
+    experience: overlay.experience.filter((item) => item.id !== id),
+    deletedExperienceIds: overlay.deletedExperienceIds.includes(id)
+      ? overlay.deletedExperienceIds
+      : [...overlay.deletedExperienceIds, id],
+  });
 }

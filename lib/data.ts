@@ -25,6 +25,25 @@ export type Project = {
   caseStudyGallery?: string[];
   projectLink?: string;
   caseStudy?: string;
+  // How the project appears in the home page's "Selected work" (2026-11-03). All optional:
+  // a blank field falls back to the project's own title, year, description and image.
+  showOnHome?: boolean;
+  homeOrder?: number;
+  homeTitle?: string;
+  homeMeta?: string;
+  homeLine?: string;
+  cover?: string;
+  coverBg?: string;
+  coverDark?: boolean;
+};
+
+/* One line of the home page's work history, editable from the admin (2026-11-03). */
+export type Experience = {
+  id: string;
+  when: string;
+  role: string;
+  note: string;
+  order?: number;
 };
 
 export type Company = {
@@ -54,7 +73,15 @@ export const projects: Project[] = [
     caseStudy: 'Project Overview: The AI-Powered Travel Planner is a mobile application designed to help users plan personalized trips efficiently. The app uses artificial intelligence to generate travel itineraries based on user inputs such as destination, budget, travel dates, and interests. The goal is to simplify the travel planning process, reduce the time spent researching, and provide users with a seamless planning experience. Goals and Objectives: Deliver a personalized travel planning experience, reduce time spent planning trips, improve user satisfaction through AI-driven recommendations, create an intuitive and easy-to-use interface, ensure smooth navigation across screens, and enable easy customization of AI-generated itineraries. Core Features: User Input Form, AI-Powered Itinerary Generator, Itinerary Customization, Interactive Map Integration, Save and Share Feature, and AI Assistant Chat Feature. Functional Requirements: User input form, AI-generated itinerary system, customization features, save and share functionality, and optional user authentication. Non-Functional Requirements: Fast AI response time, mobile-first design, accessibility compliance, and secure data handling. Conclusion: The AI-Powered Travel Planner provides a structured and efficient way for users to plan trips using AI-generated recommendations. By combining automation with user customization, the app supports a seamless travel planning experience aligned with user needs.',
     tech: ['AI'],
     category: 'engineering',
-    image: 'https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&q=80&w=1200'
+    image: 'https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&q=80&w=1200',
+    showOnHome: true,
+    homeOrder: 3,
+    homeTitle: 'WanderSmart',
+    homeMeta: 'Travel · AI product · 2024',
+    homeLine: 'A travel planner that writes a full day-by-day trip from four answers, then lets the traveller change any part of it.',
+    cover: '/work/wandersmart-cover.webp',
+    coverBg: '#16151A',
+    coverDark: true
   },
   {
     slug: 'sabi-bank-app',
@@ -79,7 +106,14 @@ export const projects: Project[] = [
     caseStudy: 'SabiBank represents a comprehensive approach to personal finance management app design, driven by extensive research into user needs, competitive landscape analysis, and design thinking principles. The case study demonstrates an end-to-end UX process from research and persona development through wireframing, visual design, prototyping, and testing. The design addresses a clear market gap: young adults and students seeking intuitive, trustworthy financial management tools without overwhelming complexity. Through user research, the team identified that users feared confusing financial jargon and time-consuming data entry more than the technology itself. The solution implements simplified terminology, quick expense entry options, and AI-powered automatic categorization to reduce friction. Visual design leverages color psychology with trust-inducing blue as the primary color. The interface prioritizes visual feedback through charts, badges, and progress indicators to motivate continued use. Multiple persona-driven features (student budgeting templates, goal-setting gamification, educational content library) differentiate SabiBank from competitors. The design process emphasized user testing across multiple iterations, refining the expense tracking visualization, notification messaging, and overall navigation based on feedback. The resulting app balances security requirements with accessibility, automation with user control, and financial complexity with approachable design. SabiBank demonstrates how thoughtful UX design can make financial management feel not just functional but engaging and empowering for users seeking to take control of their finances.',
     tech: ['Figma', 'UX Research', 'User Testing', 'Wireframing', 'Prototyping', 'UI/UX Design'],
     category: 'design',
-    image: 'https://images.unsplash.com/photo-1579621970563-3173fba999f5?auto=format&fit=crop&q=80&w=1200'
+    image: 'https://images.unsplash.com/photo-1579621970563-3173fba999f5?auto=format&fit=crop&q=80&w=1200',
+    showOnHome: true,
+    homeOrder: 1,
+    homeTitle: 'SabiBank',
+    homeMeta: 'Fintech · 2024',
+    homeLine: 'A personal-finance app for students who find banking apps confusing, slow and built for someone else. Plain language, ready-made student budgets, automatic categories.',
+    cover: '/work/sabibank-cover.webp',
+    coverBg: '#DDE7FB'
   },
   {
     slug: 'backup-line-cloud-storage',
@@ -104,7 +138,14 @@ export const projects: Project[] = [
     caseStudy: 'Backup Line is a cloud storage UX case study built around business-grade file safety and team productivity. The project started from a clear enterprise problem statement and translated it into an end-to-end design process across research, IA, wireframing, visual design, prototyping, and testing. The final concept balances usability and security by prioritizing search efficiency, project-level organization, collaboration-friendly sharing, and dependable backup behavior.',
     tech: ['Figma', 'UX Research', 'Information Architecture', 'Prototyping', 'Usability Testing'],
     category: 'design',
-    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1600'
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1600',
+    showOnHome: true,
+    homeOrder: 5,
+    homeTitle: 'Backup Line',
+    homeMeta: 'B2B · Cloud storage · 2024',
+    homeLine: 'Cloud storage for business teams, reorganised around projects so files are found in seconds and never lost by accident.',
+    cover: '/work/backupline-cover.webp',
+    coverBg: '#E6EDCF'
   },
   {
     slug: 'gigsgig-app',
@@ -129,7 +170,14 @@ export const projects: Project[] = [
     caseStudy: 'GigsGig explored how to design trust into peer-to-peer student gig exchange. By pairing commitment staking and escrow logic with plain-language UX, the product reframed risky informal coordination into a dependable workflow. The design focused on reducing ambiguity at every step: what happens to funds, who is accountable, what counts as proof, and when payment is released. The final concept demonstrates that trust can be operationalized through transparent states, lightweight commitments, and context-aware discovery rather than relying only on ratings.',
     tech: ['Figma', 'FigJam', 'Design Thinking', 'Usability Testing', 'Cardano Blockchain'],
     category: 'engineering',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200'
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200',
+    showOnHome: true,
+    homeOrder: 2,
+    homeTitle: 'GigsGig',
+    homeMeta: 'Marketplace · 2025',
+    homeLine: 'A gig marketplace for UNILAG students. Research showed people feared each other more than the app, so the design is built around visible commitment. +40% trust score in testing.',
+    cover: '/work/gigsgig-cover.webp',
+    coverBg: '#9DCBA4'
   },
   {
     slug: 'speed-math-battle',
@@ -155,7 +203,15 @@ export const projects: Project[] = [
     tech: ['Framer Motion', 'React', 'Orbitron Font', 'Inter Font', 'Glass Morphism', 'Tailwind CSS', 'Spring Physics'],
     category: 'engineering',
     image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=1200',
-    projectLink: 'https://speed-math-game-seven.vercel.app/'
+    projectLink: 'https://speed-math-game-seven.vercel.app/',
+    showOnHome: true,
+    homeOrder: 4,
+    homeTitle: 'Speed Math',
+    homeMeta: 'Front-end · Live · 2025',
+    homeLine: 'Designed and built end to end: 60 fps on mid-range phones, 44 px touch targets, keyboard play and WCAG AA contrast.',
+    cover: '/work/speedmath-cover.webp',
+    coverBg: '#0B1C2E',
+    coverDark: true
   },
   {
     slug: 'cardano-governance-platform',
@@ -167,7 +223,8 @@ export const projects: Project[] = [
     role: 'UX Design / Front-End',
     tech: ['Web3', 'Design Systems', 'Accessibility'],
     category: 'design',
-    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=1200'
+    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=1200',
+    showOnHome: false
   }
 ];
 
@@ -185,6 +242,19 @@ export const skillBuckets = {
   design: ['UX Research', 'Wireframing', 'Prototyping', 'Design Systems', 'Interaction Design'],
   tools: ['Figma', 'Framer', 'Git', 'Notion']
 };
+
+export const experience: Experience[] = [
+  {
+    id: 'freelance',
+    when: '2023 to now',
+    role: 'Freelance product designer & front-end engineer',
+    note: 'Fintech, Web3 and consumer apps, from research to production React. Cardano ecosystem work with Gimbalabs and Andamio.',
+    order: 1,
+  },
+  { id: 'gdg-unilag', when: '2024', role: 'Designer, GDG UNILAG, Lagos', note: 'Design for the Google Developer Group at the University of Lagos.', order: 2 },
+  { id: 'filtar-africa', when: '2022', role: 'Digital designer, Filtar.Africa', note: 'Web, social and marketing design. Google UX Design certificate.', order: 3 },
+  { id: 'kavit-digital', when: '2019 to 2022', role: 'Instructor, Kavit Digital', note: 'Taught Photoshop, Illustrator, InDesign, Premiere Pro and After Effects.', order: 4 },
+];
 
 export const companies: Company[] = [
   {

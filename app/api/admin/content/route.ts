@@ -15,8 +15,10 @@ export async function GET(request: NextRequest) {
     // for a live Blob fetch — at most one origin read per ~10s per region.
     // ?fresh=1 (the admin dashboard's own post-save refresh) additionally
     // sends no-store so the editor sees their change instantly.
+    // ?fresh=1 also reads the newest saved version (lib/blob-content.ts), which costs a storage
+    // listing, so only the admin's own refresh asks for it.
     const adminFresh = request.nextUrl.searchParams.get('fresh') === '1';
-    const payload = await getSiteContentPayload({ fresh: true });
+    const payload = await getSiteContentPayload({ fresh: adminFresh });
     return NextResponse.json(payload, {
       headers: {
         'Cache-Control': adminFresh

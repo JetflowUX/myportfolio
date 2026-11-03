@@ -1,10 +1,11 @@
-import { companies, projects, type Company, type Project } from '@/lib/data';
+import { companies, experience, projects, type Company, type Experience, type Project } from '@/lib/data';
 
 const DEFAULT_RESUME_URL = '/resume.pdf';
 
 export type SiteContent = {
   projects: Project[];
   companies: Company[];
+  experience: Experience[];
   resumeUrl: string;
   adminProjectSlugs: string[];
 };
@@ -12,6 +13,7 @@ export type SiteContent = {
 const FALLBACK_CONTENT: SiteContent = {
   projects,
   companies,
+  experience,
   resumeUrl: DEFAULT_RESUME_URL,
   adminProjectSlugs: [],
 };
@@ -37,6 +39,7 @@ export async function getSiteContent(options?: { fresh?: boolean }): Promise<Sit
     return {
       projects: Array.isArray(data.projects) ? data.projects : projects,
       companies: Array.isArray(data.companies) ? data.companies : companies,
+      experience: Array.isArray(data.experience) ? data.experience : experience,
       resumeUrl: typeof data.resumeUrl === 'string' && data.resumeUrl ? data.resumeUrl : DEFAULT_RESUME_URL,
       adminProjectSlugs: Array.isArray(data.adminProjectSlugs) ? data.adminProjectSlugs : [],
     };
@@ -99,6 +102,26 @@ export async function deleteAdminCompany(id: string): Promise<void> {
   });
   if (!res.ok) {
     throw new Error(await parseJsonError(res, 'Unable to delete company.'));
+  }
+}
+
+export async function saveAdminExperience(entry: Experience): Promise<void> {
+  const res = await fetch('/api/admin/experience', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry),
+  });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to save the work history entry.'));
+  }
+}
+
+export async function deleteAdminExperience(id: string): Promise<void> {
+  const res = await fetch(`/api/admin/experience?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res, 'Unable to delete the work history entry.'));
   }
 }
 

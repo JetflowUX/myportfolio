@@ -7,13 +7,13 @@ import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { CursorFollower } from "@/components/cursor-follower";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { TopNav } from "@/components/top-nav";
-import { projects, type Company, type Project } from "@/lib/data";
+import { projects, type Experience, type Project } from "@/lib/data";
 import {
-  deleteAdminCompany,
+  deleteAdminExperience,
   deleteAdminProject,
   deleteAdminResume,
   getSiteContent,
-  saveAdminCompany,
+  saveAdminExperience,
   saveAdminProject,
   saveAdminResume,
   slugify,
@@ -47,13 +47,21 @@ type FormState = {
   caseStudyGallery: string;
   projectLink: string;
   caseStudy: string;
+  showOnHome: boolean;
+  homeOrder: string;
+  homeTitle: string;
+  homeMeta: string;
+  homeLine: string;
+  cover: string;
+  coverBg: string;
+  coverDark: boolean;
 };
 
-type CompanyFormState = {
-  id: string;
-  name: string;
-  logo: string;
-  website: string;
+type ExperienceFormState = {
+  when: string;
+  role: string;
+  note: string;
+  order: string;
 };
 
 const initialForm: FormState = {
@@ -83,13 +91,21 @@ const initialForm: FormState = {
   caseStudyGallery: "",
   projectLink: "",
   caseStudy: "",
+  showOnHome: true,
+  homeOrder: "",
+  homeTitle: "",
+  homeMeta: "",
+  homeLine: "",
+  cover: "",
+  coverBg: "",
+  coverDark: false,
 };
 
-const initialCompanyForm: CompanyFormState = {
-  id: "",
-  name: "",
-  logo: "",
-  website: "",
+const initialExperienceForm: ExperienceFormState = {
+  when: "",
+  role: "",
+  note: "",
+  order: "",
 };
 
 const DEFAULT_RESUME_URL = "/resume.pdf";
@@ -104,11 +120,11 @@ export function AdminDashboard() {
   const [status, setStatus] = useState("");
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [companyForm, setCompanyForm] =
-    useState<CompanyFormState>(initialCompanyForm);
-  const [availableCompanies, setAvailableCompanies] = useState<Company[]>([]);
-  const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
-  const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
+  const [experienceForm, setExperienceForm] =
+    useState<ExperienceFormState>(initialExperienceForm);
+  const [availableExperience, setAvailableExperience] = useState<Experience[]>([]);
+  const [editingExperienceId, setEditingExperienceId] = useState<string | null>(null);
+  const [isExperienceFormOpen, setIsExperienceFormOpen] = useState(false);
   const [resumeUrl, setResumeUrl] = useState(DEFAULT_RESUME_URL);
   const [isBusy, setIsBusy] = useState(false);
 
@@ -125,7 +141,7 @@ export function AdminDashboard() {
     const content = await getSiteContent({ fresh: true });
     setAvailableProjects(content.projects);
     setAdminProjectSlugs(new Set(content.adminProjectSlugs));
-    setAvailableCompanies(content.companies);
+    setAvailableExperience(content.experience);
     setResumeUrl(content.resumeUrl || DEFAULT_RESUME_URL);
   }
 
@@ -147,27 +163,24 @@ export function AdminDashboard() {
   // overriding the project being edited — so the edit never shows up.
   const effectiveSlug = editingSlug ?? liveSlug;
 
-  const liveCompanyId = useMemo(() => {
-    if (companyForm.id.trim()) {
-      return slugify(companyForm.id);
-    }
-    return slugify(companyForm.name);
-  }, [companyForm.id, companyForm.name]);
+  // A new entry's id comes from its role and dates; an edited one keeps its own.
+  const experienceId =
+    editingExperienceId ?? slugify(`${experienceForm.role} ${experienceForm.when}`);
 
   function onChange<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function onCompanyChange<K extends keyof CompanyFormState>(
+  function onExperienceChange<K extends keyof ExperienceFormState>(
     key: K,
-    value: CompanyFormState[K],
+    value: ExperienceFormState[K],
   ) {
-    setCompanyForm((prev) => ({ ...prev, [key]: value }));
+    setExperienceForm((prev) => ({ ...prev, [key]: value }));
   }
 
   async function onProjectImageUpload(
     event: ChangeEvent<HTMLInputElement>,
-    field: "image" | "caseStudyImage",
+    field: "image" | "caseStudyImage" | "cover",
   ) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -189,7 +202,9 @@ export function AdminDashboard() {
       setStatus(
         field === "image"
           ? "Uploaded project thumbnail image."
-          : "Uploaded case study hero image.",
+          : field === "cover"
+            ? "Uploaded home page cover image."
+            : "Uploaded case study hero image.",
       );
     } catch (error) {
       setStatus(
@@ -230,34 +245,6 @@ export function AdminDashboard() {
     } catch (error) {
       setStatus(
         error instanceof Error ? error.message : "Could not upload one or more gallery images.",
-      );
-    } finally {
-      setIsBusy(false);
-    }
-  }
-
-  async function onCompanyLogoUpload(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!file) {
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      setStatus("Please upload an image file for the company logo.");
-      return;
-    }
-
-    setIsBusy(true);
-    setStatus("Uploading logo…");
-    try {
-      const url = await uploadAdminFile(file);
-      setCompanyForm((prev) => ({ ...prev, logo: url }));
-      setStatus(`Uploaded logo for ${companyForm.name || "company entry"}.`);
-    } catch (error) {
-      setStatus(
-        error instanceof Error ? error.message : "Could not upload the selected image.",
       );
     } finally {
       setIsBusy(false);
@@ -359,6 +346,14 @@ export function AdminDashboard() {
         .filter(Boolean),
       projectLink: form.projectLink.trim(),
       caseStudy: form.caseStudy.trim(),
+      showOnHome: form.showOnHome,
+      homeOrder: form.homeOrder.trim() ? Number(form.homeOrder) : undefined,
+      homeTitle: form.homeTitle.trim(),
+      homeMeta: form.homeMeta.trim(),
+      homeLine: form.homeLine.trim(),
+      cover: form.cover.trim(),
+      coverBg: form.coverBg.trim(),
+      coverDark: form.coverDark,
     };
 
     setIsBusy(true);
@@ -370,7 +365,9 @@ export function AdminDashboard() {
       setForm(initialForm);
       setIsFormOpen(false);
       setStatus(
-        `${action} ${project.title}. Added to archive and case-study page: /projects/${project.slug}`,
+        `${action} ${project.title}. ${
+          project.showOnHome ? "Shown on the home page, the archive" : "Shown on the archive"
+        } and its case-study page: /projects/${project.slug}`,
       );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not save project.");
@@ -407,6 +404,14 @@ export function AdminDashboard() {
       caseStudyGallery: (project.caseStudyGallery ?? []).join("\n"),
       projectLink: project.projectLink ?? "",
       caseStudy: project.caseStudy ?? "",
+      showOnHome: project.showOnHome !== false,
+      homeOrder: project.homeOrder?.toString() ?? "",
+      homeTitle: project.homeTitle ?? "",
+      homeMeta: project.homeMeta ?? "",
+      homeLine: project.homeLine ?? "",
+      cover: project.cover ?? "",
+      coverBg: project.coverBg ?? "",
+      coverDark: Boolean(project.coverDark),
     });
     setEditingSlug(project.slug);
     setIsFormOpen(true);
@@ -450,78 +455,72 @@ export function AdminDashboard() {
     router.refresh();
   }
 
-  function onCreateCompanyNew() {
-    setCompanyForm(initialCompanyForm);
-    setEditingCompanyId(null);
-    setIsCompanyFormOpen(true);
-    setStatus("Creating a new company entry.");
+  function onCreateExperienceNew() {
+    setExperienceForm(initialExperienceForm);
+    setEditingExperienceId(null);
+    setIsExperienceFormOpen(true);
+    setStatus("Adding a work history entry.");
   }
 
-  function onEditCompany(company: Company) {
-    setCompanyForm({
-      id: company.id,
-      name: company.name,
-      logo: company.logo,
-      website: company.website ?? "",
+  function onEditExperience(entry: Experience) {
+    setExperienceForm({
+      when: entry.when,
+      role: entry.role,
+      note: entry.note,
+      order: entry.order?.toString() ?? "",
     });
-    setEditingCompanyId(company.id);
-    setIsCompanyFormOpen(true);
-    setStatus(`Editing ${company.name}`);
+    setEditingExperienceId(entry.id);
+    setIsExperienceFormOpen(true);
+    setStatus(`Editing ${entry.role}`);
   }
 
-  function onResetCompanyForm() {
-    setCompanyForm(initialCompanyForm);
-    setEditingCompanyId(null);
-    setIsCompanyFormOpen(false);
-    setStatus("Company form cleared.");
+  function onResetExperienceForm() {
+    setExperienceForm(initialExperienceForm);
+    setEditingExperienceId(null);
+    setIsExperienceFormOpen(false);
+    setStatus("Work history form cleared.");
   }
 
-  async function onSubmitCompany(event: FormEvent<HTMLFormElement>) {
+  async function onSubmitExperience(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!companyForm.name.trim()) {
-      setStatus("Company name is required.");
+    if (!experienceForm.role.trim() || !experienceForm.when.trim()) {
+      setStatus("A work history entry needs a role and its dates.");
       return;
     }
 
-    if (!liveCompanyId) {
-      setStatus("Company ID could not be generated.");
-      return;
-    }
-
-    const company: Company = {
-      id: liveCompanyId,
-      name: companyForm.name.trim(),
-      logo:
-        companyForm.logo.trim() ||
-        "https://dummyimage.com/240x240/111827/00ffc2&text=LOGO",
-      website: companyForm.website.trim(),
+    const entry: Experience = {
+      id: experienceId,
+      when: experienceForm.when.trim(),
+      role: experienceForm.role.trim(),
+      note: experienceForm.note.trim(),
+      order: experienceForm.order.trim() ? Number(experienceForm.order) : undefined,
     };
 
     setIsBusy(true);
     try {
-      await saveAdminCompany(company);
+      await saveAdminExperience(entry);
       await refreshAll();
-      const action = editingCompanyId ? "Updated" : "Saved";
-      setEditingCompanyId(null);
-      setCompanyForm(initialCompanyForm);
-      setIsCompanyFormOpen(false);
-      setStatus(`${action} ${company.name} in company list.`);
+      const action = editingExperienceId ? "Updated" : "Added";
+      setEditingExperienceId(null);
+      setExperienceForm(initialExperienceForm);
+      setIsExperienceFormOpen(false);
+      setStatus(`${action} ${entry.role} in the work history.`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not save company.");
+      setStatus(error instanceof Error ? error.message : "Could not save the work history entry.");
     } finally {
       setIsBusy(false);
     }
   }
 
-  async function onDeleteCompany(id: string) {
+  async function onDeleteExperience(id: string) {
     setIsBusy(true);
     try {
-      await deleteAdminCompany(id);
+      await deleteAdminExperience(id);
       await refreshAll();
-      setStatus(`Deleted company ${id}`);
+      setStatus(`Removed ${id} from the work history.`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not delete company.");
+      setStatus(error instanceof Error ? error.message : "Could not delete the work history entry.");
     } finally {
       setIsBusy(false);
     }
@@ -540,9 +539,10 @@ export function AdminDashboard() {
               Admin Dashboard
             </h1>
             <p className="text-gray-400 max-w-2xl">
-              Add project entries with details, project link, and case-study
-              content. Every saved project gets a page at
-              <span className="text-accent"> /projects/your-slug</span>.
+              Add or edit projects, the home page&apos;s Selected work, your work
+              history and your résumé. Every saved project gets a page at
+              <span className="text-accent-ink"> /projects/your-slug</span>, a card
+              on the archive and, unless you hide it, a place on the home page.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -1030,6 +1030,112 @@ export function AdminDashboard() {
                 </Field>
               </FormSection>
 
+              {/* ── HOME PAGE ───────────────────────────────── */}
+              <FormSection
+                number="⌂"
+                label="Home page — how it shows in Selected work"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Show on the home page">
+                    <label className="admin-input flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={form.showOnHome}
+                        onChange={(e) => onChange("showOnHome", e.target.checked)}
+                      />
+                      <span className="text-sm">
+                        {form.showOnHome ? "Shown in Selected work" : "Hidden (archive only)"}
+                      </span>
+                    </label>
+                  </Field>
+                  <Field label="Position (1 is first and opens by default)">
+                    <input
+                      value={form.homeOrder}
+                      onChange={(e) => onChange("homeOrder", e.target.value.replace(/[^0-9]/g, ""))}
+                      inputMode="numeric"
+                      className="admin-input"
+                      placeholder="Blank = after the numbered ones, newest first"
+                    />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Short title (on the spine)">
+                    <input
+                      value={form.homeTitle}
+                      onChange={(e) => onChange("homeTitle", e.target.value)}
+                      className="admin-input"
+                      placeholder="Blank = the project title"
+                    />
+                  </Field>
+                  <Field label="Small line above the title">
+                    <input
+                      value={form.homeMeta}
+                      onChange={(e) => onChange("homeMeta", e.target.value)}
+                      className="admin-input"
+                      placeholder="Fintech · 2024 (blank = category · year)"
+                    />
+                  </Field>
+                </div>
+                <Field label="One or two sentences on what it is">
+                  <textarea
+                    value={form.homeLine}
+                    onChange={(e) => onChange("homeLine", e.target.value)}
+                    className="admin-input min-h-20"
+                    placeholder="Blank = the first sentence of the description"
+                  />
+                </Field>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Cover image URL (16:10 works best)">
+                    <input
+                      value={form.cover}
+                      onChange={(e) => onChange("cover", e.target.value)}
+                      className="admin-input"
+                      placeholder="Blank = the thumbnail"
+                    />
+                  </Field>
+                  <Field label="Upload cover image">
+                    <input
+                      type="file"
+                      accept="image/*,.svg"
+                      onChange={(e) => onProjectImageUpload(e, "cover")}
+                      className="admin-input file:mr-4 file:border-0 file:bg-accent file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-black"
+                      title="Upload home page cover image"
+                    />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Panel colour">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={/^#[0-9a-f]{6}$/i.test(form.coverBg) ? form.coverBg : "#e7e5e0"}
+                        onChange={(e) => onChange("coverBg", e.target.value)}
+                        className="h-11 w-14 shrink-0 cursor-pointer border border-border bg-transparent"
+                        title="Panel colour"
+                      />
+                      <input
+                        value={form.coverBg}
+                        onChange={(e) => onChange("coverBg", e.target.value)}
+                        className="admin-input"
+                        placeholder="#DDE7FB (blank = paper grey)"
+                      />
+                    </div>
+                  </Field>
+                  <Field label="Text on the panel">
+                    <label className="admin-input flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={form.coverDark}
+                        onChange={(e) => onChange("coverDark", e.target.checked)}
+                      />
+                      <span className="text-sm">
+                        {form.coverDark ? "White text (for a dark colour)" : "Black text (for a light colour)"}
+                      </span>
+                    </label>
+                  </Field>
+                </div>
+              </FormSection>
+
               {/* ── THUMBNAIL ───────────────────────────────── */}
               <FormSection
                 number="↑"
@@ -1090,150 +1196,106 @@ export function AdminDashboard() {
 
       <section className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
         <aside className="bento-card p-5 sm:p-8 lg:col-span-5">
-          <h2 className="text-2xl font-bold mb-2">Companies I Worked With</h2>
+          <h2 className="text-2xl font-bold mb-2">Work history</h2>
           <p className="text-xs text-gray-500 mb-6">
-            Manage the homepage slider logos and company names.
+            The dated list under About on the home page, top to bottom. The first entry is
+            highlighted.
           </p>
           <button
             type="button"
-            onClick={onCreateCompanyNew}
+            onClick={onCreateExperienceNew}
             className="mb-4 px-4 py-3 bg-accent text-black text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all"
           >
-            Add New Company
+            Add Work History Entry
           </button>
           <div className="space-y-3 max-h-[580px] overflow-auto pr-2">
-            {availableCompanies.length === 0 ? (
-              <p className="text-sm text-gray-500">No company entries yet.</p>
+            {availableExperience.length === 0 ? (
+              <p className="text-sm text-gray-500">No work history entries yet.</p>
             ) : (
-              availableCompanies.map((item) => {
-                return (
-                  <div key={item.id} className="border border-white/10 p-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={item.logo}
-                        alt={`${item.name} logo`}
-                        className="w-10 h-10 shrink-0 rounded border border-white/10 object-contain bg-black/40 p-1"
-                      />
-                      <div className="min-w-0">
-                        <p className="font-bold uppercase tracking-tight break-words">
-                          {item.name}
-                        </p>
-                        <p className="text-[10px] text-gray-500 mt-1 break-all">
-                          /{item.id}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <button
-                        onClick={() => onEditCompany(item)}
-                        className="tag hover:border-accent hover:text-accent"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => onDeleteCompany(item.id)}
-                        className="tag hover:border-red-400 hover:text-red-300"
-                      >
-                        Delete
-                      </button>
-                    </div>
+              availableExperience.map((item) => (
+                <div key={item.id} className="border border-white/10 p-4">
+                  <p className="font-bold tracking-tight break-words">{item.role}</p>
+                  <p className="text-[10px] text-gray-500 mt-1">{item.when}</p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <button
+                      onClick={() => onEditExperience(item)}
+                      className="tag hover:border-accent hover:text-accent"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onDeleteExperience(item.id)}
+                      className="tag hover:border-red-400 hover:text-red-300"
+                    >
+                      Delete
+                    </button>
                   </div>
-                );
-              })
+                </div>
+              ))
             )}
           </div>
         </aside>
 
         <article className="bento-card p-5 sm:p-8 lg:col-span-7">
           <h2 className="text-2xl font-bold mb-6">
-            {isCompanyFormOpen
-              ? editingCompanyId
-                ? "Edit Company"
-                : "Create Company"
-              : "Company Form"}
+            {isExperienceFormOpen
+              ? editingExperienceId
+                ? "Edit Work History Entry"
+                : "Add Work History Entry"
+              : "Work History Form"}
           </h2>
-          {!isCompanyFormOpen ? (
+          {!isExperienceFormOpen ? (
             <div className="border border-white/10 p-8 text-center">
               <p className="text-sm text-gray-400 mb-5">
-                Select a company entry to edit, or add a new one.
+                Select an entry to edit, or add a new one.
               </p>
               <button
                 type="button"
-                onClick={onCreateCompanyNew}
+                onClick={onCreateExperienceNew}
                 className="px-6 py-3 bg-accent text-black text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all"
               >
-                Add New Company
+                Add Work History Entry
               </button>
             </div>
           ) : (
-            <form className="space-y-4" onSubmit={onSubmitCompany}>
-              <Field label="Company Name">
+            <form className="space-y-4" onSubmit={onSubmitExperience}>
+              <Field label="Role and where *">
                 <input
-                  value={companyForm.name}
-                  onChange={(e) => onCompanyChange("name", e.target.value)}
+                  value={experienceForm.role}
+                  onChange={(e) => onExperienceChange("role", e.target.value)}
                   className="admin-input"
-                  title="Company Name"
-                  placeholder="Gimbalabs"
+                  placeholder="Designer, GDG UNILAG, Lagos"
                   required
                 />
               </Field>
-
-              <Field label="Company ID (optional)">
-                <input
-                  value={companyForm.id}
-                  onChange={(e) => onCompanyChange("id", e.target.value)}
-                  className="admin-input"
-                  title="Company ID"
-                  placeholder="auto-generated-from-company-name"
-                />
-              </Field>
-
-              <Field label="Logo URL (SVG or image)">
-                <input
-                  value={companyForm.logo}
-                  onChange={(e) => onCompanyChange("logo", e.target.value)}
-                  className="admin-input"
-                  title="Logo URL"
-                  placeholder="https://... or leave blank and upload below"
-                />
-              </Field>
-
-              <Field label="Upload Logo Image">
-                <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field label="When *">
                   <input
-                    type="file"
-                    accept="image/*,.svg"
-                    onChange={onCompanyLogoUpload}
-                    className="admin-input file:mr-4 file:border-0 file:bg-accent file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-black"
-                    title="Upload company logo"
+                    value={experienceForm.when}
+                    onChange={(e) => onExperienceChange("when", e.target.value)}
+                    className="admin-input"
+                    placeholder="2023 to now"
+                    required
                   />
-                  <p className="text-xs text-gray-500">
-                    Use this if you only have the logo image file. The upload is
-                    stored as the company logo value, and you can still paste a
-                    URL above instead.
-                  </p>
-                  {companyForm.logo ? (
-                    <div className="inline-flex items-center gap-3 rounded border border-white/10 bg-black/30 px-3 py-3">
-                      <img
-                        src={companyForm.logo}
-                        alt={`${companyForm.name || "Company"} logo preview`}
-                        className="h-12 w-12 rounded border border-white/10 bg-black/40 object-contain p-1"
-                      />
-                      <span className="text-xs text-gray-400">
-                        Current logo preview
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
-              </Field>
-
-              <Field label="Company Website (optional)">
-                <input
-                  value={companyForm.website}
-                  onChange={(e) => onCompanyChange("website", e.target.value)}
-                  className="admin-input"
-                  title="Company Website"
-                  placeholder="https://..."
+                </Field>
+                <Field label="Position (1 is the top)">
+                  <input
+                    value={experienceForm.order}
+                    onChange={(e) =>
+                      onExperienceChange("order", e.target.value.replace(/[^0-9]/g, ""))
+                    }
+                    inputMode="numeric"
+                    className="admin-input"
+                    placeholder="Blank = at the bottom"
+                  />
+                </Field>
+              </div>
+              <Field label="One line on what you did">
+                <textarea
+                  value={experienceForm.note}
+                  onChange={(e) => onExperienceChange("note", e.target.value)}
+                  className="admin-input min-h-20"
+                  placeholder="Design for the Google Developer Group at the University of Lagos."
                 />
               </Field>
 
@@ -1243,20 +1305,16 @@ export function AdminDashboard() {
                   disabled={isBusy}
                   className="px-8 py-4 bg-accent text-black font-bold uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isBusy ? "Saving…" : editingCompanyId ? "Update Company" : "Save Company"}
+                  {isBusy ? "Saving…" : editingExperienceId ? "Update Entry" : "Save Entry"}
                 </button>
                 <button
                   type="button"
-                  onClick={onResetCompanyForm}
+                  onClick={onResetExperienceForm}
                   disabled={isBusy}
                   className="px-6 py-4 border border-white/20 text-xs font-bold uppercase tracking-widest hover:border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
-                <span className="text-xs text-gray-500">
-                  Generated company ID:{" "}
-                  <span className="text-accent">{liveCompanyId || "-"}</span>
-                </span>
               </div>
             </form>
           )}
