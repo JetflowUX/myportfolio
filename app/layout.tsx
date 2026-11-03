@@ -9,9 +9,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://jethrotheuxpert.vercel.app"),
   title: "Jethro Adebisi | Product Designer, Motion Designer & Front-End Engineer",
   description: DESCRIPTION,
+  // His J mark (2026-11-03): app/icon.svg for the tab, app/apple-icon.png for a phone's home screen.
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",
+    apple: "/apple-icon.png",
   },
   openGraph: {
     type: "website",

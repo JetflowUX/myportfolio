@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LogoMark } from "@/components/logo-mark";
 
 /* The header, after nader.io (2026-11-02): his name in tracked capitals on the
    left, the sections in small grey capitals on the right, nothing fixed or
@@ -25,7 +26,8 @@ export function TopNav() {
         Skip to content
       </a>
       <div className="mx-auto flex max-w-[1104px] flex-col gap-4 px-6 pt-8 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:pt-12 lg:px-8 xl:px-0">
-        <Link href="/" className="text-[12px] font-bold uppercase tracking-[0.16em] text-text">
+        <Link href="/" className="inline-flex items-center gap-2.5 text-[12px] font-bold uppercase tracking-[0.16em] text-text">
+          <LogoMark className="h-[18px] w-[18px]" />
           Jethro Adebisi
         </Link>
         <div className="-mx-2 flex flex-wrap">

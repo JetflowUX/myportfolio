@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { LogoMark } from "@/components/logo-mark";
 import { Button, Field, TextInput } from "@/components/admin/ui";
 
 export function AdminLoginForm() {
@@ -44,7 +45,8 @@ export function AdminLoginForm() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-bg px-5 py-16 text-text">
       <section className="w-full max-w-[400px]">
-        <Link href="/" className="text-[13px] font-bold uppercase tracking-[0.16em]">
+        <Link href="/" className="inline-flex items-center gap-2.5 text-[13px] font-bold uppercase tracking-[0.16em]">
+          <LogoMark className="h-5 w-5" />
           Jethro Adebisi
         </Link>
         <h1 className="mt-10 text-[36px] font-black leading-none tracking-[-0.035em]">Site admin</h1>

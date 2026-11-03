@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LogoMark } from "@/components/logo-mark";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
@@ -514,7 +515,8 @@ export function AdminDashboard() {
     <div className="min-h-screen bg-bg text-text lg:grid lg:grid-cols-[240px_1fr]">
       {/* side menu (wide screens) */}
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-border px-5 py-7 lg:flex">
-        <Link href="/" className="px-2 text-[13px] font-bold uppercase tracking-[0.16em]">
+        <Link href="/" className="inline-flex items-center gap-2.5 px-2 text-[13px] font-bold uppercase tracking-[0.16em]">
+          <LogoMark className="h-[18px] w-[18px]" />
           Jethro Adebisi
         </Link>
         <p className="mt-1 px-2 text-[12px] text-text-tertiary">Site admin</p>
@@ -560,7 +562,8 @@ export function AdminDashboard() {
       {/* top bar (phones and tablets) */}
       <header className="sticky top-0 z-30 border-b border-border bg-bg/95 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between px-5 pt-4">
-          <Link href="/" className="text-[12px] font-bold uppercase tracking-[0.16em]">
+          <Link href="/" className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.16em]">
+            <LogoMark className="h-4 w-4" />
             Jethro Adebisi <span className="font-medium normal-case tracking-normal text-text-tertiary">· admin</span>
           </Link>
           <button type="button" onClick={onLogout} aria-label="Log out" className="flex h-10 w-10 items-center justify-center">
