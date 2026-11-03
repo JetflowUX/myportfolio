@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Link as LinkIcon } from "lucide-react";
+import { ArrowUpRight, ExternalLink } from "lucide-react";
 import { SabiPanel, SabiStage } from "@/components/sabi/hero-stage";
 import { MotionGraph } from "@/components/motion-graph";
 
@@ -245,9 +245,9 @@ export function HeroProcess({
           ].map(([k, href]) => (
             <li key={k}>
               <a href={href} target="_blank" rel="noreferrer" className="inline-flex min-h-[32px] items-center gap-1.5 text-text-secondary hover:text-text">
-                {/* the link icon after the name, so it reads as a link (his ask, 2026-11-03) */}
+                {/* the external-link icon after the name: it opens another site (his ask, 2026-11-03) */}
                 {k}
-                <LinkIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
               </a>
             </li>
           ))}
