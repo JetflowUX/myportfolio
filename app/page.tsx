@@ -88,10 +88,11 @@ function More({ href, children }: { href: string; children: React.ReactNode }) {
 
 /* -------------------------------------------------------------------- hero */
 
-function Hero({ ready, resumeUrl }: { ready: boolean; resumeUrl: string }) {
+function Hero({ ready, resumeUrl, caseCount }: { ready: boolean; resumeUrl: string; caseCount: number }) {
   const { open } = useLightbox();
   return (
     <HeroProcess
+      caseCount={caseCount}
       ready={ready}
       resumeUrl={resumeUrl}
       onMotion={() => open({ src: "/films/sabi-launch.mp4", alt: "SabiBank launch film", kind: "video", title: "SabiBank · launch film", meta: "0:40 · launch film" })}
@@ -260,11 +261,13 @@ export default function HomePage() {
   // built-in defaults draw first, so the page looks the same before the content arrives.
   const [resumeUrl, setResumeUrl] = useState("/resume.pdf");
   const [cases, setCases] = useState<HomeCase[]>(() => homeCases(defaultProjects));
+  const [caseCount, setCaseCount] = useState(defaultProjects.length);
   const [history, setHistory] = useState<Experience[]>(defaultExperience);
   useEffect(() => {
     getSiteContent().then((c) => {
       if (c.resumeUrl) setResumeUrl(c.resumeUrl);
       setCases(homeCases(c.projects));
+      setCaseCount(c.projects.length);
       setHistory(c.experience);
     });
   }, []);
@@ -277,7 +280,7 @@ export default function HomePage() {
 
       <main id="main-content">
         <div className="mx-auto max-w-[1104px] space-y-28 px-6 pb-28 pt-36 sm:px-8 sm:pt-32 lg:px-8 lg:pt-[120px] xl:px-0">
-        <Hero ready={ready} resumeUrl={resumeUrl} />
+        <Hero ready={ready} resumeUrl={resumeUrl} caseCount={caseCount} />
 
         {/* ------------------------------------------------------- what I do */}
         <section>

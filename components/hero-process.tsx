@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Link as LinkIcon } from "lucide-react";
 import { SabiPanel, SabiStage } from "@/components/sabi/hero-stage";
 import { MotionGraph } from "@/components/motion-graph";
 
@@ -42,7 +42,18 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 /* ------------------------------------------------------------------ the hero */
 
-export function HeroProcess({ ready, resumeUrl, onMotion }: { ready: boolean; resumeUrl: string; onMotion: () => void }) {
+export function HeroProcess({
+  ready,
+  resumeUrl,
+  onMotion,
+  caseCount,
+}: {
+  ready: boolean;
+  resumeUrl: string;
+  onMotion: () => void;
+  /** how many case studies the admin holds (2026-11-03: it read a fixed 5 after Pixrosu made 7) */
+  caseCount: number;
+}) {
   const reduce = useReducedMotion();
   const [step, setStep] = useState(0);
   const [held, setHeld] = useState(false);
@@ -212,7 +223,7 @@ export function HeroProcess({ ready, resumeUrl, onMotion }: { ready: boolean; re
         <dl className="col-span-2 grid grid-cols-3 border-b border-r border-border sm:col-span-1 sm:grid-cols-1 sm:content-center sm:gap-2 sm:p-4">
           {[
             ["60", "films made"],
-            ["5", "case studies"],
+            [String(caseCount), caseCount === 1 ? "case study" : "case studies"],
             ["1st", "GDG Lagos 2024"],
           ].map(([v, k]) => (
             <div key={k} className="flex flex-col items-start gap-0.5 p-4 sm:flex-row sm:items-baseline sm:gap-2 sm:p-0">
@@ -223,7 +234,9 @@ export function HeroProcess({ ready, resumeUrl, onMotion }: { ready: boolean; re
         </dl>
         <ul className="col-span-2 flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-r border-border p-4 text-[13px] sm:col-span-3 lg:col-span-1 lg:flex-col lg:items-start lg:justify-center">
           <li>
-            <a href="mailto:adebisireuel@gmail.com" className="font-semibold hover:underline">
+            {/* a link icon before each, so they read as links (his ask, 2026-11-03) */}
+            <a href="mailto:adebisireuel@gmail.com" className="inline-flex min-h-[32px] items-center gap-1.5 font-semibold hover:underline">
+              <LinkIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
               Email me
             </a>
           </li>
@@ -233,7 +246,8 @@ export function HeroProcess({ ready, resumeUrl, onMotion }: { ready: boolean; re
             ["GitHub", "https://github.com/adebisijethro"],
           ].map(([k, href]) => (
             <li key={k}>
-              <a href={href} target="_blank" rel="noreferrer" className="text-text-secondary hover:text-text">
+              <a href={href} target="_blank" rel="noreferrer" className="inline-flex min-h-[32px] items-center gap-1.5 text-text-secondary hover:text-text">
+                <LinkIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 {k}
               </a>
             </li>

@@ -24,7 +24,8 @@ type Tab = "all" | "design" | "engineering" | "films";
 function ShelfPage() {
   const [tab, setTab] = useState<Tab>("all");
   const [allProjects, setAllProjects] = useState(projects);
-  const films = allFilms();
+  // films in alphabetical order (his ask, 2026-11-03)
+  const films = allFilms().sort((a, b) => a.title.localeCompare(b.title, "en", { sensitivity: "base" }));
 
   useEffect(() => {
     getAllProjects().then(setAllProjects);

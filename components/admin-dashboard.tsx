@@ -303,12 +303,13 @@ export function AdminDashboard() {
     return order;
   }, [availableProjects]);
 
+  // by year, newest first, then by title (his ask, 2026-11-03); each row still shows its home position
   const listed = useMemo(
     () =>
       [...availableProjects].sort(
-        (a, b) => (homeOrder.get(a.slug) ?? 999) - (homeOrder.get(b.slug) ?? 999),
+        (a, b) => (Number.parseInt(b.year, 10) || 0) - (Number.parseInt(a.year, 10) || 0) || a.title.localeCompare(b.title),
       ),
-    [availableProjects, homeOrder],
+    [availableProjects],
   );
 
   const effectiveSlug = editing && editing !== "new" ? editing : slugify(form.slug.trim() || form.title);
@@ -693,7 +694,7 @@ function ProjectList({
         description={
           <>
             Every project has its own case-study page and a card on The Shelf (/work). {shown ? `${shown} of them show` : "None show"}{" "}
-            on the home page, in the order below.
+            on the home page; the list runs newest first.
           </>
         }
         action={
