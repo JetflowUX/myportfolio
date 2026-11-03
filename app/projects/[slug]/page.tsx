@@ -25,6 +25,12 @@ const fadeUp = {
 const stagger = { show: { transition: { staggerChildren: 0.09 } } };
 
 /** The first n sentences of a field, for the summary cells (the full text stays in the article). */
+/* The project link is not always a live site: a design-only project links to its Figma file
+   (2026-11-03, Block Gov), so the button says where it goes. */
+function linkLabel(url: string | undefined) {
+  return url && /(^|\.)figma\.com\//.test(url.replace(/^https?:\/\//, "")) ? "View in Figma" : "Live site";
+}
+
 function firstSentences(text: string | undefined, n: number) {
   if (!text) return "";
   // a sentence ends at . ! or ? followed by a capital or the end: "3.2x" and "e.g." stay whole
@@ -203,7 +209,7 @@ export default function ProjectCaseStudyPage() {
             rel="noreferrer"
             className="mt-3 inline-flex w-full items-center justify-center gap-2 bg-text px-4 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-bg sm:hidden"
           >
-            Open the live site <span aria-hidden>↗</span>
+            {linkLabel(project.projectLink) === "Live site" ? "Open the live site" : "View in Figma"} <span aria-hidden>↗</span>
           </a>
         )}
       </div>
@@ -478,7 +484,7 @@ export default function ProjectCaseStudyPage() {
                 rel="noreferrer"
                 className="flex items-center justify-between bg-accent text-black px-5 py-4 text-[9px] font-black uppercase tracking-[0.28em] hover:brightness-110 transition-all group"
               >
-                Open Live Site
+                {linkLabel(project.projectLink) === "Live site" ? "Open Live Site" : "View in Figma"}
                 <span className="text-sm group-hover:translate-x-1 transition-transform">
                   ↗
                 </span>
@@ -600,7 +606,7 @@ function HeroMedia({
           onClick={(e) => e.stopPropagation()}
           className="hidden sm:flex absolute top-7 right-7 bg-accent text-black px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.25em] hover:brightness-110 transition-all z-10 items-center gap-2"
         >
-          Live Site <span className="text-[11px]">↗</span>
+          {linkLabel(project.projectLink)} <span className="text-[11px]">↗</span>
         </a>
       )}
     </motion.div>
