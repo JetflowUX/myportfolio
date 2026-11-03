@@ -12,7 +12,7 @@ import Link from "next/link";
 const LINKS = [
   { href: "/work", label: "Work" },
   { href: "/playground", label: "Playground" },
-  { href: "/#contact", label: "Contact" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function TopNav() {

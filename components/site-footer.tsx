@@ -21,6 +21,7 @@ const COLUMNS = [
   {
     title: "Connect",
     links: [
+      { label: "Contact", href: "/contact" },
       { label: "Email", href: "mailto:adebisireuel@gmail.com" },
       { label: "LinkedIn", href: "https://www.linkedin.com/in/jethro-adebisi-21872a20b" },
       { label: "Behance", href: "https://www.behance.net/adebisijethro" },

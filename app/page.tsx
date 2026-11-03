@@ -6,12 +6,14 @@ import { ArrowRight } from "lucide-react";
 import { LightboxProvider, useLightbox } from "@/components/image-lightbox";
 import { Overture } from "@/components/overture";
 import { CopyEmail } from "@/components/copy-email";
+import { ContactForm } from "@/components/contact-form";
 import { FilmColumns } from "@/components/film-columns";
 import { HeroProcess } from "@/components/hero-process";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { SiteFooter } from "@/components/site-footer";
 import { TopNav } from "@/components/top-nav";
 import {
+  SERVICES,
   experience as defaultExperience,
   projects as defaultProjects,
   testimonials,
@@ -51,20 +53,6 @@ const EMAIL = "adebisireuel@gmail.com";
 /* The five cases and the work history live in lib/data.ts and are edited from the admin
    (2026-11-03); the page draws whatever the admin content says. */
 
-const DOING = [
-  {
-    title: "Designing products people trust",
-    body: "User interviews, flows, prototypes and usability testing, through to a design system an engineer can build from.",
-  },
-  {
-    title: "Building them in code",
-    body: "React, Next.js, TypeScript and Tailwind. What I design ships the way it was designed.",
-  },
-  {
-    title: "Films that explain them",
-    body: "Launch films, explainers and adverts, cut and animated. 60 made so far.",
-  },
-];
 
 const PROCESS = [
   { tag: "Understand", title: "Interviews first", body: "Interviews, surveys and an audit of what people use today, in their words." },
@@ -281,42 +269,6 @@ export default function HomePage() {
     });
   }, []);
 
-  const [formData, setFormData] = useState({ name: "", email: "", message: "", website: "" });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState("");
-
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) {
-      setSubmitMessage("Please fill in all fields");
-      return;
-    }
-    setIsSubmitting(true);
-    setSubmitMessage("");
-    try {
-      const response = await fetch("/api/send-contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      if (response.ok) {
-        setSubmitMessage("✓ Message sent! I'll get back to you soon.");
-        setFormData({ name: "", email: "", message: "", website: "" });
-        setTimeout(() => setSubmitMessage(""), 7000);
-      } else {
-        setSubmitMessage("✗ Failed to send. Please try again.");
-      }
-    } catch (error) {
-      console.error("Form submission error:", error);
-      setSubmitMessage("✗ Error sending message. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const input =
-    "w-full border border-border bg-transparent px-4 py-3.5 text-[15px] outline-none transition-colors placeholder:text-text-tertiary focus:border-text";
-
   return (
     <LightboxProvider>
       <Overture onFinish={() => setReady(true)} />
@@ -331,7 +283,7 @@ export default function HomePage() {
         <section>
           <Label>What I do</Label>
           <div className="cells mt-10 grid md:grid-cols-3">
-            {DOING.map((d) => (
+            {SERVICES.map((d) => (
               <div key={d.title} className="p-6">
                 <h3 className="text-[18px] font-semibold tracking-[-0.01em]">{d.title}</h3>
                 <p className="mt-3 max-w-[290px] text-[14px] leading-[1.6] text-text-secondary">{d.body}</p>
@@ -484,61 +436,9 @@ export default function HomePage() {
               <CopyEmail email={EMAIL} />
             </div>
 
-            <form onSubmit={handleFormSubmit} className="space-y-3 p-6 sm:p-8">
-              {/* honeypot: the API drops anything that fills it */}
-              <input
-                type="text"
-                name="website"
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden
-                className="hidden"
-                value={formData.website}
-                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-              />
-              <label className="block">
-                <span className="sr-only">Name</span>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={input}
-                  placeholder="Your name"
-                />
-              </label>
-              <label className="block">
-                <span className="sr-only">Email</span>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={input}
-                  placeholder="you@company.com"
-                />
-              </label>
-              <label className="block">
-                <span className="sr-only">What are you building?</span>
-                <textarea
-                  rows={4}
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className={`${input} resize-none`}
-                  placeholder="The product, who it's for, and what isn't working yet"
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="inline-flex w-full items-center justify-center gap-2 bg-text px-6 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-bg transition-opacity disabled:opacity-60"
-              >
-                {isSubmitting ? "Sending..." : "Send message"} <ArrowRight className="h-4 w-4" />
-              </button>
-              {submitMessage ? (
-                <p className="text-sm text-text-secondary" role="status">
-                  {submitMessage}
-                </p>
-              ) : null}
-            </form>
+            <div className="p-6 sm:p-8">
+              <ContactForm />
+            </div>
           </div>
         </section>
         </div>

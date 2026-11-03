@@ -37,6 +37,22 @@ export type Project = {
   coverDark?: boolean;
 };
 
+/* What he does, in three lines: the home page's "What I do" and /contact's "What I can help with". */
+export const SERVICES = [
+  {
+    title: "Designing products people trust",
+    body: "User interviews, flows, prototypes and usability testing, through to a design system an engineer can build from.",
+  },
+  {
+    title: "Building them in code",
+    body: "React, Next.js, TypeScript and Tailwind. What I design ships the way it was designed.",
+  },
+  {
+    title: "Films that explain them",
+    body: "Launch films, explainers and adverts, cut and animated. 60 made so far.",
+  },
+];
+
 /* One line of the home page's work history, editable from the admin (2026-11-03). */
 export type Experience = {
   id: string;
