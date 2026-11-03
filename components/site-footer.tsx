@@ -15,7 +15,7 @@ const COLUMNS = [
       { label: "Case studies", href: "/#work" },
       { label: "The Shelf", href: "/work" },
       { label: "Playground", href: "/playground" },
-      { label: "Films", href: "/#films" },
+      { label: "Films", href: "/work?tab=films" },
     ],
   },
   {
