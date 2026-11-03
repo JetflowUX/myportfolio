@@ -7,10 +7,10 @@ import Link from "next/link";
    blurred. It sits at the top of the page and scrolls away with it. On phones
    the links wrap to their own row under the name, so nothing hides in a menu.
    Anchors match the sections on app/page.tsx. Work opens The Shelf (/work) and Playground its
-   own page (2026-11-03, his ask); Process left the menu to keep it to one row. */
+   own page (2026-11-03, his ask); Process left the menu to keep it to one row, and Films
+   too once The Shelf carried the films (his call). */
 const LINKS = [
   { href: "/work", label: "Work" },
-  { href: "/#films", label: "Films" },
   { href: "/playground", label: "Playground" },
   { href: "/#about", label: "About" },
   { href: "/#contact", label: "Contact" },
