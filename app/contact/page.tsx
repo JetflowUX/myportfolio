@@ -7,7 +7,7 @@ import { CopyEmail } from "@/components/copy-email";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { SiteFooter } from "@/components/site-footer";
 import { TopNav } from "@/components/top-nav";
-import { SERVICES, experience as defaultExperience, type Experience } from "@/lib/data";
+import { SERVICES, experience as defaultExperience, projects as defaultProjects, type Experience } from "@/lib/data";
 import { getSiteContent } from "@/lib/project-store";
 
 /* Contact (2026-11-03). Jethro: "create the contact page but let it contain some about me details
@@ -18,11 +18,14 @@ import { getSiteContent } from "@/lib/project-store";
 
 const EMAIL = "adebisireuel@gmail.com";
 
-const STATS: [string, string][] = [
-  ["60", "films made"],
-  ["5", "case studies"],
-  ["1st", "GDG Lagos 2024"],
-];
+// the case-study count comes from the admin, as on the home page (it read a fixed 5; 2026-11-03)
+function stats(caseCount: number): [string, string][] {
+  return [
+    ["60", "films made"],
+    [String(caseCount), caseCount === 1 ? "case study" : "case studies"],
+    ["1st", "GDG Lagos 2024"],
+  ];
+}
 
 const SERVICE_TOPIC: Topic[] = ["Product design", "A front-end build", "A launch film"];
 
@@ -38,6 +41,7 @@ const ELSEWHERE = [
 export default function ContactPage() {
   const [resumeUrl, setResumeUrl] = useState("/resume.pdf");
   const [history, setHistory] = useState<Experience[]>(defaultExperience);
+  const [caseCount, setCaseCount] = useState(defaultProjects.length);
   const [topic, setTopic] = useState<Topic | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +49,7 @@ export default function ContactPage() {
     getSiteContent().then((c) => {
       if (c.resumeUrl) setResumeUrl(c.resumeUrl);
       setHistory(c.experience);
+      setCaseCount(c.projects.length);
     });
   }, []);
 
@@ -110,7 +115,7 @@ export default function ContactPage() {
                 </p>
               </div>
               <dl className="mt-auto grid grid-cols-3 border-t border-border pt-5">
-                {STATS.map(([n, l]) => (
+                {stats(caseCount).map(([n, l]) => (
                   <div key={l}>
                     <dt className="sr-only">{l}</dt>
                     <dd className="text-[26px] font-black leading-none tracking-[-0.04em]">{n}</dd>
