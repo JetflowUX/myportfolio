@@ -8,5 +8,6 @@ source: IoU 0.9986, fit 4 of 4.
 
 - `j-mark.svg`, `j-mark-white.svg`: the mark alone (441 x 505)
 - `j-icon.svg`: the app icon, white mark on a #111111 rounded square (also `app/icon.svg`)
+- `app/favicon.ico` (16, 32 and 48 px) for browsers and tools that ask for /favicon.ico
 - `j-icon-512.png` (transparent corners), `app/apple-icon.png` (180 px, full square): rendered from it
 - In code: `components/logo-mark.tsx` draws it in `currentColor`
