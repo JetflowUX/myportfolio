@@ -1,8 +1,10 @@
 "use client";
 
-import { animate, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Bell, Play } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import { SabiPanel, SabiStage } from "@/components/sabi/hero-stage";
+import { MotionGraph } from "@/components/motion-graph";
 
 /* ---------------------------------------------------------------------------
    HERO (2026-11-02)
@@ -20,9 +22,10 @@ import { ArrowUpRight, Bell, Play } from "lucide-react";
    Right: one stage and one screen, SabiBank's real home screen (his case
    study, rebuilt in HTML from public/work/sabibank-home.webp), which is a
    wireframe with selection handles in Design, gets its fills and words element
-   by element in Build while the code types beside it, and plays as a cut in
-   Film on a dark edit bay with a timeline and a running timecode. The wireframe
-   look carries on from the opening animation's lines.
+   by element in Build while the code types beside it. The third step,
+   "Animate it.", swaps the screen for components/motion-graph.tsx: the gold
+   Allophone motion study over a graph editor of its real keyframes (Jethro's
+   choice, 2026-11-02, in place of a made-up SabiBank launch film).
 
    It cycles on its own while on screen; hovering or tapping a row holds it
    there. Reduced motion: no cycling, the rows still switch it.
@@ -31,320 +34,15 @@ import { ArrowUpRight, Bell, Play } from "lucide-react";
 const STEPS = [
   { word: "Design it.", label: "Design", note: "Research, flows, prototypes, testing" },
   { word: "Build it.", label: "Build", note: "React, Next.js, TypeScript" },
-  { word: "Film it.", label: "Film", note: "Launch films and explainers" },
+  { word: "Film it.", label: "Film", note: "Launch films and motion design" },
 ] as const;
 
 const CYCLE = 4600;
 const EASE = [0.22, 1, 0.36, 1] as const;
-const BLUE = "#4F8DF5";
-const GREEN = "#16A34A";
-
-/* --------------------------------------------------------------- the screen */
-
-/** One element of the screen: a dashed wireframe box in Design, the built thing after. */
-function Part({
-  mode,
-  i,
-  className = "",
-  style,
-  wire,
-  children,
-}: {
-  mode: number;
-  i: number;
-  className?: string;
-  style?: React.CSSProperties;
-  wire?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  const built = mode > 0;
-  return (
-    <div className={`absolute ${className}`} style={style}>
-      <div
-        className="absolute inset-0 rounded-[inherit] border border-dashed border-black/35 transition-opacity duration-300"
-        style={{ opacity: built ? 0 : 1, transitionDelay: built ? `${i * 70}ms` : "0ms" }}
-      >
-        {wire}
-      </div>
-      <div
-        className="absolute inset-0 rounded-[inherit] transition-all duration-500"
-        style={{
-          opacity: built ? 1 : 0,
-          transform: built ? "none" : "translateY(4px)",
-          transitionDelay: built ? `${120 + i * 90}ms` : "0ms",
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
-
-const Bar = ({ w, className = "" }: { w: string; className?: string }) => (
-  <span className={`block h-[5px] rounded-full bg-black/15 ${className}`} style={{ width: w }} />
-);
-
-function Balance({ film }: { film: boolean }) {
-  const [v, setV] = useState(23970.98);
-  useEffect(() => {
-    if (!film) {
-      setV(23970.98);
-      return;
-    }
-    const c = animate(0, 23970.98, { duration: 1.6, ease: EASE, delay: 0.3, onUpdate: setV });
-    return () => c.stop();
-  }, [film]);
-  const [whole, cents] = v.toFixed(2).split(".");
-  return (
-    <span className="text-[17px] font-bold tracking-[-0.02em]" style={{ color: GREEN }}>
-      $ {Number(whole).toLocaleString("en-US")}
-      <span className="font-normal">.{cents}</span>
-    </span>
-  );
-}
-
-const NOTES = [
-  ["Central Bank of Nigeria", "Your account has been updated", "Today"],
-  ["Account", "Your account is limited. Please...", "11 Apr"],
-  ["Alert", "Your statement is ready for you", "08 Apr"],
-];
-
-function Screen({ mode }: { mode: number }) {
-  const film = mode === 2;
-  return (
-    <div className="relative h-[410px] w-[200px] overflow-hidden rounded-[26px] border-[5px] border-[#B9C0CB] bg-white text-[#1d1d1f]">
-      {/* status */}
-      <div className="absolute left-3 top-2 text-[7px] font-semibold">9:30</div>
-      <div className="absolute left-1/2 top-2 h-[7px] w-[7px] -translate-x-1/2 rounded-full bg-black" />
-
-      <Part mode={mode} i={0} className="left-3 right-3 top-[20px] h-[26px] rounded-md" wire={<div className="flex h-full items-center gap-2 px-1.5"><span className="h-4 w-4 rounded-full border border-dashed border-black/35" /><Bar w="45%" /></div>}>
-        <div className="flex h-full items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/photos/avatar.webp?v=2" alt="" className="h-[22px] w-[22px] rounded-full object-cover" />
-          <span className="text-[9px] font-medium">Welcome Jethro!</span>
-          <Bell className="ml-auto h-3 w-3" strokeWidth={1.8} />
-        </div>
-      </Part>
-
-      <Part mode={mode} i={1} className="left-3 right-3 top-[56px] h-[38px] rounded-md" wire={<div className="space-y-2 p-1.5"><Bar w="35%" /><Bar w="62%" className="h-[9px] !bg-black/20" /></div>}>
-        <div className="pl-2">
-          <p className="text-[8px] text-black/55">Total balance</p>
-          <Balance film={film} />
-        </div>
-      </Part>
-
-      <Part mode={mode} i={2} className="left-3 right-3 top-[102px] h-[24px] rounded-md" wire={<div className="flex h-full gap-2 p-1"><span className="flex-1 rounded border border-dashed border-black/35" /><span className="flex-1 rounded border border-dashed border-black/35" /></div>}>
-        <div className="flex h-full gap-2">
-          {["↑  Transfer", "+  Add Money"].map((t) => (
-            <span key={t} className="grid flex-1 place-items-center rounded-[5px] text-[8px] font-medium text-white shadow-[0_2px_4px_rgba(79,141,245,0.35)]" style={{ background: BLUE }}>
-              {t}
-            </span>
-          ))}
-        </div>
-      </Part>
-
-      {/* the light panel and what sits on it */}
-      <Part mode={mode} i={3} className="bottom-[40px] left-[6px] right-[6px] top-[136px] rounded-t-[14px]" wire={null}>
-        <div className="h-full rounded-t-[14px] bg-[#E6EEFC]" />
-      </Part>
-      <Part mode={mode} i={4} className="left-[12px] right-[12px] top-[146px] h-[40px] rounded-md" wire={<div className="flex h-full gap-1.5 p-1">{[0, 1, 2, 3].map((k) => <span key={k} className="flex-1 rounded border border-dashed border-black/35" />)}</div>}>
-        <div className="flex h-full gap-1.5">
-          {["Expense", "Insights", "Budgets", "Save"].map((t) => (
-            <span key={t} className="flex flex-1 flex-col items-center justify-center gap-1 rounded-[6px] bg-white text-[6.5px] text-black/60">
-              <span className="h-2.5 w-2.5 rounded-[3px] bg-[#1d1d1f]" />
-              {t}
-            </span>
-          ))}
-        </div>
-      </Part>
-      <Part mode={mode} i={5} className="left-4 right-4 top-[194px] h-[10px]" wire={<Bar w="40%" className="mt-[2px]" />}>
-        <div className="flex items-center justify-between text-[6.5px] font-semibold tracking-[0.06em]">
-          NOTIFICATIONS <span className="font-medium tracking-normal" style={{ color: BLUE }}>View all</span>
-        </div>
-      </Part>
-      {NOTES.map(([t, s, d], k) => (
-        <Part
-          key={t}
-          mode={mode}
-          i={6 + k}
-          className="left-4 right-4 h-[30px] rounded-[6px]"
-          style={{ top: 212 + k * 36 }}
-          wire={<div className="flex h-full items-center gap-1.5 px-1.5"><span className="h-4 w-4 rounded border border-dashed border-black/35" /><div className="flex-1 space-y-1"><Bar w="60%" /><Bar w="85%" /></div></div>}
-        >
-          <motion.div
-            key={film ? "film" : "still"}
-            initial={film ? { x: 24, opacity: 0 } : false}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: film ? 0.9 + k * 0.25 : 0, ease: EASE }}
-            className="flex h-full items-center gap-1.5 rounded-[6px] bg-white px-1.5"
-          >
-            <span className="h-4 w-4 shrink-0 rounded-[4px]" style={{ background: BLUE }} />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[7px] font-medium">{t}</span>
-              <span className="block truncate text-[5.5px] text-black/50">{s}</span>
-            </span>
-            <span className="self-start pt-1 text-[5.5px] text-black/45">{d}</span>
-          </motion.div>
-        </Part>
-      ))}
-
-      <Part mode={mode} i={9} className="bottom-0 left-0 right-0 h-[38px]" wire={<div className="flex h-full items-center justify-around px-2">{[0, 1, 2, 3, 4].map((k) => <span key={k} className="h-3 w-3 rounded border border-dashed border-black/35" />)}</div>}>
-        <div className="flex h-full items-center justify-around border-t border-black/5 bg-white px-1 text-[6px] text-black/60">
-          {["Home", "Send", "Pay", "Insight", "More"].map((t, k) => (
-            <span key={t} className={`flex flex-col items-center gap-0.5 ${k === 0 ? "font-semibold text-black" : ""}`}>
-              <span className={`h-2.5 w-2.5 rounded-[3px] ${k === 0 ? "bg-black" : "border border-black/50"}`} />
-              {t}
-            </span>
-          ))}
-        </div>
-      </Part>
-
-      {/* Design: the balance is the selected layer */}
-      <div
-        className="pointer-events-none absolute left-3 right-3 top-[56px] h-[38px] transition-opacity duration-300"
-        style={{ opacity: mode === 0 ? 1 : 0 }}
-      >
-        <span className="absolute inset-0 border border-accent" />
-        {["-left-[3px] -top-[3px]", "-right-[3px] -top-[3px]", "-left-[3px] -bottom-[3px]", "-right-[3px] -bottom-[3px]"].map((p) => (
-          <span key={p} className={`absolute h-[6px] w-[6px] border border-accent bg-white ${p}`} />
-        ))}
-        <span className="absolute -bottom-[15px] left-1/2 -translate-x-1/2 bg-accent px-1 text-[6.5px] font-semibold text-black">168 × 38</span>
-      </div>
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------- the panel */
-
-const CODE = [
-  ["<", "Home", ">"],
-  ["  <", "Greeting", " name=\"Jethro\" />"],
-  ["  <", "Balance", " amount={23970.98} />"],
-  ["  <", "Actions", " items={actions} />"],
-  ["  <", "QuickLinks", " />"],
-  ["  <", "Notifications", " limit={3} />"],
-  ["  <", "TabBar", " active=\"home\" />"],
-  ["</", "Home", ">"],
-];
-
-function Timecode({ run }: { run: boolean }) {
-  const [f, setF] = useState(0);
-  useEffect(() => {
-    if (!run) return;
-    let raf = 0;
-    const t0 = performance.now();
-    const tick = (now: number) => {
-      setF(Math.floor(((now - t0) / 1000) * 30) + 12 * 30);
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [run]);
-  const s = Math.floor(f / 30);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    <span className="tabular-nums">
-      00:00:{pad(s)}:{pad(f % 30)}
-    </span>
-  );
-}
-
-function Panel({ mode, onReel, cycle }: { mode: number; onReel: () => void; cycle: number }) {
-  return (
-    <div className="relative h-full font-mono text-[11px] leading-[1.7]">
-      {/* Design: layers and spec */}
-      <div className="absolute inset-0 transition-opacity duration-500" style={{ opacity: mode === 0 ? 1 : 0, pointerEvents: mode === 0 ? "auto" : "none" }}>
-        <p className="label !text-[10px]">Layers</p>
-        <ul className="mt-3 space-y-1 text-text-secondary">
-          {["Home", "  Greeting", "  Balance", "  Actions", "  Quick links", "  Notifications", "  Tab bar"].map((l) => (
-            <li key={l} className={`whitespace-pre ${l.trim() === "Balance" ? "bg-accent/40 text-text" : ""}`}>
-              {l.startsWith(" ") ? "  ▫ " + l.trim() : "▪ " + l}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-6 space-y-1 border-t border-border pt-4 text-text-tertiary">
-          <p>Inter 700 · 17/20</p>
-          <p>Fill #16A34A · Gap 8</p>
-          <p>Radius 6 · Blue #4F8DF5</p>
-        </div>
-      </div>
-
-      {/* Build: the code types */}
-      <div className="absolute inset-0 transition-opacity duration-500" style={{ opacity: mode === 1 ? 1 : 0, pointerEvents: "none" }}>
-        <p className="label !text-[10px]">Home.tsx</p>
-        <div className="mt-3">
-          {CODE.map(([a, tag, b], k) => (
-            <motion.div
-              key={`${cycle}-${k}`}
-              className="flex overflow-hidden whitespace-pre"
-              initial={{ clipPath: "inset(0 100% 0 0)" }}
-              animate={mode === 1 ? { clipPath: "inset(0 0% 0 0)" } : { clipPath: "inset(0 100% 0 0)" }}
-              transition={{ duration: 0.32, delay: mode === 1 ? 0.15 + k * 0.32 : 0, ease: "linear" }}
-            >
-              <span className="w-6 shrink-0 text-right text-text-tertiary/60">{k + 1}</span>
-              <span className="ml-3 text-text-tertiary">{a}</span>
-              <span className="text-accent-ink">{tag}</span>
-              <span className="text-text-secondary">{b}</span>
-            </motion.div>
-          ))}
-        </div>
-        <p className="mt-5 text-text-tertiary">✓ Compiled</p>
-      </div>
-
-      {/* Film: the timeline */}
-      <div className="absolute inset-0 flex flex-col justify-between text-white/70 transition-opacity duration-500" style={{ opacity: mode === 2 ? 1 : 0, pointerEvents: mode === 2 ? "auto" : "none" }}>
-        <div>
-          <p className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">
-            SabiBank · launch film
-            <span className="flex items-center gap-1.5 text-white/70">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#ff4d4d]" />
-              Rec
-            </span>
-          </p>
-          <p className="mt-3 text-[22px] text-white">
-            <Timecode run={mode === 2} />
-          </p>
-          <ul className="mt-4 space-y-1 text-white/55">
-            <li>Shot 03 · balance counts up</li>
-            <li>Shot 04 · alerts slide in</li>
-          </ul>
-        </div>
-        <div>
-          <div className="relative space-y-1.5">
-            <div className="flex gap-1">
-              {[22, 14, 30, 18, 16].map((w, k) => (
-                <span key={k} className={`h-5 rounded-[2px] ${k === 2 ? "bg-accent" : "bg-white/20"}`} style={{ width: `${w}%` }} />
-              ))}
-            </div>
-            <div className="flex h-4 items-center gap-[2px]">
-              {Array.from({ length: 44 }, (_, k) => (
-                <span key={k} className="w-[2px] flex-1 bg-white/30" style={{ height: `${25 + ((k * 37) % 70)}%` }} />
-              ))}
-            </div>
-            <motion.span
-              key={`ph-${cycle}`}
-              className="absolute -top-1 bottom-[-4px] w-px bg-white"
-              initial={{ left: "18%" }}
-              animate={mode === 2 ? { left: "92%" } : { left: "18%" }}
-              transition={{ duration: CYCLE / 1000, ease: "linear" }}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={onReel}
-            className="mt-5 inline-flex items-center gap-2 bg-accent px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-black transition-transform hover:-translate-y-0.5"
-          >
-            <Play className="h-3 w-3 fill-black" /> Watch my reel
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ the hero */
 
-export function HeroProcess({ ready, resumeUrl, onReel }: { ready: boolean; resumeUrl: string; onReel: () => void }) {
+export function HeroProcess({ ready, resumeUrl, onMotion }: { ready: boolean; resumeUrl: string; onMotion: () => void }) {
   const reduce = useReducedMotion();
   const [step, setStep] = useState(0);
   const [held, setHeld] = useState(false);
@@ -468,9 +166,14 @@ export function HeroProcess({ ready, resumeUrl, onReel }: { ready: boolean; resu
           animate={{ opacity: ready ? 1 : 0 }}
           transition={{ duration: 0.8, delay: ready ? 0.35 : 0 }}
         >
+          {film ? (
+            <div className="h-full p-4 sm:p-5">
+              <MotionGraph key={cycle} onOpen={onMotion} />
+            </div>
+          ) : (
           <div className="flex h-full flex-col gap-6 p-5 sm:flex-row sm:items-stretch sm:p-6">
             <div className="order-2 h-[300px] overflow-hidden sm:order-1 sm:h-auto sm:flex-1">
-              <Panel mode={step} onReel={onReel} cycle={cycle} />
+              <SabiPanel mode={step} cycle={cycle} />
             </div>
             <div className="order-1 flex shrink-0 items-center justify-center sm:order-2">
               <motion.div
@@ -478,10 +181,11 @@ export function HeroProcess({ ready, resumeUrl, onReel }: { ready: boolean; resu
                 transition={{ duration: film ? CYCLE / 1000 : 0.6, ease: film ? "linear" : EASE }}
                 className={film ? "drop-shadow-[0_24px_40px_rgba(0,0,0,0.6)]" : ""}
               >
-                <Screen mode={step} />
+                <SabiStage mode={step} cycle={cycle} />
               </motion.div>
             </div>
           </div>
+          )}
         </motion.div>
       </div>
 

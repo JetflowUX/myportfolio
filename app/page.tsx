@@ -149,6 +149,18 @@ const REEL: MotionPiece = {
   watch: "/motion/reel.mp4",
 };
 
+/* His SabiBank launch film (ads/sabibank, 2026-11-03): the same app the hero designs and builds. */
+const SABI_FILM: MotionPiece = {
+  slug: "sabi-launch",
+  title: "SabiBank · Launch film",
+  kind: "Product film",
+  blurb: "",
+  meta: "0:40 · launch film",
+  poster: "/films/poster/sabi-launch.jpg",
+  loop: "/films/loop/sabi-launch.mp4",
+  watch: "/films/sabi-launch.mp4",
+};
+
 /* ------------------------------------------------------------------ pieces */
 
 function Label({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -171,7 +183,7 @@ function Hero({ ready, resumeUrl }: { ready: boolean; resumeUrl: string }) {
     <HeroProcess
       ready={ready}
       resumeUrl={resumeUrl}
-      onReel={() => open({ src: REEL.watch, alt: "Jethro Adebisi showreel", kind: "video", title: REEL.title, meta: REEL.meta })}
+      onMotion={() => open({ src: "/films/sabi-launch.mp4", alt: "SabiBank launch film", kind: "video", title: "SabiBank · launch film", meta: "0:40 · launch film" })}
     />
   );
 }
@@ -268,7 +280,7 @@ function Work() {
 
 function Films() {
   const { open } = useLightbox();
-  const pieces = driveFilms.length ? driveFilms : [REEL, ...motionWork];
+  const pieces = driveFilms.length ? [SABI_FILM, ...driveFilms] : [REEL, ...motionWork];
   return (
     <section id="films" className="scroll-mt-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
