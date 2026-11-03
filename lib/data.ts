@@ -395,3 +395,10 @@ export const motionWork: MotionPiece[] = [
     watch: '/motion/watch/becomes.mp4',
   },
 ];
+
+/* What people he has worked with say (2026-11-03). Only real, attributed words, with permission:
+   the home page shows a "What people say" section as soon as this list has any. One per line:
+     { quote: "...", name: "Full Name", role: "Role, Organisation" },
+*/
+export type Testimonial = { quote: string; name: string; role: string };
+export const testimonials: Testimonial[] = [];

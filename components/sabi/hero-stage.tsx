@@ -53,7 +53,7 @@ function Figma({ hifi }: { hifi: boolean }) {
           {["-left-[5px] -top-[5px]", "-right-[5px] -top-[5px]", "-left-[5px] -bottom-[5px]", "-right-[5px] -bottom-[5px]"].map((p) => (
             <span key={p} className={`absolute h-[10px] w-[10px] border-2 border-[#0D99FF] bg-white ${p}`} />
           ))}
-          <span className="absolute -bottom-[30px] left-1/2 -translate-x-1/2 rounded-[3px] bg-[#0D99FF] px-2 py-0.5 text-[15px] font-semibold text-white">380 × 95</span>
+          <span className="absolute -bottom-[30px] left-1/2 -translate-x-1/2 rounded-[3px] bg-[#0B6FCF] px-2 py-0.5 text-[15px] font-semibold text-white">380 × 95</span>
         </div>
       </div>
     </Phone>

@@ -1,9 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400..900&family=Instrument+Serif&display=swap');
-/* SabiBank's own faces, for the rebuilt app screens (components/sabi) */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;600&display=swap');
-
+/* One font request (2026-11-03, Lighthouse: four render-blocking requests before). Inter is the site face,
+   Space Mono the labels and the opening, Instrument Serif the opening card, Poppins and Roboto SabiBank's own
+   faces in components/sabi. Geist is gone: it was only ever a fallback once Inter came in. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400..900&family=Space+Mono:wght@400;700&family=Instrument+Serif&family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;600&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -19,7 +17,7 @@
   --accent-cold-rgb: 89 183 255;
   --accent-cold-ink-rgb: 29 95 168;
   --text-secondary: #4d4d4d;
-  --text-tertiary: #707070;
+  --text-tertiary: #5f5f5f; /* 5.9:1 on the paper (was #707070, which Lighthouse flagged at 11px) */
   --line: #dcdcdb;
 
   --bg: rgb(var(--bg-rgb));

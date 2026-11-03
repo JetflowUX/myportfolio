@@ -11,7 +11,7 @@ import { HeroProcess } from "@/components/hero-process";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { SiteFooter } from "@/components/site-footer";
 import { TopNav } from "@/components/top-nav";
-import { driveFilms, motionWork, type MotionPiece } from "@/lib/data";
+import { driveFilms, motionWork, testimonials, type MotionPiece } from "@/lib/data";
 import { getSiteContent } from "@/lib/project-store";
 
 /* ---------------------------------------------------------------------------
@@ -170,7 +170,7 @@ function Label({ children, className = "" }: { children: React.ReactNode; classN
 
 function More({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="label mt-6 inline-flex items-center gap-2 transition-colors hover:text-text">
+    <Link href={href} className="label relative z-10 mt-4 inline-flex min-h-[44px] items-center gap-2 py-2 transition-colors hover:text-text">
       {children} <ArrowRight className="h-3.5 w-3.5" />
     </Link>
   );
@@ -237,7 +237,7 @@ function Work() {
                   <img src={c.image} alt={`${c.title} case study`} className="h-full w-full object-cover" loading="lazy" />
                 </Link>
                 <div className={`min-w-[220px] ${ink}`}>
-                  <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${c.dark ? "text-white/60" : "text-black/55"}`}>
+                  <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${c.dark ? "text-white/70" : "text-black/70"}`}>
                     {i === 0 ? "Featured · " : ""}
                     {c.meta}
                   </p>
@@ -264,7 +264,7 @@ function Work() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={c.image} alt={`${c.title} case study`} className="aspect-[16/10] w-full object-cover" loading="lazy" />
             <div className={`p-5 ${c.dark ? "text-white" : "text-black"}`}>
-              <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${c.dark ? "text-white/60" : "text-black/55"}`}>{c.meta}</p>
+              <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${c.dark ? "text-white/70" : "text-black/70"}`}>{c.meta}</p>
               <h3 className="mt-2 text-[20px] font-bold tracking-[-0.02em]">{c.title}</h3>
               <p className={`mt-2 text-[14px] leading-[1.6] ${c.dark ? "text-white/75" : "text-black/70"}`}>{c.line}</p>
             </div>
@@ -279,9 +279,34 @@ function Work() {
 
 /* ------------------------------------------------------------------ films */
 
+/* The films, curated (2026-11-03): a featured dozen first, then the rest by type. "Featured" is
+   my pick for range (his SabiBank film, the reel, product launches across fintech, AI, health and
+   retail, one long explainer); change FEATURED to change it. Explainers are the two long pieces. */
+const FEATURED = [
+  "sabi-launch", "Jethro Adebisi · Showreel 2026", "Capveon · The Integration", "Call4Me · On The Line",
+  "Alter · Own Keys", "Pragma · In The Open", "KeepMe · Antares In Action", "Vesta · In The File",
+  "BillMender · Find Yours", "Cyberette · Show Where", "Andamio · Get Started", "Black Holes · Explainer",
+];
+const isExplainer = (p: MotionPiece) => /Explainer|Andamio · Get Started/.test(p.title);
+type FilmTab = "featured" | "launch" | "explainers" | "all";
+
 function Films() {
   const { open } = useLightbox();
-  const pieces = driveFilms.length ? [SABI_FILM, ...driveFilms] : [REEL, ...motionWork];
+  const all = driveFilms.length ? [SABI_FILM, ...driveFilms] : [REEL, ...motionWork];
+  const [tab, setTab] = useState<FilmTab>("featured");
+  const byTab: Record<FilmTab, MotionPiece[]> = {
+    featured: FEATURED.map((k) => all.find((p) => p.slug === k || p.title === k)).filter((p): p is MotionPiece => Boolean(p)),
+    launch: all.filter((p) => !isExplainer(p) && !/Showreel/.test(p.title)),
+    explainers: all.filter(isExplainer),
+    all,
+  };
+  const tabs: [FilmTab, string][] = [
+    ["featured", "Featured"],
+    ["launch", "Launch films & adverts"],
+    ["explainers", "Explainers"],
+    ["all", `All ${all.length}`],
+  ];
+  const pieces = byTab[tab].length ? byTab[tab] : all;
   return (
     <section id="films" className="scroll-mt-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -290,8 +315,24 @@ function Films() {
           Launch films and explainer videos, written, cut and animated. Click one to watch it with sound.
         </p>
       </div>
-      <div className="mt-10">
-        <FilmColumns pieces={pieces} onOpen={(p) => open({ src: p.watch, alt: p.title, kind: p.drive ? "embed" : "video", title: p.title, meta: p.meta })} />
+      <div className="-mx-2 mt-8 flex flex-wrap" role="tablist" aria-label="Films by type">
+        {tabs.map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={tab === k}
+            onClick={() => setTab(k)}
+            className={`min-h-[44px] px-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors sm:px-3 ${
+              tab === k ? "text-text underline decoration-2 underline-offset-[6px]" : "text-text-tertiary hover:text-text"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className="mt-4">
+        <FilmColumns key={tab} pieces={pieces} onOpen={(p) => open({ src: p.watch, alt: p.title, kind: p.drive ? "embed" : "video", title: p.title, meta: p.meta })} />
       </div>
       <More href={`mailto:${EMAIL}?subject=A%20film`}>Commission one</More>
     </section>
@@ -415,6 +456,10 @@ export default function HomePage() {
                   follow.
                 </p>
                 <p>I volunteer as a designer with GDG Lagos, MLSA Lagos and ACM SIGCHI Lagos.</p>
+                {/* his test for being done, in one line; check it reads like him */}
+                <p className="font-medium text-text">
+                  My test for finished: someone using it for the first time gets it without help.
+                </p>
               </div>
             </div>
           </div>
@@ -431,6 +476,24 @@ export default function HomePage() {
             ))}
           </ol>
         </section>
+
+        {/* -------------------------------------------------- what people say */}
+        {testimonials.length ? (
+          <section>
+            <Label>What people say</Label>
+            <div className="cells mt-10 grid md:grid-cols-2 lg:grid-cols-3">
+              {testimonials.map((t) => (
+                <figure key={t.name} className="flex flex-col justify-between gap-8 p-6">
+                  <blockquote className="text-[17px] leading-[1.5] tracking-[-0.01em] text-text">&ldquo;{t.quote}&rdquo;</blockquote>
+                  <figcaption>
+                    <p className="text-[14px] font-semibold">{t.name}</p>
+                    <p className="text-[13px] text-text-tertiary">{t.role}</p>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {/* ------------------------------------------------------- community */}
         <section>
@@ -459,15 +522,29 @@ export default function HomePage() {
                 that needs designing?
               </h2>
             </div>
-            <a
-              href={`mailto:${EMAIL}`}
-              className="inline-flex w-fit shrink-0 items-center gap-2 bg-black px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white transition-transform hover:-translate-y-0.5"
-            >
-              Email me
-            </a>
+            {/* two doors: an employer and a client want different next steps */}
+            <div className="grid shrink-0 gap-3 sm:min-w-[300px]">
+              <div>
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-black/70">Hiring?</p>
+                <div className="flex flex-wrap gap-2">
+                  <a href={resumeUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-black px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white transition-transform hover:-translate-y-0.5">
+                    Résumé
+                  </a>
+                  <a href="https://www.linkedin.com/in/jethro-adebisi-21872a20b" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 border border-black px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-black transition-transform hover:-translate-y-0.5">
+                    LinkedIn
+                  </a>
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-black/70">Have a product?</p>
+                <a href="#write" className="inline-flex items-center gap-2 bg-black px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white transition-transform hover:-translate-y-0.5">
+                  Start a project <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            </div>
           </div>
 
-          <div className="cells mt-1.5 grid lg:grid-cols-2">
+          <div id="write" className="cells mt-1.5 grid scroll-mt-10 lg:grid-cols-2">
             <div className="flex flex-col justify-between gap-8 p-6 sm:p-8">
               <div>
                 <p className="label">Or write here</p>

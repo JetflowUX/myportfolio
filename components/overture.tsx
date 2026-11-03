@@ -21,6 +21,8 @@ export const INTRO_KEY = "ja-intro-seen";
 export const REPLAY_EVENT = "ja:overture-replay";
 
 const END = 5650;
+// played at 1.8x (2026-11-03: "make the opening animation cost less"): the same sequence in 3.1 s
+const SPEED = 1.8;
 const NS = "http://www.w3.org/2000/svg";
 /* His mark (app/icon.svg), drawn in a 64-unit box: x 24..42, y 18..44. */
 const MARK = "M42 18H24L33.5 31L24 44H42";
@@ -191,7 +193,7 @@ export function Overture({ onFinish }: { onFinish: () => void }) {
     run.current = state;
     const tick = (now: number) => {
       if (state.done) return;
-      const ms = now - state.start;
+      const ms = (now - state.start) * SPEED;
       render(ms);
       if (ms >= END) {
         window.removeEventListener("resize", onResize);

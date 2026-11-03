@@ -1,13 +1,29 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
+const DESCRIPTION =
+  "Jethro Adebisi designs products people trust, builds them in React and Next.js, and makes the film that explains them at launch. Case studies, front-end work and launch films.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://jethrotheuxpert.vercel.app"),
   title: "Jethro Adebisi | Product Designer, Motion Designer & Front-End Engineer",
-  description:
-    "Portfolio for Jethro Adebisi: product-focused front-end engineering, design systems, and interactive experiences.",
+  description: DESCRIPTION,
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Jethro Adebisi",
+    title: "Jethro Adebisi: design it, build it, film it",
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Jethro Adebisi: design it, build it, film it",
+    description: DESCRIPTION,
   },
 };
 
@@ -40,6 +56,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <noscript>
           <style>{`.overture{display:none}`}</style>
@@ -47,6 +65,8 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        {/* page views and clicks, cookie-free; turn on Web Analytics for the project in Vercel to see them */}
+        <Analytics />
       </body>
     </html>
   );

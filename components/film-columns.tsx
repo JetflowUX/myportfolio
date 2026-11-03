@@ -77,7 +77,9 @@ function Card({ piece, ghost, onOpen }: { piece: MotionPiece; ghost: boolean; on
 export function FilmColumns({ pieces, onOpen }: { pieces: MotionPiece[]; onOpen: (p: MotionPiece) => void }) {
   const box = useRef<HTMLDivElement>(null);
   const cols = useRef<(HTMLDivElement | null)[]>([]);
-  const [count, setCount] = useState(3);
+  const [cols3, setCount] = useState(3);
+  // never more columns than films (two explainers make two columns, not a third that is empty)
+  const count = Math.max(1, Math.min(cols3, pieces.length));
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 639px)");

@@ -88,7 +88,7 @@ export function HeroProcess({ ready, resumeUrl, onMotion }: { ready: boolean; re
       >
         <p className="col-span-2 flex items-center gap-2.5 px-4 py-3 sm:col-span-1">
           <span className="h-2 w-2 bg-accent" />
-          Open to new roles and opportunities
+          Open to remote product design roles and freelance projects
         </p>
         <p className="px-4 py-3">Product designer, motion designer and front-end engineer</p>
         <a href={resumeUrl} target="_blank" rel="noreferrer" className="group flex items-center justify-end gap-1.5 px-4 py-3 font-semibold text-text">
@@ -128,7 +128,7 @@ export function HeroProcess({ ready, resumeUrl, onMotion }: { ready: boolean; re
                 <span className="-mb-[0.16em] block overflow-hidden pb-[0.16em] pt-2 text-[54px] sm:text-[76px] lg:text-[84px]">
                   <motion.span
                     className="giant block !leading-[1] text-[54px] transition-colors duration-500 sm:text-[76px] lg:text-[84px]"
-                    style={{ color: on ? "rgb(var(--ink-rgb))" : "#cdcdcb" }}
+                    style={{ color: on ? "rgb(var(--ink-rgb))" : "#8b8b89" }} /* inactive rows 3.3:1, large type (was #cdcdcb, 1.4:1) */
                     initial={{ y: "105%" }}
                     animate={{ y: ready ? "0%" : "105%" }}
                     transition={{ duration: 0.9, delay: ready ? 0.1 + i * 0.12 : 0, ease: EASE }}
@@ -200,10 +200,15 @@ export function HeroProcess({ ready, resumeUrl, onMotion }: { ready: boolean; re
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/photos/avatar.webp?v=2" alt="Jethro Adebisi" className="aspect-square h-full w-full object-cover grayscale transition-[filter] duration-500 hover:grayscale-0" />
         </div>
-        <p className="border-b border-r border-border p-4 text-[14px] leading-[1.55] text-text-secondary">
-          I&apos;m Jethro. I take products from user interviews to tested prototypes, build them in React
-          and Next.js, and make the film that explains them at launch.
-        </p>
+        {/* the plain line a skimming reviewer needs: what he is, and the proof, in one place */}
+        <div className="border-b border-r border-border p-4">
+          <p className="text-[17px] font-semibold leading-[1.35] tracking-[-0.01em] text-text">
+            Product designer who builds in React and makes the launch film.
+          </p>
+          <p className="mt-2 text-[14px] leading-[1.55] text-text-secondary">
+            I&apos;m Jethro. I take products from user interviews to tested prototypes, then build them and film them.
+          </p>
+        </div>
         <dl className="col-span-2 grid grid-cols-3 border-b border-r border-border sm:col-span-1 sm:grid-cols-1 sm:content-center sm:gap-2 sm:p-4">
           {[
             ["60", "films made"],

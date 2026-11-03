@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Maximize2 } from "lucide-react";
-import { CursorFollower } from "@/components/cursor-follower";
 import { ImagePlaceholder } from "@/components/image-placeholder";
 import { LightboxProvider, useLightbox } from "@/components/image-lightbox";
 import { SiteFooter } from "@/components/site-footer";
@@ -24,6 +23,15 @@ const fadeUp = {
   },
 };
 const stagger = { show: { transition: { staggerChildren: 0.09 } } };
+
+/** The first n sentences of a field, for the summary cells (the full text stays in the article). */
+function firstSentences(text: string | undefined, n: number) {
+  if (!text) return "";
+  // a sentence ends at . ! or ? followed by a capital or the end: "3.2x" and "e.g." stay whole
+  const parts = text.replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+(?=[A-Z("'])/);
+  const out = parts.slice(0, n).join(" ").trim();
+  return out.length > 260 ? out.slice(0, 257).replace(/\s+\S*$/, "") + "..." : out;
+}
 
 export default function ProjectCaseStudyPage() {
   const params = useParams<{ slug: string }>();
@@ -143,91 +151,75 @@ export default function ProjectCaseStudyPage() {
     <LightboxProvider>
     <main className="relative z-10 min-h-screen bg-bg">
       <ScrollProgress />
-      <CursorFollower />
       <TopNav />
 
-      {/* ─── HEADER ─────────────────────────────────────────── */}
-      <div className="pt-28 sm:pt-32 px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.22em] sm:tracking-[0.3em] text-text-tertiary mb-8 sm:mb-10 font-mono">
-          <Link href="/" className="hover:text-accent-ink transition-colors">
-            Home
-          </Link>
-          <span className="opacity-30">·</span>
-          <Link href="/archive" className="hover:text-accent-ink transition-colors">
-            Archive
-          </Link>
-          <span className="opacity-30">·</span>
-          <span className="text-accent-ink/70 break-words">{project.title}</span>
-        </div>
+      {/* ─── HEADER (2026-11-03: the home page's grid, and the outcome up front) ─── */}
+      <div className="mx-auto max-w-[1104px] px-6 pt-36 sm:px-8 sm:pt-40 lg:px-8 xl:px-0">
+        <nav aria-label="Breadcrumb" className="label !text-[10px] flex flex-wrap items-center gap-2">
+          <Link href="/" className="hover:text-text">Home</Link>
+          <span aria-hidden>/</span>
+          <Link href="/archive" className="hover:text-text">All projects</Link>
+        </nav>
 
-        {/* Title block */}
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate="show"
-          className="mb-12"
-        >
-          <motion.p
-            variants={fadeUp}
-            className="text-[10px] text-accent-ink tracking-[0.4em] uppercase mb-4 font-mono"
-          >
-            UX Case Study — {project.year}
+        <motion.div variants={stagger} initial="hidden" animate="show" className="mt-8 grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-end">
+          <div>
+            <motion.p variants={fadeUp} className="label">
+              Case study · {project.year}
+            </motion.p>
+            <motion.h1 variants={fadeUp} className="mt-5 text-[40px] font-black leading-[0.98] tracking-[-0.045em] sm:text-[60px]">
+              {project.title}
+            </motion.h1>
+          </div>
+          <motion.p variants={fadeUp} className="max-w-[460px] text-[15px] leading-[1.6] text-text-secondary">
+            {firstSentences(project.description, 2)}
           </motion.p>
-          <motion.h1
-            variants={fadeUp}
-            className="text-4xl min-[420px]:text-5xl sm:text-7xl md:text-[clamp(4rem,10vw,8rem)] font-black tracking-tighter uppercase leading-[0.88] mb-8 break-words"
-          >
-            {project.title}
-          </motion.h1>
-          <motion.div
-            variants={fadeUp}
-            className="flex flex-col sm:flex-row sm:items-end gap-6 sm:gap-10"
-          >
-            <p className="font-sans text-text-secondary text-sm sm:text-base leading-relaxed max-w-2xl flex-1">
-              {project.description}
-            </p>
-            <div className="flex flex-wrap gap-2 shrink-0">
-              {(project.tech ?? []).slice(0, 4).map((t) => (
-                <span key={t} className="tag">
-                  {t}
-                </span>
-              ))}
-            </div>
-          </motion.div>
         </motion.div>
+
+        {/* the four things a reviewer looks for, before the long read */}
+        <div className="cells mt-12 grid sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ["The problem", firstSentences(project.problem, 2)],
+            ["My role", project.role],
+            ["The outcome", firstSentences(project.outcomes, 2)],
+            ["What's next", firstSentences(project.nextSteps, 1)],
+          ]
+            .filter(([, v]) => v && v.trim())
+            .map(([k, v], i) => (
+              <div key={k} className={`p-5 ${i === 2 ? "bg-accent/15" : ""}`}>
+                <p className="label !text-[10px]">{k}</p>
+                <p className="mt-3 text-[14px] leading-[1.55] text-text">{v}</p>
+              </div>
+            ))}
+        </div>
       </div>
 
       {/* ─── HERO IMAGE ─────────────────────────────────────── */}
-      <div className="w-full px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto mb-0">
+      <div className="mx-auto mt-10 max-w-[1104px] px-6 sm:px-8 lg:px-8 xl:px-0">
         <HeroMedia project={project} caseStudyImage={caseStudyImage} />
         {project.projectLink && (
           <a
             href={project.projectLink}
             target="_blank"
             rel="noreferrer"
-            className="sm:hidden mt-3 inline-flex items-center justify-center gap-2 bg-accent text-black px-4 py-2.5 text-[9px] font-black uppercase tracking-[0.22em] w-full"
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 bg-text px-4 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-bg sm:hidden"
           >
-            Open Live Site <span className="text-[11px]">↗</span>
+            Open the live site <span aria-hidden>↗</span>
           </a>
         )}
       </div>
 
       {/* ─── STATS BAR ──────────────────────────────────────── */}
-      <div className="px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-4 border-l border-r border-b border-ink/[0.07]">
+      <div className="mx-auto max-w-[1104px] px-6 sm:px-8 lg:px-8 xl:px-0">
+        <div className="grid grid-cols-2 border-b border-l border-r border-border sm:grid-cols-4">
           <StatCell label="Year" value={project.year} />
           <StatCell label="Role" value={project.role} />
           <StatCell label="Category" value={project.category} />
-          <StatCell
-            label="Stack"
-            value={(project.tech ?? []).slice(0, 2).join(" · ")}
-          />
+          <StatCell label="Stack" value={(project.tech ?? []).slice(0, 2).join(" · ")} />
         </div>
       </div>
 
       {/* ─── MAIN CONTENT + SIDEBAR ─────────────────────────── */}
-      <div className="px-4 sm:px-6 lg:px-10 max-w-7xl mx-auto mt-20 sm:mt-24">
+      <div className="mx-auto mt-20 max-w-[1104px] px-6 sm:mt-24 sm:px-8 lg:px-8 xl:px-0">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-14 lg:gap-16 items-start">
           {/* ── ARTICLE ─────────────────────────────── */}
           <article className="min-w-0">
