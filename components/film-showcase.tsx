@@ -49,18 +49,11 @@ export function ShowreelPlayer({ film, onPlay }: { film: MotionPiece; onPlay: ()
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={film.poster} alt="" className="absolute inset-0 h-full w-full object-cover" />
         {reduced ? null : <video ref={video} muted loop playsInline preload="none" className="absolute inset-0 h-full w-full object-cover" />}
-        {/* bottom right: the reel's own captions and name sit on the left */}
         <span className="absolute bottom-4 right-4 inline-flex min-h-[44px] items-center gap-2 bg-white px-4 text-[13px] font-semibold text-black transition-transform group-hover:-translate-y-0.5 sm:bottom-6 sm:right-6">
           <Play className="h-4 w-4 fill-current" aria-hidden /> Play with sound
         </span>
       </button>
-      <figcaption className="mt-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <span className="text-[17px] font-semibold tracking-[-0.01em]">{film.title}</span>
-        <span className="text-[13px] text-text-tertiary">
-          {film.meta}
-          {film.blurb ? ` · ${film.blurb}` : ""}
-        </span>
-      </figcaption>
+      {/* no caption: Jethro, 2026-11-04, "just display the videos alone" */}
     </figure>
   );
 }
