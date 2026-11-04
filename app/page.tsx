@@ -109,8 +109,10 @@ function Work({ cases }: { cases: HomeCase[] }) {
     <section id="work" className="scroll-mt-10">
       <Label>Selected work</Label>
 
-      {/* wide screens: an accordion of spines, one case open at a time */}
-      <div className="mt-10 hidden h-[340px] gap-1.5 md:flex">
+      {/* wide screens: an accordion of spines, one case open at a time. The covers are wide pictures
+          (16:9 to 5:4) with words on them; a tall box cropped half of each away (Jethro, 2026-11-04),
+          so closed cases are narrow fixed spines and the open one shows its whole cover, words under it. */}
+      <div className="mt-10 hidden h-[500px] gap-1.5 md:flex">
         {cases.map((c, i) => {
           const isOpen = i === active;
           const ink = c.dark ? "text-white" : "text-black";
@@ -119,8 +121,8 @@ function Work({ cases }: { cases: HomeCase[] }) {
               key={c.slug}
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
-              className="relative flex overflow-hidden border border-black/10 transition-[flex-grow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-              style={{ background: c.bg, flexGrow: isOpen ? 7 : 1, flexBasis: 0 }}
+              className="relative flex min-w-0 overflow-hidden border border-black/10 transition-[flex-grow] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{ background: c.bg, flexGrow: isOpen ? 1 : 0, flexShrink: 0, flexBasis: 64 }}
             >
               {/* the spine */}
               <button
@@ -128,45 +130,54 @@ function Work({ cases }: { cases: HomeCase[] }) {
                 onClick={() => setActive(i)}
                 aria-expanded={isOpen}
                 aria-label={`${c.title}, ${c.meta}`}
-                className={`flex shrink-0 flex-col items-center justify-between py-6 ${ink} ${isOpen ? "w-[60px] border-r border-black/10 lg:w-[72px]" : "w-full"}`}
+                className={`flex w-16 shrink-0 flex-col items-center justify-between py-6 ${ink} ${isOpen ? "border-r border-black/10" : ""}`}
               >
                 <span className="text-[17px] font-semibold tracking-tight [writing-mode:vertical-rl]">{c.title}</span>
                 <span className="block h-2.5 w-full" style={{ background: "linear-gradient(90deg,#00FFC2 0 33%,#111 33% 66%,#59B7FF 66%)" }} />
               </button>
 
-              {/* the open case */}
+              {/* the open case: the whole cover, then what it is */}
               <div
-                className={`flex min-w-0 flex-1 items-center gap-8 p-6 transition-opacity duration-500 lg:p-7 ${isOpen ? "opacity-100 delay-200" : "pointer-events-none opacity-0"}`}
+                className={`flex min-w-0 flex-1 flex-col gap-5 p-5 transition-opacity duration-500 lg:p-6 ${isOpen ? "opacity-100 delay-200" : "pointer-events-none opacity-0"}`}
                 aria-hidden={!isOpen}
               >
                 <Link
                   href={`/projects/${c.slug}`}
                   tabIndex={isOpen ? 0 : -1}
-                  className="block h-full w-[48%] shrink-0 overflow-hidden border border-black/10"
+                  className="flex min-h-0 flex-1 items-center justify-center"
                 >
                   {/* a project saved without any image gets a plain panel, not a broken one */}
                   {c.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.image} alt={`${c.title} case study`} className="h-full w-full object-cover" loading="lazy" />
+                    <img
+                      src={c.image}
+                      alt={`${c.title} case study`}
+                      className="block h-auto max-h-full w-auto max-w-full border border-black/10"
+                      loading="lazy"
+                    />
                   ) : (
                     <div className="h-full w-full bg-black/[0.05]" />
                   )}
                 </Link>
-                {/* min-w-0 lets a long title wrap when the admin has put more than five cases here */}
-                <div className={`min-w-0 flex-1 ${ink}`}>
-                  <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${c.dark ? "text-white/70" : "text-black/70"}`}>
-                    {i === 0 ? "Featured · " : ""}
-                    {c.meta}
-                  </p>
-                  <h3 className="mt-3 text-[22px] font-bold leading-tight tracking-[-0.02em] [overflow-wrap:anywhere]">{c.title}</h3>
-                  <p className={`mt-3 line-clamp-5 text-[14px] leading-[1.6] ${c.dark ? "text-white/75" : "text-black/70"}`}>{c.line}</p>
-                  <Link
-                    href={`/projects/${c.slug}`}
-                    tabIndex={isOpen ? 0 : -1}
-                    className="mt-5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] hover:underline"
-                  >
-                    Read the case study <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
+                <div className={`grid shrink-0 items-end gap-x-8 gap-y-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] ${ink}`}>
+                  {/* min-w-0 lets a long title wrap when the admin has put more than five cases here */}
+                  <div className="min-w-0">
+                    <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${c.dark ? "text-white/70" : "text-black/70"}`}>
+                      {i === 0 ? "Featured · " : ""}
+                      {c.meta}
+                    </p>
+                    <h3 className="mt-2 text-[22px] font-bold leading-tight tracking-[-0.02em] [overflow-wrap:anywhere]">{c.title}</h3>
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`line-clamp-2 text-[14px] leading-[1.55] ${c.dark ? "text-white/75" : "text-black/70"}`}>{c.line}</p>
+                    <Link
+                      href={`/projects/${c.slug}`}
+                      tabIndex={isOpen ? 0 : -1}
+                      className="mt-2 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] hover:underline"
+                    >
+                      Read the case study <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
