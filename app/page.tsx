@@ -7,7 +7,7 @@ import { LightboxProvider, useLightbox } from "@/components/image-lightbox";
 import { Overture } from "@/components/overture";
 import { CopyEmail } from "@/components/copy-email";
 import { ContactForm } from "@/components/contact-form";
-import { FilmColumns } from "@/components/film-columns";
+import { FilmTile, ShowreelPlayer } from "@/components/film-showcase";
 import { HeroProcess } from "@/components/hero-process";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { SiteFooter } from "@/components/site-footer";
@@ -19,10 +19,9 @@ import {
   testimonials as defaultTestimonials,
   type Experience,
   type Testimonial,
-  type MotionPiece,
 } from "@/lib/data";
 import { homeCases, type HomeCase } from "@/lib/home-work";
-import { FEATURED, allFilms, isExplainer } from "@/lib/films";
+import { SHOWREEL, SIX, allFilms, lightboxItem } from "@/lib/films";
 import { getSiteContent } from "@/lib/project-store";
 
 /* ---------------------------------------------------------------------------
@@ -201,26 +200,16 @@ function Work({ cases }: { cases: HomeCase[] }) {
 
 /* ------------------------------------------------------------------ films */
 
-/* The film list, the featured dozen and the explainer test live in lib/films.ts (shared with /work). */
-type FilmTab = "featured" | "launch" | "explainers" | "all";
-
+/* The reel first and large, then six films chosen for range, then a link to all of them on The
+   Shelf (2026-11-04; the moving wall of columns and its four tabs were retired). lib/films.ts holds
+   the reel, the six and their lines. */
 function Films() {
   const { open } = useLightbox();
   const all = allFilms();
-  const [tab, setTab] = useState<FilmTab>("featured");
-  const byTab: Record<FilmTab, MotionPiece[]> = {
-    featured: FEATURED.map((k) => all.find((p) => p.slug === k || p.title === k)).filter((p): p is MotionPiece => Boolean(p)),
-    launch: all.filter((p) => !isExplainer(p) && !/Showreel/.test(p.title)),
-    explainers: all.filter(isExplainer),
-    all,
-  };
-  const tabs: [FilmTab, string][] = [
-    ["featured", "Featured"],
-    ["launch", "Launch films & adverts"],
-    ["explainers", "Explainers"],
-    ["all", `All ${all.length}`],
-  ];
-  const pieces = byTab[tab].length ? byTab[tab] : all;
+  const six = SIX.flatMap(({ key, line }) => {
+    const film = all.find((p) => p.slug === key || p.title === key);
+    return film ? [{ film, line }] : [];
+  });
   return (
     <section id="films" className="scroll-mt-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -229,26 +218,22 @@ function Films() {
           Launch films and explainer videos, written, cut and animated. Click one to watch it with sound.
         </p>
       </div>
-      <div className="-mx-2 mt-8 flex flex-wrap" role="tablist" aria-label="Films by type">
-        {tabs.map(([k, label]) => (
-          <button
-            key={k}
-            type="button"
-            role="tab"
-            aria-selected={tab === k}
-            onClick={() => setTab(k)}
-            className={`min-h-[44px] px-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors sm:px-3 ${
-              tab === k ? "text-text underline decoration-2 underline-offset-[6px]" : "text-text-tertiary hover:text-text"
-            }`}
-          >
-            {label}
-          </button>
+      <div className="mt-10">
+        <ShowreelPlayer film={SHOWREEL} onPlay={() => open(lightboxItem(SHOWREEL))} />
+      </div>
+      <div className="mt-14 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+        {six.map(({ film, line }) => (
+          <FilmTile key={film.slug} film={film} line={line} onOpen={() => open(lightboxItem(film))} />
         ))}
       </div>
-      <div className="mt-4">
-        <FilmColumns key={tab} pieces={pieces} onOpen={(p) => open({ src: p.watch, alt: p.title, kind: p.drive ? "embed" : "video", title: p.title, meta: p.meta })} />
+      <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
+        <Link href="/work?tab=films" className="label inline-flex min-h-[44px] items-center gap-2 transition-colors hover:text-text">
+          See all {all.length} films <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+        </Link>
+        <a href={`mailto:${EMAIL}?subject=A%20film`} className="label inline-flex min-h-[44px] items-center gap-2 transition-colors hover:text-text">
+          Commission one <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+        </a>
       </div>
-      <More href={`mailto:${EMAIL}?subject=A%20film`}>Commission one</More>
     </section>
   );
 }

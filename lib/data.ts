@@ -356,7 +356,7 @@ export function driveFilm(link: string, title: string, meta: string, local?: str
    folder's other sizes (1x1, 4x5, 9x16, vertical) are left out, and so are the two
    Orca launch films while that deal is live. Lengths read from his local copies. */
 export const driveFilms: MotionPiece[] = [
-  driveFilm('1LWl6lnUFCB6gYw4X3bUhbuTjGio3jCU1', 'Jethro Adebisi · Showreel 2026', '0:45 · showreel', 'jethro-adebisi-showreel-2026'),
+  driveFilm('1LWl6lnUFCB6gYw4X3bUhbuTjGio3jCU1', 'Jethro Adebisi · Showreel (October 2026)', '0:45 · showreel', 'jethro-adebisi-showreel-2026'),
   driveFilm('1UOc6FHYd7nvAIqT1pFkg8Uo9auavrFNY', 'Capveon · The Integration', '0:40 · film', 'capveon-the-integration'),
   driveFilm('1-ZJ6IigcSnx_PzsHeGhu2XDe48_SReEd', 'Call4Me · On The Line', '0:57 · film', 'call4me-on-the-line'),
   driveFilm('1Zg3C88kf38o9T5HqtXI96zVzROUkZU5g', 'Alter · Own Keys', '0:41 · film', 'alter-own-keys'),
