@@ -38,6 +38,20 @@ export const SHOWREEL: MotionPiece = {
   watch: '/films/showreel-2026.mp4',
 };
 
+/* The short reel (films/jethro-reel Quarters, 2026-11-04): 18 s in a 2x2 grid, after a reference
+   the owner sent, from the four films he chose (Allophone, BillMender, Gimbalabs, Stormy). It leads
+   the home page's Films section; the 45 s reel stays on The Shelf. */
+export const SHORT_REEL: MotionPiece = {
+  slug: 'showreel-short-2026',
+  title: 'Jethro Adebisi · Showreel, short',
+  kind: 'Motion graphics',
+  blurb: 'Four of my films in 18 seconds.',
+  meta: '0:18 · showreel',
+  poster: '/films/poster/showreel-short-2026.jpg',
+  loop: '/films/loop/showreel-short-2026.mp4',
+  watch: '/films/showreel-short-2026.mp4',
+};
+
 /* Two recent films not on Drive (2026-10-30), hosted with the site. */
 const local = (slug: string, title: string, meta: string): MotionPiece => ({
   slug,
@@ -53,7 +67,7 @@ const LEXI = local('lexi-pages', 'Lexi · Pages', '0:40 · launch film');
 const SWERVE = local('swerve-unfolds', 'Swerve · Unfolds', '0:36 · launch film');
 
 export function allFilms(): MotionPiece[] {
-  return driveFilms.length ? [SHOWREEL, SABI_FILM, LEXI, SWERVE, ...driveFilms] : [REEL, ...motionWork];
+  return driveFilms.length ? [SHORT_REEL, SHOWREEL, SABI_FILM, LEXI, SWERVE, ...driveFilms] : [REEL, ...motionWork];
 }
 
 /* The home page's six, chosen for range (2026-11-04): an app he designed, 3D simulation, a 3D

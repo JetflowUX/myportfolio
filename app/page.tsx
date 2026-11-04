@@ -21,7 +21,7 @@ import {
   type Testimonial,
 } from "@/lib/data";
 import { homeCases, type HomeCase } from "@/lib/home-work";
-import { SHOWREEL, SIX, allFilms, lightboxItem } from "@/lib/films";
+import { SHORT_REEL, SIX, allFilms, lightboxItem } from "@/lib/films";
 import { getSiteContent } from "@/lib/project-store";
 
 /* ---------------------------------------------------------------------------
@@ -219,7 +219,8 @@ function Films() {
         </p>
       </div>
       <div className="mt-10">
-        <ShowreelPlayer film={SHOWREEL} onPlay={() => open(lightboxItem(SHOWREEL))} />
+        {/* the 18 s reel leads (his choice, 2026-11-04); the 45 s reel is on The Shelf */}
+        <ShowreelPlayer film={SHORT_REEL} onPlay={() => open(lightboxItem(SHORT_REEL))} />
       </div>
       <div className="mt-14 grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
         {six.map(({ film, line }) => (
